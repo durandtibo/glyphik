@@ -41,12 +41,12 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development :: Testing",
 ]
 
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "coola >=1.1.8a0,<2.0",
+    "deepagents>=0.6,<1.0",
     "langchain-core>=1.4,<2.0",
     "langchain>=1.3,<2.0",
 ]
@@ -117,7 +117,7 @@ addopts = ["--color", "yes", "--durations", "10", "-rf"]
 
 [tool.black]
 line-length = 100
-target-version = ["py310", "py311", "py312", "py313", "py314"]
+target-version = ["py312", "py313", "py314"]
 include = '\.pyi?$'
 
 [tool.pylint.FORMAT]
@@ -266,7 +266,7 @@ lint.exclude = [
 lint.extend-select = ["D400", "D401", "D404"]
 
 line-length = 100
-target-version = "py310"
+target-version = "py312"
 src = ["src"]
 
 [tool.ruff.lint.per-file-ignores]
