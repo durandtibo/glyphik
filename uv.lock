@@ -1038,7 +1038,7 @@ requires-dist = [
     { name = "deepagents", specifier = ">=0.6,<1.0" },
     { name = "langchain", specifier = ">=1.3,<2.0" },
     { name = "langchain-anthropic", marker = "extra == 'anthropic'", specifier = ">=1.4,<2.0" },
-    { name = "langchain-chroma", marker = "extra == 'chroma'", specifier = ">=1.0,<2.0" },
+    { name = "langchain-chroma", marker = "python_full_version >= '3.11' and extra == 'chroma'", specifier = ">=1.0,<2.0" },
     { name = "langchain-core", specifier = ">=1.4,<2.0" },
     { name = "langchain-google-genai", marker = "extra == 'google-genai'", specifier = ">=4.2,<5.0" },
     { name = "langchain-huggingface", marker = "extra == 'huggingface'", specifier = ">=1.2,<2.0" },
@@ -1049,7 +1049,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2,<2.0" },
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a0,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a1,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "google-genai", "huggingface", "nvidia-ai-endpoints", "ollama", "openai", "sentence-transformers", "text-splitters"]
 
@@ -4557,7 +4557,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a0"
+version = "0.0.1a1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -4567,9 +4567,9 @@ dependencies = [
     { name = "objectory" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/89/96/7db777d883bbdb571a4257b39dc3591fc772c5cbd629073994530c5dbbad/zenpyre-0.0.1a0.tar.gz", hash = "sha256:75c9ae905d14ab86cae3754d8d3088718f31815782e9ce5d6695a07f25074a54", size = 18260, upload-time = "2026-06-28T20:58:32.829Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/94/76ae24d6b2ef1d909e1bc0840fa0ffcc1f07706e93385698e6186ffbcbbe/zenpyre-0.0.1a1.tar.gz", hash = "sha256:6cbda64dfb9a6681d1afedbee7c590d9b536c99bd15d7c97554deef5b6f5700c", size = 19812, upload-time = "2026-06-28T22:48:59.758Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/34/9c/ebc24cc71bb82c3beaa0ec742ad4b198b3c5a226e404c98a61908fb4bceb/zenpyre-0.0.1a0-py3-none-any.whl", hash = "sha256:928c5a9d4f9e6d7d33e65d50407c2456dcb1fe3a38f16609c01703bbcf0365f3", size = 32752, upload-time = "2026-06-28T20:58:31.535Z" },
+    { url = "https://files.pythonhosted.org/packages/88/3d/a3a55dd6587b41cb117fb215f5fc2148b6c738bb28b960037e0442482f87/zenpyre-0.0.1a1-py3-none-any.whl", hash = "sha256:5a7a3b3e44121cca3efa5c2605dbbaec5458138af82579fea990b588ed82b2b6", size = 38940, upload-time = "2026-06-28T22:48:37.648Z" },
 ]
 
 [[package]]
