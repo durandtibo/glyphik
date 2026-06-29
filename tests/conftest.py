@@ -29,11 +29,5 @@ def _edgar_identity() -> None:
     import edgar
 
     identity = os.getenv("EDGAR_IDENTITY")
-    if not identity:
-        msg = (
-            "EDGAR_IDENTITY environment variable is not set. "
-            "Set it to your name and email, e.g. "
-            "'First Last name@example.com'."
-        )
-        raise ValueError(msg)
-    edgar.set_identity(identity)
+    if identity:
+        edgar.set_identity(identity)
