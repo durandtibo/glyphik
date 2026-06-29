@@ -13,6 +13,7 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from zenpyre.embeddings.chroma import inspect_embeddings
 from zenpyre.utils.rich import configure_rich_logging, print_pretty
 
 if TYPE_CHECKING:
@@ -157,40 +158,6 @@ def get_or_build_vector_store(base_dir: Path) -> Chroma:
         logger.info("Embeddings computed and saved to disk successfully!")
 
     return vector_store
-
-
-def inspect_embeddings(vector_store: Chroma) -> None:
-    """Retrieve and display the raw embeddings from the vector store."""
-    logger.info("\n--- INSTRUCTING VECTOR STORE TO REVEAL EMBEDDINGS ---")
-
-    # Use the .get() method and explicitly request 'embeddings'
-    db_data = vector_store.get(include=["embeddings", "documents", "metadatas"])
-
-    # Extract the lists from the dictionary
-    embeddings = db_data["embeddings"]
-    documents = db_data["documents"]
-    metadatas = db_data["metadatas"]
-    ids = db_data["ids"]
-
-    # Check if we got anything back
-    if embeddings is None:
-        logger.info("No embeddings found in the database.")
-        return
-
-    logger.info(f"Successfully retrieved {len(embeddings)} embeddings.\n")
-
-    # Loop through the first 2 chunks to see what the data looks like
-    for i in range(min(2, len(embeddings))):
-        logger.info(f"Chunk ID:   {ids[i]}")
-        logger.info(f"Source:     {metadatas[i].get('source')}")
-        logger.info(f"Text:       {documents[i]}")
-
-        # An embedding is a massive list of floats. We will just print the first 5.
-        vector = embeddings[i]
-        logger.info(f"Dimensions: {len(vector)} numbers long")
-        logger.info(
-            f"Vector:     [{vector[0]:.4f}, {vector[1]:.4f}, {vector[2]:.4f}, {vector[3]:.4f}, {vector[4]:.4f}, ...]\n"
-        )
 
 
 def search(query: str, vector_store: Chroma, search_kwargs: dict | None = None) -> None:
