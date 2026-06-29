@@ -8,10 +8,16 @@ from langchain_core.document_loaders import BaseLoader
 from langchain_core.documents import Document
 from langchain_core.embeddings.fake import FakeEmbeddings
 from langchain_core.vectorstores import InMemoryVectorStore, VectorStore
-from langchain_text_splitters import CharacterTextSplitter, TextSplitter
 from zenpyre.document_loaders import DocumentListLoader
+from zenpyre.testing.fixtures import langchain_text_splitters_available
+from zenpyre.utils.imports import is_langchain_text_splitters_available
 
 from glyphik.pipeline import BasePipeline, DocumentIndexingPipeline
+
+if is_langchain_text_splitters_available():
+    from langchain_text_splitters import CharacterTextSplitter, TextSplitter
+else:
+    CharacterTextSplitter, TextSplitter = None, None
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -56,6 +62,7 @@ def _make_pipeline(
 # --- Inheritance ---
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_is_base_pipeline() -> None:
     assert isinstance(_make_pipeline(), BasePipeline)
 
@@ -63,16 +70,19 @@ def test_document_indexing_pipeline_is_base_pipeline() -> None:
 # --- execute ---
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_returns_vector_store() -> None:
     assert isinstance(_make_pipeline().execute(), VectorStore)
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_returns_same_vector_store_instance() -> None:
     vector_store = _make_vector_store()
     pipeline = _make_pipeline(vector_store=vector_store)
     assert pipeline.execute() is vector_store
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_calls_lazy_load() -> None:
     loader = MagicMock(spec=BaseLoader)
     loader.lazy_load.return_value = iter(_make_docs())
@@ -80,12 +90,14 @@ def test_document_indexing_pipeline_execute_calls_lazy_load() -> None:
     loader.lazy_load.assert_called_once()
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_calls_add_documents() -> None:
     vector_store = MagicMock(spec=VectorStore)
     _make_pipeline(vector_store=vector_store).execute()
     vector_store.add_documents.assert_called()
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_with_empty_loader() -> None:
     vector_store = MagicMock(spec=VectorStore)
     pipeline = _make_pipeline(loader=_make_loader(0), vector_store=vector_store)
@@ -94,6 +106,7 @@ def test_document_indexing_pipeline_execute_with_empty_loader() -> None:
     vector_store.add_documents.assert_not_called()
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_processes_all_documents() -> None:
     n_docs = 7
     batch_size = 3
@@ -111,6 +124,7 @@ def test_document_indexing_pipeline_execute_processes_all_documents() -> None:
     assert vector_store.add_documents.call_count == 3
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_docs_exactly_divisible_by_batch() -> None:
     n_docs = 6
     batch_size = 3
@@ -131,6 +145,7 @@ def test_document_indexing_pipeline_execute_docs_exactly_divisible_by_batch() ->
 # --- _split_and_index ---
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_split_and_index_calls_text_splitter() -> None:
     text_splitter = MagicMock(spec=TextSplitter)
     text_splitter.split_documents.return_value = _make_docs(2)
@@ -139,6 +154,7 @@ def test_document_indexing_pipeline_split_and_index_calls_text_splitter() -> Non
     text_splitter.split_documents.assert_called_once_with(_make_docs(2))
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_split_and_index_calls_add_documents() -> None:
     chunks = _make_docs(2)
     text_splitter = MagicMock(spec=TextSplitter)
@@ -149,6 +165,7 @@ def test_document_indexing_pipeline_split_and_index_calls_add_documents() -> Non
     vector_store.add_documents.assert_called_once_with(chunks)
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_split_and_index_returns_chunks() -> None:
     chunks = _make_docs(3)
     text_splitter = MagicMock(spec=TextSplitter)
@@ -160,6 +177,7 @@ def test_document_indexing_pipeline_split_and_index_returns_chunks() -> None:
 # --- _get_repr_kwargs ---
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_get_repr_kwargs_keys() -> None:
     assert set(_make_pipeline()._get_repr_kwargs().keys()) == {
         "loader",
@@ -169,10 +187,12 @@ def test_document_indexing_pipeline_get_repr_kwargs_keys() -> None:
     }
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_get_repr_kwargs_batch_size() -> None:
     assert _make_pipeline(batch_size=64)._get_repr_kwargs()["batch_size"] == 64
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_get_repr_kwargs_values() -> None:
     loader = _make_loader()
     text_splitter = _make_text_splitter()
@@ -193,9 +213,11 @@ def test_document_indexing_pipeline_get_repr_kwargs_values() -> None:
 # --- __repr__ and __str__ ---
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_repr_starts_with_class_name() -> None:
     assert repr(_make_pipeline()).startswith("DocumentIndexingPipeline(")
 
 
+@langchain_text_splitters_available
 def test_document_indexing_pipeline_str_starts_with_class_name() -> None:
     assert str(_make_pipeline()).startswith("DocumentIndexingPipeline(")
