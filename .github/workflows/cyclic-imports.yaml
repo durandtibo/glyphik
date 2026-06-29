@@ -1,0 +1,48 @@
+name: Cyclic Imports
+on:
+  workflow_call:
+  workflow_dispatch:  # to trigger manually
+
+permissions:
+  contents: read
+
+jobs:
+  cyclic-import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup python environment
+        uses: durandtibo/setup-venv-uv-action@v0.0.3
+
+      - name: check glyphik
+        run: |
+          python -c "import glyphik"
+
+      - name: check glyphik.agent
+        run: |
+          python -c "from glyphik import agent"
+
+      - name: check glyphik.data
+        run: |
+          python -c "from glyphik import data"
+
+      - name: check glyphik.deepagent
+        run: |
+          python -c "from glyphik import deepagent"
+
+      - name: check glyphik.pipeline
+        run: |
+          python -c "from glyphik import pipeline"
+
+      - name: check glyphik.testing
+        run: |
+          python -c "from glyphik import testing"
+
+      - name: check glyphik.utils
+        run: |
+          python -c "from glyphik import utils"
+          python -c "from glyphik.utils import fallback"
+          python -c "from glyphik.utils import imports"
