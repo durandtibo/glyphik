@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
+
 jobs:
   # Test with all dependencies across multiple Python versions and operating systems
   all:
@@ -48,6 +51,8 @@ jobs:
           inv unit-test --cov
 
       - name: Run integration tests
+        env:
+          EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
         run: |
           inv integration-test --cov
 

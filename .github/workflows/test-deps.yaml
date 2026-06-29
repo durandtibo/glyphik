@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
+
 jobs:
   # Get dependency version information from config file
   get-versions:
