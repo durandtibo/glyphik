@@ -12,6 +12,8 @@ from glyphik.utils.imports import is_edgar_available
 if is_edgar_available():
     from edgar import Company
     from edgar.entity import CompanyNotFoundError
+else:  # pragma: no cover
+    from glyphik.utils.fallback.edgar import Company, CompanyNotFoundError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
