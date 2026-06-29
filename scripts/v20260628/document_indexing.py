@@ -18,7 +18,7 @@ from zenpyre.utils.rich import configure_rich_logging
 
 from glyphik.pipeline import (
     BasePipeline,
-    BatchDocumentIndexingPipeline,
+    DocumentIndexingPipeline,
 )
 
 if TYPE_CHECKING:
@@ -132,7 +132,7 @@ def get_vector_store(base_dir: Path) -> Chroma:
 
 def get_pipeline(vector_store: Chroma) -> BasePipeline:
     """Define the document indexing pipeline."""
-    return BatchDocumentIndexingPipeline(
+    return DocumentIndexingPipeline(
         loader=DocumentListLoader(list(create_large_fake_documents())),
         text_splitter=RecursiveCharacterTextSplitter(
             chunk_size=100, chunk_overlap=20, separators=["\n\n", "\n", ".", " "]

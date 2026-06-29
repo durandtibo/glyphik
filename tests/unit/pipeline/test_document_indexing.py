@@ -1,10 +1,9 @@
-"""Unit tests for DocumentIndexingPipeline."""
+"""Unit tests for BatchDocumentIndexingPipeline."""
 
 from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from coola.equality import objects_are_equal
 from langchain_core.document_loaders import BaseLoader
 from langchain_core.documents import Document
 from langchain_core.embeddings.fake import FakeEmbeddings
@@ -19,15 +18,12 @@ from glyphik.pipeline import BasePipeline, DocumentIndexingPipeline
 # ---------------------------------------------------------------------------
 
 
-def _make_docs() -> list[Document]:
-    return [
-        Document(page_content="Cats sleep up to 16 hours a day."),
-        Document(page_content="Cats are obligate carnivores."),
-    ]
+def _make_docs(n: int = 6) -> list[Document]:
+    return [Document(page_content=f"Cats fact number {i}.") for i in range(n)]
 
 
-def _make_loader(documents: list[Document] | None = None) -> DocumentListLoader:
-    return DocumentListLoader(documents if documents is not None else _make_docs())
+def _make_loader(n: int = 6) -> DocumentListLoader:
+    return DocumentListLoader(_make_docs(n))
 
 
 def _make_text_splitter() -> CharacterTextSplitter:
@@ -42,17 +38,19 @@ def _make_pipeline(
     loader: BaseLoader | None = None,
     text_splitter: TextSplitter | None = None,
     vector_store: VectorStore | None = None,
+    batch_size: int = 2,
 ) -> DocumentIndexingPipeline:
     return DocumentIndexingPipeline(
         loader=loader or _make_loader(),
         text_splitter=text_splitter or _make_text_splitter(),
         vector_store=vector_store or _make_vector_store(),
+        batch_size=batch_size,
     )
 
 
-##################################################
-#     Tests for DocumentIndexingPipeline         #
-##################################################
+##############################################
+#     Tests for DocumentIndexingPipeline     #
+##############################################
 
 
 # --- Inheritance ---
@@ -75,58 +73,107 @@ def test_document_indexing_pipeline_execute_returns_same_vector_store_instance()
     assert pipeline.execute() is vector_store
 
 
-def test_document_indexing_pipeline_execute_calls_loader_load() -> None:
+def test_document_indexing_pipeline_execute_calls_lazy_load() -> None:
     loader = MagicMock(spec=BaseLoader)
-    loader.load.return_value = _make_docs()
+    loader.lazy_load.return_value = iter(_make_docs())
     _make_pipeline(loader=loader).execute()
-    loader.load.assert_called_once()
+    loader.lazy_load.assert_called_once()
 
 
 def test_document_indexing_pipeline_execute_calls_add_documents() -> None:
     vector_store = MagicMock(spec=VectorStore)
     _make_pipeline(vector_store=vector_store).execute()
-    vector_store.add_documents.assert_called_once()
-
-
-def test_document_indexing_pipeline_execute_adds_chunks_to_vector_store() -> None:
-    docs = _make_docs()
-    text_splitter = MagicMock(spec=TextSplitter)
-    text_splitter.split_documents.return_value = docs
-    vector_store = MagicMock(spec=VectorStore)
-    _make_pipeline(text_splitter=text_splitter, vector_store=vector_store).execute()
-    vector_store.add_documents.assert_called_once_with(docs)
+    vector_store.add_documents.assert_called()
 
 
 def test_document_indexing_pipeline_execute_with_empty_loader() -> None:
     vector_store = MagicMock(spec=VectorStore)
-    pipeline = _make_pipeline(loader=_make_loader([]), vector_store=vector_store)
+    pipeline = _make_pipeline(loader=_make_loader(0), vector_store=vector_store)
     result = pipeline.execute()
     assert result is vector_store
+    vector_store.add_documents.assert_not_called()
 
 
-# --- _split_documents ---
-
-
-def test_document_indexing_pipeline_split_documents_calls_text_splitter() -> None:
+def test_document_indexing_pipeline_execute_processes_all_documents() -> None:
+    n_docs = 7
+    batch_size = 3
+    vector_store = MagicMock(spec=VectorStore)
     text_splitter = MagicMock(spec=TextSplitter)
-    text_splitter.split_documents.return_value = _make_docs()
+    text_splitter.split_documents.side_effect = lambda docs: docs
+    pipeline = _make_pipeline(
+        loader=_make_loader(n_docs),
+        text_splitter=text_splitter,
+        vector_store=vector_store,
+        batch_size=batch_size,
+    )
+    pipeline.execute()
+    # 7 docs with batch_size=3: batches of 3, 3, 1 → 3 add_documents calls
+    assert vector_store.add_documents.call_count == 3
+
+
+def test_document_indexing_pipeline_execute_docs_exactly_divisible_by_batch() -> None:
+    n_docs = 6
+    batch_size = 3
+    vector_store = MagicMock(spec=VectorStore)
+    text_splitter = MagicMock(spec=TextSplitter)
+    text_splitter.split_documents.side_effect = lambda docs: docs
+    pipeline = _make_pipeline(
+        loader=_make_loader(n_docs),
+        text_splitter=text_splitter,
+        vector_store=vector_store,
+        batch_size=batch_size,
+    )
+    pipeline.execute()
+    # 6 docs with batch_size=3: two full batches → 2 add_documents calls
+    assert vector_store.add_documents.call_count == 2
+
+
+# --- _split_and_index ---
+
+
+def test_document_indexing_pipeline_split_and_index_calls_text_splitter() -> None:
+    text_splitter = MagicMock(spec=TextSplitter)
+    text_splitter.split_documents.return_value = _make_docs(2)
     pipeline = _make_pipeline(text_splitter=text_splitter)
-    pipeline._split_documents(_make_docs())
-    text_splitter.split_documents.assert_called_once_with(_make_docs())
+    pipeline._split_and_index(_make_docs(2))
+    text_splitter.split_documents.assert_called_once_with(_make_docs(2))
 
 
-def test_document_indexing_pipeline_split_documents_returns_chunks() -> None:
-    chunks = [Document(page_content="chunk")]
+def test_document_indexing_pipeline_split_and_index_calls_add_documents() -> None:
+    chunks = _make_docs(2)
+    text_splitter = MagicMock(spec=TextSplitter)
+    text_splitter.split_documents.return_value = chunks
+    vector_store = MagicMock(spec=VectorStore)
+    pipeline = _make_pipeline(text_splitter=text_splitter, vector_store=vector_store)
+    pipeline._split_and_index(_make_docs(2))
+    vector_store.add_documents.assert_called_once_with(chunks)
+
+
+def test_document_indexing_pipeline_split_and_index_returns_chunks() -> None:
+    chunks = _make_docs(3)
     text_splitter = MagicMock(spec=TextSplitter)
     text_splitter.split_documents.return_value = chunks
     pipeline = _make_pipeline(text_splitter=text_splitter)
-    assert pipeline._split_documents(_make_docs()) == chunks
+    assert pipeline._split_and_index(_make_docs(2)) == chunks
 
 
 # --- _get_repr_kwargs ---
 
 
-def test_document_indexing_pipeline_get_repr_kwargs() -> None:
+def test_document_indexing_pipeline_get_repr_kwargs_keys() -> None:
+    assert set(_make_pipeline()._get_repr_kwargs().keys()) == {
+        "loader",
+        "text_splitter",
+        "vector_store",
+        "batch_size",
+    }
+
+
+def test_document_indexing_pipeline_get_repr_kwargs_batch_size() -> None:
+    assert _make_pipeline(batch_size=64)._get_repr_kwargs()["batch_size"] == 64
+
+
+def test_document_indexing_pipeline_get_repr_kwargs_values() -> None:
     loader = _make_loader()
     text_splitter = _make_text_splitter()
     vector_store = _make_vector_store()
@@ -134,11 +181,13 @@ def test_document_indexing_pipeline_get_repr_kwargs() -> None:
         loader=loader,
         text_splitter=text_splitter,
         vector_store=vector_store,
+        batch_size=32,
     )
     kwargs = pipeline._get_repr_kwargs()
-    assert objects_are_equal(
-        kwargs, {"loader": loader, "text_splitter": text_splitter, "vector_store": vector_store}
-    )
+    assert kwargs["loader"] is loader
+    assert kwargs["text_splitter"] is text_splitter
+    assert kwargs["vector_store"] is vector_store
+    assert kwargs["batch_size"] == 32
 
 
 # --- __repr__ and __str__ ---
