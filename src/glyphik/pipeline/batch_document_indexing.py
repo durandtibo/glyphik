@@ -6,10 +6,19 @@ from __future__ import annotations
 __all__ = ["BatchDocumentIndexingPipeline"]
 
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 from coola.display import MultilineDisplayMixin
+from coola.utils.format import str_time_human
 from langchain_core.vectorstores import VectorStore
+from rich.progress import (
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 
 from glyphik.pipeline.base import BasePipeline
 
@@ -80,18 +89,28 @@ class BatchDocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayM
             The populated :class:`~langchain_core.vectorstores.VectorStore`
             instance.
         """
-        logger.info("Starting BatchDocumentIndexingPipeline...")
+        logger.info("Starting document indexing pipeline...")
+        t_start = time.perf_counter()
         total_docs = 0
         total_chunks = 0
 
         batch: list[Document] = []
-        for doc in self._loader.lazy_load():
-            batch.append(doc)
-            if len(batch) >= self._batch_size:
-                chunks = self._split_and_index(batch)
-                total_docs += len(batch)
-                total_chunks += len(chunks)
-                batch = []
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            MofNCompleteColumn(),
+            TimeElapsedColumn(),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Indexing documents...", total=None)
+            for doc in self._loader.lazy_load():
+                batch.append(doc)
+                progress.advance(task)
+                if len(batch) >= self._batch_size:
+                    chunks = self._split_and_index(batch)
+                    total_docs += len(batch)
+                    total_chunks += len(chunks)
+                    batch = []
 
         if batch:
             chunks = self._split_and_index(batch)
@@ -99,9 +118,10 @@ class BatchDocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayM
             total_chunks += len(chunks)
 
         logger.info(
-            "BatchDocumentIndexingPipeline complete. Processed %s documents into %s chunks.",
+            "Indexing complete. Processed %s documents into %s chunks in %s",
             f"{total_docs:,}",
             f"{total_chunks:,}",
+            str_time_human(time.perf_counter() - t_start),
         )
         return self._vector_store
 
@@ -118,10 +138,10 @@ class BatchDocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayM
             :class:`~langchain_core.documents.Document` instances that
             were added to the vector store.
         """
-        logger.info("Processing batch of %s documents...", f"{len(documents):,}")
+        logger.debug("Processing batch of %s documents...", f"{len(documents):,}")
         chunks = self._text_splitter.split_documents(documents)
         self._vector_store.add_documents(chunks)
-        logger.info("Indexed %s chunks.", f"{len(chunks):,}")
+        logger.debug("Indexed %s chunks", f"{len(chunks):,}")
         return chunks
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
