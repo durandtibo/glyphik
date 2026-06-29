@@ -1049,7 +1049,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2,<2.0" },
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a3,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a4,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "google-genai", "huggingface", "nvidia-ai-endpoints", "ollama", "openai", "sentence-transformers", "text-splitters"]
 
@@ -4557,7 +4557,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a3"
+version = "0.0.1a4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -4567,9 +4567,9 @@ dependencies = [
     { name = "objectory" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fb/41/faa00f0abb5adbe2043bb9f1df2cb2641c9703abe504a8c58d86f8c1f304/zenpyre-0.0.1a3.tar.gz", hash = "sha256:a062cf04c8332d74686fb2969bee8d87920efa8ec925a67224e6bfec2e825e95", size = 21214, upload-time = "2026-06-29T03:08:50.749Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/13/73/cf311cba1e90d1e6c9702a68440bf1c9db9d34e956066b9d6e4c429b46bc/zenpyre-0.0.1a4.tar.gz", hash = "sha256:ecae737bd8d11fc69b9904888d017f7bfc71faea1461e8bb2f8fdc13d85f35a0", size = 21576, upload-time = "2026-06-29T03:38:44.494Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/ae/0dd961a92ae3192354947693f23fd1c2dbe717b6d134936e72de90423947/zenpyre-0.0.1a3-py3-none-any.whl", hash = "sha256:c4c124b487046439b6889aa889512de93d548cbcc503e35713101b44e2d6d7c7", size = 41532, upload-time = "2026-06-29T03:08:49.609Z" },
+    { url = "https://files.pythonhosted.org/packages/33/90/427471d6acf39a403ea2ce7f4ec63210968c46cd1bc285a363430d619bb6/zenpyre-0.0.1a4-py3-none-any.whl", hash = "sha256:0e6935537c012883b2993bbe3f64d93fbc4cdee768f1e6ff3984594395ed2388", size = 42685, upload-time = "2026-06-29T03:38:43.253Z" },
 ]
 
 [[package]]
