@@ -3,7 +3,8 @@ r"""Contain code to explore a document search pipeline."""
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
@@ -11,6 +12,7 @@ from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from zenpyre.document_loaders import DocumentListLoader
+from zenpyre.embeddings.chroma import inspect_embeddings
 from zenpyre.utils.rich import configure_rich_logging
 
 from glyphik.pipeline import BasePipeline, DocumentIndexingPipeline
@@ -18,7 +20,7 @@ from glyphik.pipeline import BasePipeline, DocumentIndexingPipeline
 if TYPE_CHECKING:
     from langchain_core.embeddings import Embeddings
 
-# Initialize the logger
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -61,59 +63,32 @@ def create_fake_documents() -> list[Document]:
     return documents
 
 
-def inspect_embeddings(vector_store: Chroma) -> None:
-    """Retrieve and display the raw embeddings from the vector store."""
-    logger.info("\n--- INSTRUCTING VECTOR STORE TO REVEAL EMBEDDINGS ---")
-
-    # Use the .get() method and explicitly request 'embeddings'
-    db_data = vector_store.get(include=["embeddings", "documents", "metadatas"])
-
-    # Extract the lists from the dictionary
-    embeddings = db_data["embeddings"]
-    documents = db_data["documents"]
-    metadatas = db_data["metadatas"]
-    ids = db_data["ids"]
-
-    # Check if we got anything back
-    if embeddings is None:
-        logger.info("No embeddings found in the database.")
-        return
-
-    logger.info(f"Successfully retrieved {len(embeddings)} embeddings.\n")
-
-    # Loop through the first 2 chunks to see what the data looks like
-    for i in range(min(2, len(embeddings))):
-        logger.info(f"Chunk ID:   {ids[i]}")
-        logger.info(f"Source:     {metadatas[i].get('source')}")
-        logger.info(f"Text:       {documents[i]}")
-
-        # An embedding is a massive list of floats. We will just print the first 5.
-        vector = embeddings[i]
-        logger.info(f"Dimensions: {len(vector)} numbers long")
-        logger.info(
-            f"Vector:     [{vector[0]:.4f}, {vector[1]:.4f}, {vector[2]:.4f}, {vector[3]:.4f}, {vector[4]:.4f}, ...]\n"
-        )
-
-
-def get_embedding_model(model_name: str = "all-MiniLM-L6-v2") -> Embeddings:
+def get_embedding_model(model_name: str = "all-MiniLM-L6-v2", **kwargs: Any) -> Embeddings:
     r"""Return the embedding model."""
-    return HuggingFaceEmbeddings(model_name=model_name)
+    return HuggingFaceEmbeddings(model_name=model_name, **kwargs)
 
 
-def get_pipeline() -> BasePipeline:
+def get_pipeline(base_dir: Path) -> BasePipeline:
     r"""Define the pipeline."""
     return DocumentIndexingPipeline(
         loader=DocumentListLoader(create_fake_documents()),
         text_splitter=RecursiveCharacterTextSplitter(
             chunk_size=100, chunk_overlap=20, separators=["\n\n", "\n", ".", " "]
         ),
-        vector_store=Chroma(collection_name="foo", embedding_function=get_embedding_model()),
+        vector_store=Chroma(
+            collection_name="foo",
+            embedding_function=get_embedding_model(
+                cache_folder=base_dir.joinpath("cache/embeddings").as_posix()
+            ),
+        ),
     )
 
 
 def main() -> None:
     r"""Define the main function."""
-    pipeline = get_pipeline()
+    base_dir = Path(__file__).parent.parent.parent / "tmp/v20260628"
+
+    pipeline = get_pipeline(base_dir)
     logger.info(pipeline)
     vector_store = pipeline.execute()
     inspect_embeddings(vector_store)
