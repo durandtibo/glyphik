@@ -3,6 +3,7 @@ r"""Contain code to explore a document search pipeline."""
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -22,6 +23,10 @@ if TYPE_CHECKING:
 
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+# Suppress HuggingFace/Chroma warnings for a cleaner console output
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 def create_fake_documents() -> list[Document]:
@@ -65,7 +70,9 @@ def create_fake_documents() -> list[Document]:
 
 def get_embedding_model(model_name: str = "all-MiniLM-L6-v2", **kwargs: Any) -> Embeddings:
     r"""Return the embedding model."""
-    return HuggingFaceEmbeddings(model_name=model_name, **kwargs)
+    return HuggingFaceEmbeddings(
+        model_name=model_name, **kwargs, model_kwargs={"local_files_only": True}
+    )
 
 
 def get_pipeline(base_dir: Path) -> BasePipeline:
@@ -80,6 +87,7 @@ def get_pipeline(base_dir: Path) -> BasePipeline:
             embedding_function=get_embedding_model(
                 cache_folder=base_dir.joinpath("cache/embeddings").as_posix()
             ),
+            persist_directory=base_dir.joinpath("cache/chroma").as_posix(),
         ),
     )
 
