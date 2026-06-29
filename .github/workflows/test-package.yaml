@@ -15,6 +15,9 @@ on:
 permissions:
   contents: read
 
+env:
+  EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
