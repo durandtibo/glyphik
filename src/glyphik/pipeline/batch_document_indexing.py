@@ -12,13 +12,7 @@ from typing import TYPE_CHECKING, Any
 from coola.display import MultilineDisplayMixin
 from coola.utils.format import str_time_human
 from langchain_core.vectorstores import VectorStore
-from rich.progress import (
-    MofNCompleteColumn,
-    Progress,
-    SpinnerColumn,
-    TextColumn,
-    TimeElapsedColumn,
-)
+from zenpyre.utils.rich import make_spinner
 
 from glyphik.pipeline.base import BasePipeline
 
@@ -95,13 +89,7 @@ class BatchDocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayM
         total_chunks = 0
 
         batch: list[Document] = []
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            MofNCompleteColumn(),
-            TimeElapsedColumn(),
-            transient=True,
-        ) as progress:
+        with make_spinner(transient=True) as progress:
             task = progress.add_task("Indexing documents...", total=None)
             for doc in self._loader.lazy_load():
                 batch.append(doc)
