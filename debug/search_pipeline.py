@@ -13,8 +13,7 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from glyphik.utils.logging import log_pretty
+from zenpyre.utils.rich import configure_rich_logging, print_pretty
 
 if TYPE_CHECKING:
     from langchain_core.embeddings import Embeddings
@@ -77,7 +76,7 @@ def split_documents(documents: list[Document]) -> list[Document]:
 
     chunks = splitter.split_documents(documents)
     logger.info(f"   Created {len(chunks)} chunks.")
-    log_pretty(chunks)
+    print_pretty(chunks)
     return chunks
 
 
@@ -291,5 +290,5 @@ def main() -> None:  # noqa: D103
 
 if __name__ == "__main__":
     load_dotenv()
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    configure_rich_logging(level=logging.INFO)
     main()
