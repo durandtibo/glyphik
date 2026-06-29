@@ -1,0 +1,130 @@
+# Dependency compatibility testing workflow.
+# Tests the package with different versions of optional dependencies.
+# Ensures compatibility across supported dependency version ranges.
+
+name: Test - Dependencies
+on:
+  workflow_call:
+  workflow_dispatch:  # to trigger manually
+
+permissions:
+  contents: read
+
+jobs:
+  # Get dependency version information from config file
+  get-versions:
+    uses: ./.github/workflows/get-versions.yaml
+
+  ########################
+  #     Dependencies     #
+  ########################
+
+  coola:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: coola
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).coola) }}
+
+  langchain-core:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langchain-core
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions)['langchain-core']) }}
+
+  langchain:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langchain
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).langchain) }}
+
+  langgraph:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langgraph
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).langgraph) }}
+
+  objectory:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: objectory
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).objectory) }}
+
+  rich:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: rich
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).rich) }}
+
+  zenpyre:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: zenpyre
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).zenpyre) }}
+
+
+  #################################
+  #     Optional dependencies     #
+  #################################
+
+  edgartools:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: edgartools
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).edgartools) }}
+
+  langchain-anthropic:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langchain-anthropic
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions)['langchain-anthropic']) }}
+
+  langchain-chroma:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langchain-chroma
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions)['langchain-chroma']) }}
+
+  langchain-google-genai:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langchain-google-genai
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions)['langchain-google-genai']) }}
+
+  langchain-huggingface:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langchain-huggingface
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions)['langchain-huggingface']) }}
+
+  langchain-ollama:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langchain-ollama
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions)['langchain-ollama']) }}
+
+  langchain-openai:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langchain-openai
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions)['langchain-openai']) }}
+
+  langchain-text-splitters:
+    needs: get-versions
+    uses: ./.github/workflows/test-code-dep.yaml
+    with:
+      package-name: langchain-text-splitters
+      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions)['langchain-text-splitters']) }}
