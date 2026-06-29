@@ -16,6 +16,8 @@ from glyphik.pipeline import BasePipeline, DocumentIndexingPipeline
 
 if is_langchain_text_splitters_available():
     from langchain_text_splitters import CharacterTextSplitter, TextSplitter
+else:
+    CharacterTextSplitter, TextSplitter = None, None
 
 # ---------------------------------------------------------------------------
 # Fixtures
