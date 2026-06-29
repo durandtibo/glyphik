@@ -57,7 +57,7 @@ dependencies = [
 anthropic = [ "langchain-anthropic >= 1.4,<2.0" ]
 # Require python 3.11 because onnxruntime is one of the dependency and needs >= 3.11
 chroma = [ "langchain-chroma >=1.0,<2.0 ; python_version >= '3.11'" ]
-edgartools = [ "edgartools >=5.36,<6.0" ]
+edgar = [ "edgartools >=5.36,<6.0" ]
 google-genai = [ "langchain-google-genai >= 4.2,<5.0" ]
 huggingface = [ "langchain-huggingface >=1.2,<2.0" ]
 nvidia-ai-endpoints = [ "langchain-nvidia-ai-endpoints >=1.0,<2.0" ]

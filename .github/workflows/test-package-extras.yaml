@@ -25,7 +25,7 @@ jobs:
           'all',
           'anthropic',
           'chroma',
-          'edgartools',
+          'edgar',
           'google-genai',
           'huggingface',
           'ollama',
