@@ -278,24 +278,6 @@ def test_fetch_form_filings_force_download_overwrites_existing(tmp_path: Path) -
     filing.save.assert_called_once()
 
 
-def test_fetch_filings_with_cik(tmp_path: Path) -> None:
-    with patch(f"{MODULE}.Company", return_value=_make_mock_company()) as mock_company:
-        result = fetch_filings(
-            cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path
-        )
-    assert isinstance(result, list)
-    mock_company.assert_called_once_with(320193)
-
-
-def test_fetch_filings_with_ticker(tmp_path: Path) -> None:
-    with patch(f"{MODULE}.Company", return_value=_make_mock_company()) as mock_company:
-        result = fetch_filings(
-            cik_or_ticker="AAPL", start_date=date(2024, 1, 1), output_dir=tmp_path
-        )
-    assert isinstance(result, list)
-    mock_company.assert_called_once_with("AAPL")
-
-
 ##############################################
 #     Tests for fetch_filings                #
 ##############################################
@@ -304,14 +286,18 @@ def test_fetch_filings_with_ticker(tmp_path: Path) -> None:
 @edgar_available
 def test_fetch_filings_returns_list(tmp_path: Path) -> None:
     with patch(f"{MODULE}.Company", return_value=_make_mock_company()):
-        result = fetch_filings(cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path)
+        result = fetch_filings(
+            cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path
+        )
     assert isinstance(result, list)
 
 
 @edgar_available
 def test_fetch_filings_empty_returns_empty(tmp_path: Path) -> None:
     with patch(f"{MODULE}.Company", return_value=_make_mock_company(filings=[])):
-        result = fetch_filings(cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path)
+        result = fetch_filings(
+            cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path
+        )
     assert result == []
 
 
@@ -332,7 +318,9 @@ def test_fetch_filings_custom_forms(tmp_path: Path) -> None:
         patch(f"{MODULE}.Company", return_value=_make_mock_company()),
         patch(f"{MODULE}.fetch_form_filings", return_value=[]) as mock_fetch,
     ):
-        fetch_filings(cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path, forms=["10-K"])
+        fetch_filings(
+            cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path, forms=["10-K"]
+        )
     forms = [c.kwargs["form"] for c in mock_fetch.call_args_list]
     assert forms == ["10-K"]
 
@@ -344,5 +332,27 @@ def test_fetch_filings_returns_sec_filing_records(tmp_path: Path) -> None:
         patch(f"{MODULE}.Company", return_value=_make_mock_company()),
         patch(f"{MODULE}.fetch_form_filings", return_value=[record]),
     ):
-        result = fetch_filings(cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path)
+        result = fetch_filings(
+            cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path
+        )
     assert all(isinstance(r, SecFilingRecord) for r in result)
+
+
+@edgar_available
+def test_fetch_filings_with_cik(tmp_path: Path) -> None:
+    with patch(f"{MODULE}.Company", return_value=_make_mock_company()) as mock_company:
+        result = fetch_filings(
+            cik_or_ticker=320193, start_date=date(2024, 1, 1), output_dir=tmp_path
+        )
+    assert isinstance(result, list)
+    mock_company.assert_called_once_with(320193)
+
+
+@edgar_available
+def test_fetch_filings_with_ticker(tmp_path: Path) -> None:
+    with patch(f"{MODULE}.Company", return_value=_make_mock_company()) as mock_company:
+        result = fetch_filings(
+            cik_or_ticker="AAPL", start_date=date(2024, 1, 1), output_dir=tmp_path
+        )
+    assert isinstance(result, list)
+    mock_company.assert_called_once_with("AAPL")
