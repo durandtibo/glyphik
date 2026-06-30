@@ -127,7 +127,7 @@ def main() -> None:
     data_path = base_dir / "sec"
 
     companies = load_dataclasses(companies_path, Sp1500Company)
-    companies = companies[:100]  # limit for local development
+    # companies = companies[:100]  # limit for local development
 
     filings = load_or_fetch_filings(
         companies=companies,
