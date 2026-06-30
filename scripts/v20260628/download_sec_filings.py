@@ -91,8 +91,14 @@ def process_company(
             output_dir=data_path,
             forms=list(config.forms),
         )
-    except Exception:  # noqa: BLE001 - one company's failure shouldn't abort the batch run
-        logger.warning("Failed to fetch filings for %s (CIK %s).", company.ticker, company.cik)
+    except Exception as e:  # noqa: BLE001 - one company's failure shouldn't abort the batch run
+        logger.warning(
+            "Failed to fetch filings for %s (CIK %s)\n  %s: %s",
+            company.ticker,
+            company.cik,
+            type(e).__name__,
+            e,
+        )
         return []
 
     save_dataclasses(filings, cache_filepath)
@@ -122,7 +128,7 @@ def main() -> None:
     data_path = base_dir / "sec"
 
     companies = load_dataclasses(companies_path, Sp1500Company)
-    companies = companies[:100]  # limit for local development
+    # companies = companies[:100]  # limit for local development
 
     t_start = time.perf_counter()
 
