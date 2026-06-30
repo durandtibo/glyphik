@@ -70,7 +70,7 @@ def main() -> None:
         companies = process_companies(companies)
         save_dataclasses(companies, companies_path)
 
-    print_pretty(companies, title="S&P 1500 Companies")
+    print_pretty(companies, title=f"S&P 1500 Companies (n={len(companies):,})")
 
 
 if __name__ == "__main__":
