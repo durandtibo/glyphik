@@ -11,16 +11,17 @@ from datetime import date
 from typing import TYPE_CHECKING, Any
 
 from coola.utils.path import sanitize_path
-from edgar import Filing
 from zenpyre.utils.hashing import hash_dict_uuid
 
 from glyphik.data.sec.cik import fetch_ticker_from_cik
 from glyphik.data.sec.form import SecForm
 from glyphik.utils.imports import is_edgar_available
 
-if is_edgar_available():
-    from edgar import Company
+if TYPE_CHECKING or is_edgar_available():
+    from edgar import Company, Filing
     from edgar.entity.utils import format_cik
+else:
+    from glyphik.utils.fallback.edgar import Company, Filing
 
 if TYPE_CHECKING:
     from pathlib import Path
