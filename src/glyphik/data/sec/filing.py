@@ -67,7 +67,7 @@ class SecFilingRecord:
         """
         filepath = self.metadata.get("filepath")
         if filepath is None:
-            msg = "Cannot load filing: 'filepath' is not set in metadata."
+            msg = "Cannot load filing: 'filepath' is not set in metadata"
             raise ValueError(msg)
         return Filing.load(filepath)
 
@@ -195,7 +195,7 @@ def fetch_form_filings(
 
         if filepath.is_file() and not force_download:
             logger.info(
-                "Skipping %s %s filed on %s — already exists.",
+                "Skipping %s %s filed on %s — already exists",
                 cik,
                 form,
                 filing_date,
@@ -203,7 +203,7 @@ def fetch_form_filings(
         else:
             logger.info("Downloading %s %s filed on %s...", cik, form, filing_date)
             filing.save(filepath)
-            logger.info("Saved to %s.", filepath)
+            logger.info("Saved to %s", filepath)
 
         documents.append(
             SecFilingRecord.from_metadata(
