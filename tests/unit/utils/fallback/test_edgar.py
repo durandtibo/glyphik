@@ -6,7 +6,7 @@ from types import ModuleType
 
 import pytest
 
-from glyphik.utils.fallback.edgar import Company, CompanyNotFoundError, edgar
+from glyphik.utils.fallback.edgar import Company, CompanyNotFoundError, Filing, edgar
 
 #########################################
 #     Tests for the edgar fallback      #
@@ -69,6 +69,33 @@ def test_company_instantiation_with_kwargs_raises() -> None:
 def test_edgar_company_instantiation_raises() -> None:
     with pytest.raises(RuntimeError, match=r"'edgar' package is required but not installed."):
         edgar.Company()
+
+
+# --- Filing ---
+
+
+def test_filing_is_class() -> None:
+    assert isinstance(Filing, type)
+
+
+def test_filing_instantiation_raises() -> None:
+    with pytest.raises(RuntimeError, match=r"'edgar' package is required but not installed."):
+        Filing()
+
+
+def test_filing_instantiation_with_args_raises() -> None:
+    with pytest.raises(RuntimeError, match=r"'edgar' package is required but not installed."):
+        Filing("AAPL")
+
+
+def test_filing_instantiation_with_kwargs_raises() -> None:
+    with pytest.raises(RuntimeError, match=r"'edgar' package is required but not installed."):
+        Filing(ticker="AAPL")
+
+
+def test_edgar_filing_instantiation_raises() -> None:
+    with pytest.raises(RuntimeError, match=r"'edgar' package is required but not installed."):
+        edgar.Filing()
 
 
 # --- CompanyNotFoundError ---

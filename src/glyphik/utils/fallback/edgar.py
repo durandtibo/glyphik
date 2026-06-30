@@ -3,7 +3,7 @@ not available."""
 
 from __future__ import annotations
 
-__all__ = ["Company", "CompanyNotFoundError", "edgar"]
+__all__ = ["Company", "CompanyNotFoundError", "Filing", "edgar"]
 
 from types import ModuleType
 from typing import Any
@@ -28,6 +28,7 @@ class FakeClass:
 
 Company = FakeClass
 CompanyNotFoundError = FakeClass
+Filing = FakeClass
 
 entity: ModuleType = ModuleType("edgar.entity")
 entity.CompanyNotFoundError = CompanyNotFoundError
@@ -36,3 +37,4 @@ entity.CompanyNotFoundError = CompanyNotFoundError
 edgar: ModuleType = ModuleType("edgar")
 edgar.entity = entity
 edgar.Company = Company
+edgar.Filing = Filing
