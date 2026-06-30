@@ -92,7 +92,7 @@ class SecFilingRecord:
 
 
 def fetch_filings(
-    cik: int,
+    cik_or_ticker: int | str,
     start_date: date,
     output_dir: Path | str,
     end_date: date | None = None,
@@ -103,12 +103,14 @@ def fetch_filings(
 
     For each form type in ``forms``, fetches filings filed between
     ``start_date`` and ``end_date`` for the company identified by
-    ``cik``.  Each filing is saved to ``output_dir / <cik> / <form> /
-    <accession_number>.pkl`` if it does not already exist, or if
-    ``force_download=True``.
+    ``cik_or_ticker``.  Each filing is saved to ``output_dir / <cik> /
+    <form> / <accession_number>.pkl`` if it does not already exist, or
+    if ``force_download=True``.
 
     Args:
-        cik: The SEC Central Index Key (CIK) of the company.
+        cik_or_ticker: The SEC Central Index Key (CIK) of the company
+            as an integer (e.g. ``320193``), or its stock ticker symbol
+            as a string (e.g. ``"AAPL"``).
         start_date: The start of the filing date range (inclusive).
         output_dir: The directory to save filings to.
         end_date: The end of the filing date range (inclusive).
@@ -127,7 +129,7 @@ def fetch_filings(
     forms = forms or [SecForm.TEN_K, SecForm.TEN_Q]
     date_range = f"{start_date}:{end_date}"
 
-    company = Company(cik)
+    company = Company(cik_or_ticker)
     documents: list[SecFilingRecord] = []
 
     for form in forms:

@@ -15,9 +15,28 @@ if TYPE_CHECKING:
 
 
 @edgar_available
-def test_fetch_filings(tmp_path: Path) -> None:
+def test_fetch_filings_with_cik(tmp_path: Path) -> None:
     docs = fetch_filings(
-        cik=320193,
+        cik_or_ticker=320193,
+        start_date=date(2023, 1, 1),
+        end_date=date(2023, 12, 31),
+        output_dir=tmp_path,
+        forms=[SecForm.TEN_K, SecForm.TEN_Q],
+    )
+
+    assert len(docs) == 4
+    assert all(isinstance(doc, SecFilingRecord) for doc in docs)
+    assert all(doc.metadata["cik"] == 320193 for doc in docs)
+    assert docs[0].metadata["form"] == SecForm.TEN_K
+    assert docs[1].metadata["form"] == SecForm.TEN_Q
+    assert docs[2].metadata["form"] == SecForm.TEN_Q
+    assert docs[3].metadata["form"] == SecForm.TEN_Q
+
+
+@edgar_available
+def test_fetch_filings_with_ticker(tmp_path: Path) -> None:
+    docs = fetch_filings(
+        cik_or_ticker="AAPL",
         start_date=date(2023, 1, 1),
         end_date=date(2023, 12, 31),
         output_dir=tmp_path,
