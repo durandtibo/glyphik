@@ -4,19 +4,18 @@ companies."""
 from __future__ import annotations
 
 import logging
-import time
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
 
 from coola.hashing import hash_object
-from coola.utils.format import str_time_human
 from dotenv import load_dotenv
 from edgar.entity.utils import format_cik
 from zenpyre.utils.dataclass_io import load_dataclasses, save_dataclasses
-from zenpyre.utils.rich import configure_rich_logging, make_progressbar
+from zenpyre.utils.rich import configure_rich_logging
 
 from glyphik.data.sec import SecFilingRecord, SecForm, fetch_filings
+from glyphik.data.sp1500 import load_or_fetch_filings
 from glyphik.data.sp1500.companies import Sp1500Company
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -117,7 +116,7 @@ def main() -> None:
     companies.  Logs the total time taken once all companies have been
     processed.
     """
-    config = Config(
+    Config(
         start_date=date(2025, 1, 1),
         end_date=date(2026, 6, 1),
         forms=(SecForm.TEN_K, SecForm.TEN_Q),
@@ -128,20 +127,18 @@ def main() -> None:
     data_path = base_dir / "sec"
 
     companies = load_dataclasses(companies_path, Sp1500Company)
-    # companies = companies[:100]  # limit for local development
+    companies = companies[:100]  # limit for local development
 
-    t_start = time.perf_counter()
-
-    with make_progressbar() as progress:
-        task = progress.add_task("Downloading SEC filings...", total=len(companies))
-        for company in companies:
-            process_company(company, config, data_path)
-            progress.advance(task)
+    filings = load_or_fetch_filings(
+        companies=companies,
+        output_dir=data_path,
+        start_date=date(2025, 1, 1),
+        end_date=date(2026, 6, 1),
+        forms=[SecForm.TEN_K, SecForm.TEN_Q],
+    )
 
     logger.info(
-        "Downloaded filings for %s companies in %s.",
-        f"{len(companies):,}",
-        str_time_human(time.perf_counter() - t_start),
+        "Downloaded %s filings for %s companies", f"{len(filings):,}", f"{len(companies):,}"
     )
 
 
