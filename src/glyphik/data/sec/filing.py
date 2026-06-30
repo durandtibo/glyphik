@@ -17,7 +17,7 @@ from glyphik.data.sec.cik import fetch_ticker_from_cik
 from glyphik.data.sec.form import SecForm
 from glyphik.utils.imports import is_edgar_available
 
-if is_edgar_available():
+if TYPE_CHECKING or is_edgar_available():
     from edgar import Company, Filing
     from edgar.entity.utils import format_cik
 else:
