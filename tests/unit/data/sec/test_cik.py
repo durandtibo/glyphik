@@ -28,9 +28,9 @@ def clear_cache() -> Generator[None]:
     _fetch_ticker_from_cik.cache_clear()
 
 
-def make_mock_company(tickers: list[str]) -> MagicMock:
+def make_mock_company(ticker: str | None) -> MagicMock:
     company = MagicMock(spec=Company)
-    company.tickers = tickers
+    company.get_ticker.return_value = ticker
     return company
 
 
@@ -43,19 +43,13 @@ def make_mock_company(tickers: list[str]) -> MagicMock:
 
 @edgar_available
 def test_fetch_ticker_from_cik_returns_primary_ticker() -> None:
-    with patch(f"{MODULE}.Company", return_value=make_mock_company(["AAPL"])):
+    with patch(f"{MODULE}.Company", return_value=make_mock_company("AAPL")):
         assert fetch_ticker_from_cik(320193) == "AAPL"
 
 
 @edgar_available
-def test_fetch_ticker_from_cik_returns_first_ticker_when_multiple() -> None:
-    with patch(f"{MODULE}.Company", return_value=make_mock_company(["GOOGL", "GOOG"])):
-        assert fetch_ticker_from_cik(1652044) == "GOOGL"
-
-
-@edgar_available
-def test_fetch_ticker_from_cik_returns_none_when_no_tickers() -> None:
-    with patch(f"{MODULE}.Company", return_value=make_mock_company([])):
+def test_fetch_ticker_from_cik_returns_none_when_no_ticker() -> None:
+    with patch(f"{MODULE}.Company", return_value=make_mock_company(None)):
         assert fetch_ticker_from_cik(320193) is None
 
 
@@ -70,19 +64,19 @@ def test_fetch_ticker_from_cik_returns_none_when_company_not_found() -> None:
 
 @edgar_available
 def test_fetch_ticker_from_cik_accepts_int() -> None:
-    with patch(f"{MODULE}.Company", return_value=make_mock_company(["AAPL"])):
+    with patch(f"{MODULE}.Company", return_value=make_mock_company("AAPL")):
         assert fetch_ticker_from_cik(320193) == "AAPL"
 
 
 @edgar_available
 def test_fetch_ticker_from_cik_accepts_str() -> None:
-    with patch(f"{MODULE}.Company", return_value=make_mock_company(["AAPL"])):
+    with patch(f"{MODULE}.Company", return_value=make_mock_company("AAPL")):
         assert fetch_ticker_from_cik("320193") == "AAPL"
 
 
 @edgar_available
 def test_fetch_ticker_from_cik_int_and_str_return_same_result() -> None:
-    with patch(f"{MODULE}.Company", return_value=make_mock_company(["AAPL"])):
+    with patch(f"{MODULE}.Company", return_value=make_mock_company("AAPL")):
         assert fetch_ticker_from_cik(320193) == fetch_ticker_from_cik("320193")
 
 
@@ -91,7 +85,7 @@ def test_fetch_ticker_from_cik_int_and_str_return_same_result() -> None:
 
 @edgar_available
 def test_fetch_ticker_from_cik_caches_result() -> None:
-    with patch(f"{MODULE}.Company", return_value=make_mock_company(["AAPL"])) as mock_company:
+    with patch(f"{MODULE}.Company", return_value=make_mock_company("AAPL")) as mock_company:
         fetch_ticker_from_cik(320193)
         fetch_ticker_from_cik(320193)
     mock_company.assert_called_once()
@@ -99,7 +93,7 @@ def test_fetch_ticker_from_cik_caches_result() -> None:
 
 @edgar_available
 def test_fetch_ticker_from_cik_int_and_str_share_cache_entry() -> None:
-    with patch(f"{MODULE}.Company", return_value=make_mock_company(["AAPL"])) as mock_company:
+    with patch(f"{MODULE}.Company", return_value=make_mock_company("AAPL")) as mock_company:
         fetch_ticker_from_cik(320193)
         fetch_ticker_from_cik("320193")
     mock_company.assert_called_once()
@@ -107,7 +101,7 @@ def test_fetch_ticker_from_cik_int_and_str_share_cache_entry() -> None:
 
 @edgar_available
 def test_fetch_ticker_from_cik_different_ciks_cached_separately() -> None:
-    with patch(f"{MODULE}.Company", return_value=make_mock_company(["AAPL"])) as mock_company:
+    with patch(f"{MODULE}.Company", return_value=make_mock_company("AAPL")) as mock_company:
         fetch_ticker_from_cik(320193)
         fetch_ticker_from_cik(789019)
     assert mock_company.call_count == 2
