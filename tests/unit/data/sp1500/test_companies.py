@@ -13,12 +13,14 @@ from zenpyre.utils.dataclass_io import save_dataclasses
 
 from glyphik.data.sp1500 import (
     Sp1500Company,
+    fetch_sp1500_companies,
+    load_or_fetch_sp1500_companies,
+)
+from glyphik.data.sp1500.companies import (
     _find_column,
     _find_constituent_table,
     _find_optional_column,
     _parse_table,
-    fetch_sp1500_companies,
-    load_or_fetch_sp1500_companies,
 )
 
 if TYPE_CHECKING:
@@ -29,7 +31,7 @@ if is_pandas_available():
 else:  # pragma: no cover
     from coola.utils.fallback.pandas import pandas as pd
 
-MODULE = "glyphik.data.sp1500"
+MODULE = "glyphik.data.sp1500.companies"
 
 
 # ---------------------------------------------------------------------------
