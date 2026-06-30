@@ -25,9 +25,9 @@ def fetch_ticker_from_cik(cik: int | str) -> str | None:
     cached with an LRU cache of size 256 to avoid repeated network
     calls for the same CIK within a session.
 
-    Looks up the company via edgar and returns the first ticker in
-    its ``tickers`` list. Returns ``None`` if the company has no tickers
-    or is not found.
+    Looks up the company via edgar and returns its primary ticker via
+    :meth:`~edgar.Company.get_ticker`. Returns ``None`` if the company
+    has no ticker or is not found.
 
     Args:
         cik: The SEC Central Index Key (CIK) number to look up, as an
@@ -51,27 +51,27 @@ def fetch_ticker_from_cik(cik: int | str) -> str | None:
 
 @lru_cache(maxsize=256)
 def _fetch_ticker_from_cik(cik: int) -> str | None:
-    """Fetch the ticker for a normalised integer CIK.
+    """Fetch the primary ticker for a normalised integer CIK.
 
     Takes a normalised integer CIK so that ``320193`` and ``"320193"``
     hit the same cache entry.
 
     Args:
-        cik: The SEC Central Index Key (CIK) number to look up, as an
-            integer or string (e.g. ``320193`` or ``"320193"``).
+        cik: The SEC Central Index Key (CIK) number to look up, as a
+            normalised integer.
 
     Returns:
         The primary ticker symbol (e.g. ``"AAPL"``), or ``None`` if it
         cannot be determined.
     """
     try:
-        tickers = Company(cik).tickers
+        ticker = Company(cik).get_ticker()
     except CompanyNotFoundError:
         logger.debug("Company not found for CIK %s.", cik)
         return None
 
-    if not tickers:
-        logger.debug("No tickers found for CIK %s.", cik)
+    if not ticker:
+        logger.debug("No ticker found for CIK %s.", cik)
         return None
 
-    return tickers[0]
+    return ticker
