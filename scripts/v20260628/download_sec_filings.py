@@ -3,6 +3,7 @@ r"""Provide code to explore a document search pipeline."""
 from __future__ import annotations
 
 import logging
+import random
 import time
 from datetime import date
 from pathlib import Path
@@ -33,7 +34,8 @@ def main() -> None:
     data_path = base_dir / "sec"
 
     companies = load_dataclasses(companies_path, Sp1500Company)
-    companies = companies[:10]  # limit for local development
+    # companies = companies[:100]  # limit for local development
+    random.shuffle(companies)
 
     t_start = time.perf_counter()
 
@@ -50,7 +52,7 @@ def main() -> None:
             try:
                 fetch_filings(
                     cik_or_ticker=company.cik,
-                    start_date=date(2024, 1, 1),
+                    start_date=date(2025, 1, 1),
                     end_date=date(2026, 6, 1),
                     output_dir=data_path,
                     forms=[SecForm.TEN_K, SecForm.TEN_Q],
