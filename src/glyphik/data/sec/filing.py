@@ -20,7 +20,7 @@ from glyphik.utils.imports import is_edgar_available
 if TYPE_CHECKING or is_edgar_available():
     from edgar import Company, Filing
     from edgar.entity.utils import format_cik
-else:
+else:  # pragma: no cover
     from glyphik.utils.fallback.edgar import Company, Filing
 
 if TYPE_CHECKING:
