@@ -72,6 +72,28 @@ def irrelevant_table() -> pd.DataFrame:
     return pd.DataFrame({"Foo": [1, 2], "Bar": [3, 4]})
 
 
+@pytest.fixture
+def companies() -> list[Sp1500Company]:
+    return [
+        Sp1500Company(
+            ticker="AAPL",
+            cik=320193,
+            security="Apple Inc.",
+            gics_sector="Information Technology",
+            gics_sub_industry="Technology Hardware",
+            index="S&P 500",
+        ),
+        Sp1500Company(
+            ticker="XYZ",
+            cik=None,
+            security="Example Mid Corp",
+            gics_sector="Industrials",
+            gics_sub_industry="Industrial Machinery",
+            index="S&P MidCap 400",
+        ),
+    ]
+
+
 ########################################
 #     Tests for Sp1500Company         #
 ########################################
@@ -378,28 +400,6 @@ def test_fetch_sp1500_companies_propagates_parse_error(irrelevant_table: pd.Data
         ),
     ):
         fetch_sp1500_companies()
-
-
-@pytest.fixture
-def companies() -> list[Sp1500Company]:
-    return [
-        Sp1500Company(
-            ticker="AAPL",
-            cik=320193,
-            security="Apple Inc.",
-            gics_sector="Information Technology",
-            gics_sub_industry="Technology Hardware",
-            index="S&P 500",
-        ),
-        Sp1500Company(
-            ticker="XYZ",
-            cik=None,
-            security="Example Mid Corp",
-            gics_sector="Industrials",
-            gics_sub_industry="Industrial Machinery",
-            index="S&P MidCap 400",
-        ),
-    ]
 
 
 #################################################
