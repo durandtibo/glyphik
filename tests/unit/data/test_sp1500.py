@@ -5,8 +5,9 @@ from __future__ import annotations
 from dataclasses import FrozenInstanceError
 from unittest.mock import patch
 
-import pandas as pd
 import pytest
+from coola.testing.fixtures import pandas_available
+from coola.utils.imports import is_pandas_available
 
 from glyphik.data.sp1500 import (
     Sp1500Company,
@@ -16,6 +17,11 @@ from glyphik.data.sp1500 import (
     _parse_table,
     fetch_sp1500_companies,
 )
+
+if is_pandas_available():
+    import pandas as pd
+else:  # pragma: no cover
+    from coola.utils.fallback.pandas import pandas as pd
 
 MODULE = "glyphik.data.sp1500"
 
@@ -132,6 +138,7 @@ def test_sp1500_company_equality() -> None:
 ###############################################
 
 
+@pandas_available
 def test_find_constituent_table_returns_matching_table(
     sp500_table: pd.DataFrame, irrelevant_table: pd.DataFrame
 ) -> None:
@@ -139,22 +146,26 @@ def test_find_constituent_table_returns_matching_table(
     assert result is sp500_table
 
 
+@pandas_available
 def test_find_constituent_table_returns_first_match(sp500_table: pd.DataFrame) -> None:
     other_match = sp500_table.copy()
     result = _find_constituent_table([sp500_table, other_match], "S&P 500")
     assert result is sp500_table
 
 
+@pandas_available
 def test_find_constituent_table_no_match_raises(irrelevant_table: pd.DataFrame) -> None:
     with pytest.raises(ValueError, match="Could not find a constituent table"):
         _find_constituent_table([irrelevant_table], "S&P 500")
 
 
+@pandas_available
 def test_find_constituent_table_empty_list_raises() -> None:
     with pytest.raises(ValueError, match="Could not find a constituent table"):
         _find_constituent_table([], "S&P 500")
 
 
+@pandas_available
 def test_find_constituent_table_recognises_alternate_ticker_column(
     midcap_table_without_cik: pd.DataFrame,
 ) -> None:
@@ -167,19 +178,23 @@ def test_find_constituent_table_recognises_alternate_ticker_column(
 ###########################################
 
 
+@pandas_available
 def test_find_optional_column_returns_match(sp500_table: pd.DataFrame) -> None:
     assert _find_optional_column(sp500_table, ("Symbol", "Ticker symbol")) == "Symbol"
 
 
+@pandas_available
 def test_find_optional_column_returns_first_match_in_priority_order() -> None:
     table = pd.DataFrame({"Ticker": ["AAPL"], "Symbol": ["AAPL"]})
     assert _find_optional_column(table, ("Symbol", "Ticker")) == "Symbol"
 
 
+@pandas_available
 def test_find_optional_column_no_match_returns_none(irrelevant_table: pd.DataFrame) -> None:
     assert _find_optional_column(irrelevant_table, ("Symbol", "Ticker symbol")) is None
 
 
+@pandas_available
 def test_find_optional_column_empty_candidates_returns_none(sp500_table: pd.DataFrame) -> None:
     assert _find_optional_column(sp500_table, ()) is None
 
@@ -189,15 +204,18 @@ def test_find_optional_column_empty_candidates_returns_none(sp500_table: pd.Data
 ##################################
 
 
+@pandas_available
 def test_find_column_returns_match(sp500_table: pd.DataFrame) -> None:
     assert _find_column(sp500_table, ("Symbol", "Ticker"), "ticker", "S&P 500") == "Symbol"
 
 
+@pandas_available
 def test_find_column_no_match_raises(irrelevant_table: pd.DataFrame) -> None:
     with pytest.raises(ValueError, match="Could not find a 'ticker' column for S&P 500"):
         _find_column(irrelevant_table, ("Symbol", "Ticker"), "ticker", "S&P 500")
 
 
+@pandas_available
 def test_find_column_error_message_includes_field_and_index(irrelevant_table: pd.DataFrame) -> None:
     with pytest.raises(ValueError, match="GICS Sector"):
         _find_column(irrelevant_table, ("GICS Sector",), "GICS Sector", "S&P MidCap 400")
@@ -208,16 +226,19 @@ def test_find_column_error_message_includes_field_and_index(irrelevant_table: pd
 ##################################
 
 
+@pandas_available
 def test_parse_table_returns_list_of_sp1500_company(sp500_table: pd.DataFrame) -> None:
     result = _parse_table(sp500_table, "S&P 500")
     assert all(isinstance(c, Sp1500Company) for c in result)
 
 
+@pandas_available
 def test_parse_table_one_company_per_row(sp500_table: pd.DataFrame) -> None:
     result = _parse_table(sp500_table, "S&P 500")
     assert len(result) == 2
 
 
+@pandas_available
 def test_parse_table_field_values(sp500_table: pd.DataFrame) -> None:
     result = _parse_table(sp500_table, "S&P 500")
     assert result[0] == Sp1500Company(
@@ -230,16 +251,19 @@ def test_parse_table_field_values(sp500_table: pd.DataFrame) -> None:
     )
 
 
+@pandas_available
 def test_parse_table_sets_index_name(sp500_table: pd.DataFrame) -> None:
     result = _parse_table(sp500_table, "S&P 500")
     assert all(c.index == "S&P 500" for c in result)
 
 
+@pandas_available
 def test_parse_table_missing_cik_column_sets_none(midcap_table_without_cik: pd.DataFrame) -> None:
     result = _parse_table(midcap_table_without_cik, "S&P MidCap 400")
     assert result[0].cik is None
 
 
+@pandas_available
 def test_parse_table_missing_cik_other_fields_still_set(
     midcap_table_without_cik: pd.DataFrame,
 ) -> None:
@@ -250,6 +274,7 @@ def test_parse_table_missing_cik_other_fields_still_set(
     assert result[0].gics_sub_industry == "Industrial Machinery"
 
 
+@pandas_available
 def test_parse_table_nan_cik_value_sets_none() -> None:
     table = pd.DataFrame(
         {
@@ -264,6 +289,7 @@ def test_parse_table_nan_cik_value_sets_none() -> None:
     assert result[0].cik is None
 
 
+@pandas_available
 def test_parse_table_strips_whitespace() -> None:
     table = pd.DataFrame(
         {
@@ -279,11 +305,13 @@ def test_parse_table_strips_whitespace() -> None:
     assert result[0].security == "Apple Inc."
 
 
+@pandas_available
 def test_parse_table_missing_required_column_raises(irrelevant_table: pd.DataFrame) -> None:
     with pytest.raises(ValueError, match="Could not find a 'ticker' column for S&P 500"):
         _parse_table(irrelevant_table, "S&P 500")
 
 
+@pandas_available
 def test_parse_table_empty_table_returns_empty_list() -> None:
     table = pd.DataFrame(
         {"Symbol": [], "Security": [], "GICS Sector": [], "GICS Sub-Industry": [], "CIK": []}
@@ -296,12 +324,14 @@ def test_parse_table_empty_table_returns_empty_list() -> None:
 ##########################################
 
 
+@pandas_available
 def test_fetch_sp1500_companies_returns_list(sp500_table: pd.DataFrame) -> None:
     with patch(f"{MODULE}.pd.read_html", return_value=[sp500_table]):
         result = fetch_sp1500_companies()
     assert isinstance(result, list)
 
 
+@pandas_available
 def test_fetch_sp1500_companies_combines_all_three_indices(
     sp500_table: pd.DataFrame, midcap_table_without_cik: pd.DataFrame
 ) -> None:
@@ -313,6 +343,7 @@ def test_fetch_sp1500_companies_combines_all_three_indices(
     assert len(result) == 2 + 1 + 2
 
 
+@pandas_available
 def test_fetch_sp1500_companies_sets_correct_index_per_call(
     sp500_table: pd.DataFrame, midcap_table_without_cik: pd.DataFrame
 ) -> None:
@@ -325,12 +356,14 @@ def test_fetch_sp1500_companies_sets_correct_index_per_call(
     assert indices == {"S&P 500", "S&P MidCap 400", "S&P SmallCap 600"}
 
 
+@pandas_available
 def test_fetch_sp1500_companies_calls_read_html_three_times(sp500_table: pd.DataFrame) -> None:
     with patch(f"{MODULE}.pd.read_html", return_value=[sp500_table]) as mock_read_html:
         fetch_sp1500_companies()
     assert mock_read_html.call_count == 3
 
 
+@pandas_available
 def test_fetch_sp1500_companies_propagates_parse_error(irrelevant_table: pd.DataFrame) -> None:
     with (
         patch(f"{MODULE}.pd.read_html", return_value=[irrelevant_table]),

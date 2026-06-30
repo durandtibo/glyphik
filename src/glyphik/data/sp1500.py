@@ -8,7 +8,12 @@ __all__ = ["Sp1500Company", "fetch_sp1500_companies"]
 import logging
 from dataclasses import dataclass
 
-import pandas as pd
+from coola.utils.imports import is_pandas_available
+
+if is_pandas_available():
+    import pandas as pd
+else:  # pragma: no cover
+    from coola.utils.fallback.pandas import pandas as pd
 
 logger: logging.Logger = logging.getLogger(__name__)
 
