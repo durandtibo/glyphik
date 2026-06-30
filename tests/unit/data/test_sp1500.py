@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
 from coola.testing.fixtures import pandas_available
 from coola.utils.imports import is_pandas_available
+from zenpyre.utils.dataclass_io import save_dataclasses
 
 from glyphik.data.sp1500 import (
     Sp1500Company,
@@ -16,7 +18,11 @@ from glyphik.data.sp1500 import (
     _find_optional_column,
     _parse_table,
     fetch_sp1500_companies,
+    load_or_fetch_sp1500_companies,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 if is_pandas_available():
     import pandas as pd
@@ -64,6 +70,28 @@ def midcap_table_without_cik() -> pd.DataFrame:
 def irrelevant_table() -> pd.DataFrame:
     """A table that does not contain a ticker column."""
     return pd.DataFrame({"Foo": [1, 2], "Bar": [3, 4]})
+
+
+@pytest.fixture
+def companies() -> list[Sp1500Company]:
+    return [
+        Sp1500Company(
+            ticker="AAPL",
+            cik=320193,
+            security="Apple Inc.",
+            gics_sector="Information Technology",
+            gics_sub_industry="Technology Hardware",
+            index="S&P 500",
+        ),
+        Sp1500Company(
+            ticker="XYZ",
+            cik=None,
+            security="Example Mid Corp",
+            gics_sector="Industrials",
+            gics_sub_industry="Industrial Machinery",
+            index="S&P MidCap 400",
+        ),
+    ]
 
 
 ########################################
@@ -372,3 +400,106 @@ def test_fetch_sp1500_companies_propagates_parse_error(irrelevant_table: pd.Data
         ),
     ):
         fetch_sp1500_companies()
+
+
+#################################################
+#     Tests for load_or_fetch_sp1500_companies  #
+#################################################
+
+
+# --- Cache exists ---
+
+
+def test_load_or_fetch_sp1500_companies_loads_existing_cache(
+    tmp_path: Path, companies: list[Sp1500Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+    save_dataclasses(companies, path)
+
+    with patch(f"{MODULE}.fetch_sp1500_companies") as mock_fetch:
+        result = load_or_fetch_sp1500_companies(path)
+
+    assert result == companies
+    mock_fetch.assert_not_called()
+
+
+def test_load_or_fetch_sp1500_companies_does_not_overwrite_existing_cache(
+    tmp_path: Path, companies: list[Sp1500Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+    save_dataclasses(companies, path)
+    original_mtime = path.stat().st_mtime_ns
+
+    with patch(f"{MODULE}.fetch_sp1500_companies"):
+        load_or_fetch_sp1500_companies(path)
+
+    assert path.stat().st_mtime_ns == original_mtime
+
+
+def test_load_or_fetch_sp1500_companies_accepts_str_path(
+    tmp_path: Path, companies: list[Sp1500Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+    save_dataclasses(companies, path)
+
+    result = load_or_fetch_sp1500_companies(str(path))
+    assert result == companies
+
+
+# --- Cache does not exist ---
+
+
+def test_load_or_fetch_sp1500_companies_fetches_when_no_cache(
+    tmp_path: Path, companies: list[Sp1500Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+
+    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies) as mock_fetch:
+        result = load_or_fetch_sp1500_companies(path)
+
+    mock_fetch.assert_called_once()
+    assert result == companies
+
+
+def test_load_or_fetch_sp1500_companies_saves_after_fetching(
+    tmp_path: Path, companies: list[Sp1500Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+
+    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies):
+        load_or_fetch_sp1500_companies(path)
+
+    assert path.exists()
+
+
+def test_load_or_fetch_sp1500_companies_saved_file_is_loadable(
+    tmp_path: Path, companies: list[Sp1500Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+
+    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies):
+        load_or_fetch_sp1500_companies(path)
+
+    assert load_or_fetch_sp1500_companies(path) == companies
+
+
+def test_load_or_fetch_sp1500_companies_second_call_uses_cache(
+    tmp_path: Path, companies: list[Sp1500Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+
+    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies) as mock_fetch:
+        load_or_fetch_sp1500_companies(path)
+        load_or_fetch_sp1500_companies(path)
+
+    mock_fetch.assert_called_once()
+
+
+def test_load_or_fetch_sp1500_companies_empty_fetch_result(tmp_path: Path) -> None:
+    path = tmp_path / "sp1500.json"
+
+    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=[]):
+        result = load_or_fetch_sp1500_companies(path)
+
+    assert result == []
+    assert path.exists()

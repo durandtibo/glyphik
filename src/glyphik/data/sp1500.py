@@ -3,12 +3,18 @@ Wikipedia."""
 
 from __future__ import annotations
 
-__all__ = ["Sp1500Company", "fetch_sp1500_companies"]
+__all__ = ["Sp1500Company", "fetch_sp1500_companies", "load_or_fetch_sp1500_companies"]
 
 import logging
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from coola.utils.imports import is_pandas_available
+from coola.utils.path import sanitize_path
+from zenpyre.utils.dataclass_io import load_dataclasses, save_dataclasses
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 if is_pandas_available():
     import pandas as pd
@@ -55,6 +61,40 @@ class Sp1500Company:
     gics_sector: str
     gics_sub_industry: str
     index: str
+
+
+def load_or_fetch_sp1500_companies(path: Path | str) -> list[Sp1500Company]:
+    """Load S&P 1500 companies from a cached JSON file, or fetch and
+    cache them if no cache exists.
+
+    If ``path`` already exists, the companies are loaded from it via
+    :func:`load_dataclasses`.  Otherwise, the companies are fetched
+    from Wikipedia via :func:`fetch_sp1500_companies` and saved to
+    ``path`` via :func:`save_dataclasses` for future calls.
+
+    Args:
+        path: The path to the JSON cache file.
+
+    Returns:
+        A list of :class:`Sp1500Company` instances, either loaded from
+        the cache or freshly fetched and cached.
+
+    Example:
+        ```pycon
+        >>> from glyphik.data.sp1500 import load_or_fetch_sp1500_companies
+        >>> companies = load_or_fetch_sp1500_companies("sp1500.json")  # doctest: +SKIP
+
+        ```
+    """
+    path = sanitize_path(path)
+    if path.exists():
+        logger.info("Loading cached S&P 1500 companies from %s...", path)
+        return load_dataclasses(path, Sp1500Company)
+
+    logger.info("No cache found at %s, fetching from Wikipedia...", path)
+    companies = fetch_sp1500_companies()
+    save_dataclasses(companies, path)
+    return companies
 
 
 def fetch_sp1500_companies() -> list[Sp1500Company]:
