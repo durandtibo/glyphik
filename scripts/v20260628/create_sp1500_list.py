@@ -11,7 +11,7 @@ from zenpyre.utils.dataclass_io import load_dataclasses, save_dataclasses
 from zenpyre.utils.rich import configure_rich_logging, make_progressbar, print_pretty
 
 from glyphik.data.sec import fetch_cik_from_ticker
-from glyphik.data.sp1500 import Sp1500Company, load_or_fetch_sp1500_companies
+from glyphik.data.sp1500.companies import Sp1500Company, load_or_fetch_sp1500_companies
 
 logger: logging.Logger = logging.getLogger(__name__)
 
