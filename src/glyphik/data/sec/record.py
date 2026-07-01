@@ -4,10 +4,10 @@ from __future__ import annotations
 
 __all__ = ["SecFilingRecord"]
 
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from zenpyre.utils.hashing import hash_dict_uuid
+from zenpyre.records import Record
 
 from glyphik.utils.imports import is_edgar_available
 
@@ -18,7 +18,7 @@ else:  # pragma: no cover
 
 
 @dataclass(frozen=True)
-class SecFilingRecord:
+class SecFilingRecord(Record):
     """A downloaded SEC filing record containing metadata and a
     reference to the filing saved on disk.
 
@@ -33,9 +33,6 @@ class SecFilingRecord:
         metadata: Dict of metadata associated with the filing
             (e.g. accession number, CIK, ticker, form type, filepath).
     """
-
-    id: str
-    metadata: dict[str, Any] = field(default_factory=dict)
 
     def load_filing(self) -> Filing:
         """Load and return the filing from disk.
@@ -57,22 +54,3 @@ class SecFilingRecord:
             msg = "Cannot load filing: 'filepath' is not set in metadata"
             raise ValueError(msg)
         return Filing.load(filepath)
-
-    @classmethod
-    def from_metadata(cls, metadata: dict[str, Any]) -> SecFilingRecord:
-        """Construct a :class:`SecFilingRecord` from a metadata dict.
-
-        Computes a stable UUID from ``metadata`` via
-        :func:`~zenpyre.hashing.hash_dict_uuid` and uses it as the
-        record's ``id``.
-
-        Args:
-            metadata: Dict of metadata associated with the filing.
-                Should include at least ``"filepath"`` so that
-                :meth:`load_filing` can retrieve the filing later.
-
-        Returns:
-            A new :class:`SecFilingRecord` with ``id`` derived from
-            ``metadata``.
-        """
-        return cls(id=hash_dict_uuid(metadata), metadata=metadata)
