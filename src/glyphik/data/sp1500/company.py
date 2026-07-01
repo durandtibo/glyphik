@@ -3,7 +3,7 @@ Wikipedia."""
 
 from __future__ import annotations
 
-__all__ = ["Sp1500Company", "fetch_sp1500_companies", "load_or_fetch_sp1500_companies"]
+__all__ = ["Company", "fetch_sp1500_companies", "load_or_fetch_sp1500_companies"]
 
 import logging
 from dataclasses import dataclass
@@ -39,7 +39,7 @@ _HEADERS: dict[str, str] = {"User-Agent": "Mozilla/5.0"}
 
 
 @dataclass(frozen=True)
-class Sp1500Company:
+class Company:
     """A single S&P 1500 constituent company.
 
     Args:
@@ -63,7 +63,7 @@ class Sp1500Company:
     index: str
 
 
-def load_or_fetch_sp1500_companies(path: Path | str) -> list[Sp1500Company]:
+def load_or_fetch_sp1500_companies(path: Path | str) -> list[Company]:
     """Load S&P 1500 companies from a cached JSON file, or fetch and
     cache them if no cache exists.
 
@@ -89,7 +89,7 @@ def load_or_fetch_sp1500_companies(path: Path | str) -> list[Sp1500Company]:
     path = sanitize_path(path)
     if path.exists():
         logger.info("Loading cached S&P 1500 companies from %s...", path)
-        return load_dataclasses(path, Sp1500Company)
+        return load_dataclasses(path, Company)
 
     logger.info("No cache found at %s, fetching from Wikipedia...", path)
     companies = fetch_sp1500_companies()
@@ -97,7 +97,7 @@ def load_or_fetch_sp1500_companies(path: Path | str) -> list[Sp1500Company]:
     return companies
 
 
-def fetch_sp1500_companies() -> list[Sp1500Company]:
+def fetch_sp1500_companies() -> list[Company]:
     """Fetch the current approximate S&P 1500 constituents from Wikipedia.
 
     Scrapes the constituent tables of the S&P 500, S&P MidCap 400, and
@@ -134,7 +134,7 @@ def fetch_sp1500_companies() -> list[Sp1500Company]:
         print(companies[0].ticker, companies[0].gics_sector)  # doctest: +SKIP
         ```
     """
-    companies: list[Sp1500Company] = []
+    companies: list[Company] = []
 
     for index_name, url in _WIKIPEDIA_URLS.items():
         logger.info("Fetching %s constituents from %s...", index_name, url)
@@ -236,7 +236,7 @@ def _find_column(
     return column
 
 
-def _parse_table(table: pd.DataFrame, index_name: str) -> list[Sp1500Company]:
+def _parse_table(table: pd.DataFrame, index_name: str) -> list[Company]:
     """Convert a raw Wikipedia constituent table into a list of
     companies.
 
@@ -269,7 +269,7 @@ def _parse_table(table: pd.DataFrame, index_name: str) -> list[Sp1500Company]:
     cik_col = _find_optional_column(table, _CIK_COLUMNS)
 
     return [
-        Sp1500Company(
+        Company(
             ticker=str(row[ticker_col]).strip(),
             cik=int(row[cik_col]) if cik_col is not None and pd.notna(row[cik_col]) else None,
             security=str(row[security_col]).strip(),

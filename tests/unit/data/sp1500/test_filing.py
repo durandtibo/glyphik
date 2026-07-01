@@ -11,7 +11,7 @@ import pytest
 
 from glyphik.data.sec import SecFilingRecord
 from glyphik.data.sp1500 import (
-    Sp1500Company,
+    Company,
     load_or_fetch_company_filings,
     load_or_fetch_filings,
 )
@@ -39,8 +39,8 @@ def config() -> Config:
 
 
 @pytest.fixture
-def company() -> Sp1500Company:
-    return Sp1500Company(
+def company() -> Company:
+    return Company(
         ticker="AAPL",
         cik=320193,
         security="Apple Inc.",
@@ -51,8 +51,8 @@ def company() -> Sp1500Company:
 
 
 @pytest.fixture
-def company_without_cik() -> Sp1500Company:
-    return Sp1500Company(
+def company_without_cik() -> Company:
+    return Company(
         ticker="XYZ",
         cik=None,
         security="Example Corp",
@@ -103,7 +103,7 @@ def test_config_cache_key_different_forms_different_key() -> None:
 
 @edgar_available
 def test_load_or_fetch_company_filings_no_cik_returns_empty(
-    company_without_cik: Sp1500Company, config: Config, tmp_path: Path
+    company_without_cik: Company, config: Config, tmp_path: Path
 ) -> None:
     result = load_or_fetch_company_filings(company_without_cik, config, tmp_path)
     assert result == []
@@ -111,7 +111,7 @@ def test_load_or_fetch_company_filings_no_cik_returns_empty(
 
 @edgar_available
 def test_load_or_fetch_company_filings_no_cik_does_not_call_fetch_filings(
-    company_without_cik: Sp1500Company, config: Config, tmp_path: Path
+    company_without_cik: Company, config: Config, tmp_path: Path
 ) -> None:
     with patch(f"{MODULE}.fetch_filings") as mock_fetch:
         load_or_fetch_company_filings(company_without_cik, config, tmp_path)
@@ -123,7 +123,7 @@ def test_load_or_fetch_company_filings_no_cik_does_not_call_fetch_filings(
 
 @edgar_available
 def test_load_or_fetch_company_filings_cache_hit_loads_from_disk(
-    company: Sp1500Company, config: Config, tmp_path: Path
+    company: Company, config: Config, tmp_path: Path
 ) -> None:
     cached_records = [SecFilingRecord(id="abc", metadata={"ticker": "AAPL"})]
     with patch(f"{MODULE}.format_cik", return_value="0000320193"):
@@ -145,7 +145,7 @@ def test_load_or_fetch_company_filings_cache_hit_loads_from_disk(
 
 @edgar_available
 def test_load_or_fetch_company_filings_cache_miss_calls_fetch_filings(
-    company: Sp1500Company, config: Config, tmp_path: Path
+    company: Company, config: Config, tmp_path: Path
 ) -> None:
     with (
         patch(f"{MODULE}.format_cik", return_value="0000320193"),
@@ -164,7 +164,7 @@ def test_load_or_fetch_company_filings_cache_miss_calls_fetch_filings(
 
 @edgar_available
 def test_load_or_fetch_company_filings_cache_miss_returns_fetched_filings(
-    company: Sp1500Company, config: Config, tmp_path: Path
+    company: Company, config: Config, tmp_path: Path
 ) -> None:
     filings = [SecFilingRecord(id="abc", metadata={"ticker": "AAPL"})]
     with (
@@ -178,7 +178,7 @@ def test_load_or_fetch_company_filings_cache_miss_returns_fetched_filings(
 
 @edgar_available
 def test_load_or_fetch_company_filings_cache_miss_saves_to_cache(
-    company: Sp1500Company, config: Config, tmp_path: Path
+    company: Company, config: Config, tmp_path: Path
 ) -> None:
     filings = [SecFilingRecord(id="abc", metadata={"ticker": "AAPL"})]
     with (
@@ -196,7 +196,7 @@ def test_load_or_fetch_company_filings_cache_miss_saves_to_cache(
 
 @edgar_available
 def test_load_or_fetch_company_filings_fetch_failure_returns_empty(
-    company: Sp1500Company, config: Config, tmp_path: Path
+    company: Company, config: Config, tmp_path: Path
 ) -> None:
     with (
         patch(f"{MODULE}.format_cik", return_value="0000320193"),
@@ -208,7 +208,7 @@ def test_load_or_fetch_company_filings_fetch_failure_returns_empty(
 
 @edgar_available
 def test_load_or_fetch_company_filings_fetch_failure_does_not_save(
-    company: Sp1500Company, config: Config, tmp_path: Path
+    company: Company, config: Config, tmp_path: Path
 ) -> None:
     with (
         patch(f"{MODULE}.format_cik", return_value="0000320193"),
@@ -225,7 +225,7 @@ def test_load_or_fetch_company_filings_fetch_failure_does_not_save(
 
 
 @edgar_available
-def test_load_or_fetch_filings_returns_list(company: Sp1500Company, tmp_path: Path) -> None:
+def test_load_or_fetch_filings_returns_list(company: Company, tmp_path: Path) -> None:
     with patch(f"{MODULE}.load_or_fetch_company_filings", return_value=[]):
         result = load_or_fetch_filings(
             companies=[company],
@@ -239,7 +239,7 @@ def test_load_or_fetch_filings_returns_list(company: Sp1500Company, tmp_path: Pa
 
 @edgar_available
 def test_load_or_fetch_filings_combines_all_company_results(
-    company: Sp1500Company, company_without_cik: Sp1500Company, tmp_path: Path
+    company: Company, company_without_cik: Company, tmp_path: Path
 ) -> None:
     filings_a = [SecFilingRecord(id="a", metadata={})]
     filings_b = [SecFilingRecord(id="b", metadata={})]
@@ -256,7 +256,7 @@ def test_load_or_fetch_filings_combines_all_company_results(
 
 @edgar_available
 def test_load_or_fetch_filings_calls_company_filings_once_per_company(
-    company: Sp1500Company, tmp_path: Path
+    company: Company, tmp_path: Path
 ) -> None:
     with patch(f"{MODULE}.load_or_fetch_company_filings", return_value=[]) as mock_load:
         load_or_fetch_filings(
@@ -270,9 +270,7 @@ def test_load_or_fetch_filings_calls_company_filings_once_per_company(
 
 
 @edgar_available
-def test_load_or_fetch_filings_passes_correct_config(
-    company: Sp1500Company, tmp_path: Path
-) -> None:
+def test_load_or_fetch_filings_passes_correct_config(company: Company, tmp_path: Path) -> None:
     with patch(f"{MODULE}.load_or_fetch_company_filings", return_value=[]) as mock_load:
         load_or_fetch_filings(
             companies=[company],
@@ -300,9 +298,7 @@ def test_load_or_fetch_filings_empty_companies_returns_empty_list(tmp_path: Path
 
 
 @edgar_available
-def test_load_or_fetch_filings_accepts_str_output_dir(
-    company: Sp1500Company, tmp_path: Path
-) -> None:
+def test_load_or_fetch_filings_accepts_str_output_dir(company: Company, tmp_path: Path) -> None:
     with patch(f"{MODULE}.load_or_fetch_company_filings", return_value=[]) as mock_load:
         load_or_fetch_filings(
             companies=[company],

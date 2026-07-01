@@ -13,7 +13,7 @@ from zenpyre.utils.rich import configure_rich_logging
 
 from glyphik.data.sec import SecForm
 from glyphik.data.sp1500 import load_or_fetch_filings
-from glyphik.data.sp1500.companies import Sp1500Company
+from glyphik.data.sp1500.company import Company
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -34,8 +34,8 @@ def main() -> None:
     companies_path = base_dir / "sp1500" / "companies_processed.json"
     data_path = base_dir / "sec"
 
-    companies = load_dataclasses(companies_path, Sp1500Company)
-    # companies = companies[:100]  # limit for local development
+    companies = load_dataclasses(companies_path, Company)
+    companies = companies[:100]  # limit for local development
 
     filings = load_or_fetch_filings(
         companies=companies,
