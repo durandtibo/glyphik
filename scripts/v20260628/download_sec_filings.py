@@ -8,12 +8,10 @@ from datetime import date
 from pathlib import Path
 
 from dotenv import load_dotenv
-from zenpyre.utils.dataclass_io import load_dataclasses
-from zenpyre.utils.rich import configure_rich_logging
+from zenpyre.utils.rich import configure_rich_logging, print_pretty
 
 from glyphik.data.sec import SecForm
-from glyphik.data.sp1500 import load_or_fetch_filings
-from glyphik.data.sp1500.company import Company
+from glyphik.data.sp1500 import load_or_fetch_filings, load_or_fetch_sp1500_companies
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -31,10 +29,10 @@ def main() -> None:
     processed.
     """
     base_dir = Path(__file__).parent.parent.parent / "tmp/v20260628"
-    companies_path = base_dir / "sp1500" / "companies_processed.json"
+    companies_path = base_dir / "sp1500" / "companies.json"
     data_path = base_dir / "sec"
 
-    companies = load_dataclasses(companies_path, Company)
+    companies = load_or_fetch_sp1500_companies(companies_path)
     companies = companies[:100]  # limit for local development
 
     filings = load_or_fetch_filings(
@@ -48,6 +46,8 @@ def main() -> None:
     logger.info(
         "Downloaded %s filings for %s companies", f"{len(filings):,}", f"{len(companies):,}"
     )
+
+    print_pretty(filings[:10], title=f"Filings (n={len(filings):,})")
 
 
 if __name__ == "__main__":
