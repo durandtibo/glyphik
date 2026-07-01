@@ -12,6 +12,7 @@ from coola.utils.imports import is_pandas_available
 from coola.utils.path import sanitize_path
 from zenpyre.utils.dataclass_io import load_dataclasses, save_dataclasses
 
+from glyphik.data.sp1500.cik import fill_missing_ciks
 from glyphik.data.sp1500.company import Company
 
 if TYPE_CHECKING:
@@ -39,21 +40,32 @@ _CIK_COLUMNS: tuple[str, ...] = ("CIK",)
 _HEADERS: dict[str, str] = {"User-Agent": "Mozilla/5.0"}
 
 
-def load_or_fetch_sp1500_companies(path: Path | str) -> list[Company]:
+def load_or_fetch_sp1500_companies(
+    path: Path | str, find_missing_ciks: bool = True
+) -> list[Company]:
     """Load S&P 1500 companies from a cached JSON file, or fetch and
     cache them if no cache exists.
 
     If ``path`` already exists, the companies are loaded from it via
     :func:`load_dataclasses`.  Otherwise, the companies are fetched
-    from Wikipedia via :func:`fetch_sp1500_companies` and saved to
-    ``path`` via :func:`save_dataclasses` for future calls.
+    from Wikipedia via :func:`fetch_sp1500_companies`, optionally
+    enriched with missing CIK numbers via :func:`fill_missing_ciks`,
+    and saved to ``path`` via :func:`save_dataclasses` for future
+    calls.
 
     Args:
         path: The path to the JSON cache file.
+        find_missing_ciks: If ``True`` (the default), calls
+            :func:`fill_missing_ciks` after fetching to look up CIK
+            numbers for companies whose ``cik`` is ``None`` (e.g.
+            S&P MidCap 400 companies, which Wikipedia does not list
+            CIKs for).  Set to ``False`` to skip this step and save
+            companies as-is.  Has no effect when loading from an
+            existing cache.
 
     Returns:
-        A list of :class:`Sp1500Company` instances, either loaded from
-        the cache or freshly fetched and cached.
+        A list of :class:`~glyphik.data.sp1500.Company` instances,
+        either loaded from the cache or freshly fetched and cached.
 
     Example:
         ```pycon
@@ -63,12 +75,14 @@ def load_or_fetch_sp1500_companies(path: Path | str) -> list[Company]:
         ```
     """
     path = sanitize_path(path)
-    if path.exists():
+    if path.is_file():
         logger.info("Loading cached S&P 1500 companies from %s...", path)
         return load_dataclasses(path, Company)
 
     logger.info("No cache found at %s, fetching from Wikipedia...", path)
     companies = fetch_sp1500_companies()
+    if find_missing_ciks:
+        companies = fill_missing_ciks(companies)
     save_dataclasses(companies, path)
     return companies
 
@@ -78,7 +92,7 @@ def fetch_sp1500_companies() -> list[Company]:
 
     Scrapes the constituent tables of the S&P 500, S&P MidCap 400, and
     S&P SmallCap 600 Wikipedia pages and returns one
-    :class:`Sp1500Company` per row across all three indices.  Each page
+    :class:`Company` per row across all three indices.  Each page
     is fetched and parsed independently via :func:`_find_constituent_table`
     and :func:`_parse_table`, then the results are concatenated.
 
@@ -91,7 +105,7 @@ def fetch_sp1500_companies() -> list[Company]:
         data.
 
     Returns:
-        A list of :class:`Sp1500Company` instances, one per
+        A list of :class:`Company` instances, one per
         constituent, across all three sub-indices.  Typically close to,
         but not exactly, 1500 entries (multiple share classes, recent
         changes, and scraping quirks can shift the count slightly).
@@ -218,7 +232,7 @@ def _parse_table(table: pd.DataFrame, index_name: str) -> list[Company]:
 
     Resolves the ticker, security, GICS sector, GICS sub-industry, and
     (optional) CIK columns via :func:`_find_column` and
-    :func:`_find_optional_column`, then builds one :class:`Sp1500Company`
+    :func:`_find_optional_column`, then builds one :class:`Company`
     per row.
 
     Args:
@@ -227,11 +241,11 @@ def _parse_table(table: pd.DataFrame, index_name: str) -> list[Company]:
             :func:`_find_constituent_table`.
         index_name: The name of the S&P sub-index the table
             corresponds to (e.g. ``"S&P 500"``), stored on each
-            resulting :class:`Sp1500Company` and used for error
+            resulting :class:`Company` and used for error
             reporting.
 
     Returns:
-        A list of :class:`Sp1500Company` instances, one per row in
+        A list of :class:`Company` instances, one per row in
         ``table``.
 
     Raises:

@@ -341,6 +341,11 @@ def test_fetch_sp1500_companies_propagates_parse_error(irrelevant_table: pd.Data
 #################################################
 
 
+#################################################
+#     Tests for load_or_fetch_sp1500_companies  #
+#################################################
+
+
 # --- Cache exists ---
 
 
@@ -380,6 +385,18 @@ def test_load_or_fetch_sp1500_companies_accepts_str_path(
     assert result == companies
 
 
+def test_load_or_fetch_sp1500_companies_cache_hit_does_not_call_fill_missing_ciks(
+    tmp_path: Path, companies: list[Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+    save_dataclasses(companies, path)
+
+    with patch(f"{MODULE}.fill_missing_ciks") as mock_fill:
+        load_or_fetch_sp1500_companies(path)
+
+    mock_fill.assert_not_called()
+
+
 # --- Cache does not exist ---
 
 
@@ -388,7 +405,10 @@ def test_load_or_fetch_sp1500_companies_fetches_when_no_cache(
 ) -> None:
     path = tmp_path / "sp1500.json"
 
-    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies) as mock_fetch:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies) as mock_fetch,
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies),
+    ):
         result = load_or_fetch_sp1500_companies(path)
 
     mock_fetch.assert_called_once()
@@ -400,7 +420,10 @@ def test_load_or_fetch_sp1500_companies_saves_after_fetching(
 ) -> None:
     path = tmp_path / "sp1500.json"
 
-    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies):
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies),
+    ):
         load_or_fetch_sp1500_companies(path)
 
     assert path.exists()
@@ -411,7 +434,10 @@ def test_load_or_fetch_sp1500_companies_saved_file_is_loadable(
 ) -> None:
     path = tmp_path / "sp1500.json"
 
-    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies):
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies),
+    ):
         load_or_fetch_sp1500_companies(path)
 
     assert load_or_fetch_sp1500_companies(path) == companies
@@ -422,7 +448,10 @@ def test_load_or_fetch_sp1500_companies_second_call_uses_cache(
 ) -> None:
     path = tmp_path / "sp1500.json"
 
-    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies) as mock_fetch:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies) as mock_fetch,
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies),
+    ):
         load_or_fetch_sp1500_companies(path)
         load_or_fetch_sp1500_companies(path)
 
@@ -432,8 +461,66 @@ def test_load_or_fetch_sp1500_companies_second_call_uses_cache(
 def test_load_or_fetch_sp1500_companies_empty_fetch_result(tmp_path: Path) -> None:
     path = tmp_path / "sp1500.json"
 
-    with patch(f"{MODULE}.fetch_sp1500_companies", return_value=[]):
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=[]),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=[]),
+    ):
         result = load_or_fetch_sp1500_companies(path)
 
     assert result == []
     assert path.exists()
+
+
+# --- find_missing_ciks parameter ---
+
+
+def test_load_or_fetch_sp1500_companies_calls_fill_missing_ciks_by_default(
+    tmp_path: Path, companies: list[Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies) as mock_fill,
+    ):
+        load_or_fetch_sp1500_companies(path)
+
+    mock_fill.assert_called_once_with(companies)
+
+
+def test_load_or_fetch_sp1500_companies_skips_fill_when_find_missing_ciks_false(
+    tmp_path: Path, companies: list[Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks") as mock_fill,
+    ):
+        load_or_fetch_sp1500_companies(path, find_missing_ciks=False)
+
+    mock_fill.assert_not_called()
+
+
+def test_load_or_fetch_sp1500_companies_find_missing_ciks_true_result(
+    tmp_path: Path, companies: list[Company]
+) -> None:
+    path = tmp_path / "sp1500.json"
+    enriched = [
+        Company(
+            ticker="XYZ",
+            cik=999999,
+            security="Example Mid Corp",
+            gics_sector="Industrials",
+            gics_sub_industry="Industrial Machinery",
+            index="S&P MidCap 400",
+        )
+    ]
+
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=enriched),
+    ):
+        result = load_or_fetch_sp1500_companies(path, find_missing_ciks=True)
+
+    assert result == enriched
