@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
+import pytest
+
 from glyphik.data.sp1500 import Company
 from glyphik.ingestors import Sp1500CompanyIngestor
 
@@ -14,7 +16,8 @@ if TYPE_CHECKING:
 MODULE = "glyphik.ingestors.sp1500_company"
 
 
-def _make_companies() -> list[Company]:
+@pytest.fixture
+def companies() -> list[Company]:
     return [
         Company(
             ticker="AAPL",
@@ -87,8 +90,9 @@ def test_sp1500_company_ingestor_ingest_returns_list(tmp_path: Path) -> None:
     assert isinstance(result, list)
 
 
-def test_sp1500_company_ingestor_ingest_returns_companies(tmp_path: Path) -> None:
-    companies = _make_companies()
+def test_sp1500_company_ingestor_ingest_returns_companies(
+    tmp_path: Path, companies: list[Company]
+) -> None:
     with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies):
         result = Sp1500CompanyIngestor(path=tmp_path / "sp1500.json").ingest()
     assert result == companies
@@ -108,8 +112,9 @@ def test_sp1500_company_ingestor_ingest_passes_find_missing_ciks_false(tmp_path:
     mock_load.assert_called_once_with(path=path, find_missing_ciks=False)
 
 
-def test_sp1500_company_ingestor_ingest_can_be_called_multiple_times(tmp_path: Path) -> None:
-    companies = _make_companies()
+def test_sp1500_company_ingestor_ingest_can_be_called_multiple_times(
+    tmp_path: Path, companies: list[Company]
+) -> None:
     with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies):
         ingestor = Sp1500CompanyIngestor(path=tmp_path / "sp1500.json")
         assert ingestor.ingest() == ingestor.ingest()
