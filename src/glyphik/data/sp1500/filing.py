@@ -75,7 +75,7 @@ def load_or_fetch_filings(
     companies have been processed.
 
     Args:
-        companies: The list of :class:`~glyphik.data.sp1500.Sp1500Company`
+        companies: The list of :class:`~glyphik.data.sp1500.Company`
             instances to fetch filings for.
         output_dir: The base directory under which filings and cache
             files are stored.
@@ -124,7 +124,7 @@ def load_or_fetch_company_filings(
     future runs.
 
     Args:
-        company: The :class:`~glyphik.data.sp1500.Sp1500Company` to
+        company: The :class:`~glyphik.data.sp1500.Company` to
             fetch filings for.
         config: The date range and form types to fetch.
         output_dir: The base directory under which filings and cache
