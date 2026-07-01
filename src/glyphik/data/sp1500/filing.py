@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from datetime import date
     from pathlib import Path
 
-    from glyphik.data.sp1500.companies import Sp1500Company
+    from glyphik.data.sp1500.company import Company
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class Config:
 
 
 def load_or_fetch_filings(
-    companies: list[Sp1500Company],
+    companies: list[Company],
     output_dir: Path | str,
     start_date: date,
     end_date: date,
@@ -112,7 +112,7 @@ def load_or_fetch_filings(
 
 
 def load_or_fetch_company_filings(
-    company: Sp1500Company, config: Config, output_dir: Path
+    company: Company, config: Config, output_dir: Path
 ) -> list[SecFilingRecord]:
     """Download or load cached SEC filings for a single company.
 

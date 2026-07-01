@@ -11,12 +11,12 @@ from zenpyre.utils.dataclass_io import load_dataclasses, save_dataclasses
 from zenpyre.utils.rich import configure_rich_logging, make_progressbar, print_pretty
 
 from glyphik.data.sec import fetch_cik_from_ticker
-from glyphik.data.sp1500.companies import Sp1500Company, load_or_fetch_sp1500_companies
+from glyphik.data.sp1500.company import Company, load_or_fetch_sp1500_companies
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def process_companies(companies: list[Sp1500Company]) -> list[Sp1500Company]:
+def process_companies(companies: list[Company]) -> list[Company]:
     """Fill in missing CIK numbers for a list of S&P 1500 companies.
 
     For each company whose ``cik`` is ``None``, looks up its CIK via
@@ -63,7 +63,7 @@ def main() -> None:
 
     if companies_path.is_file():
         logger.info("Loading cached processed companies from %s...", companies_path)
-        companies = load_dataclasses(companies_path, Sp1500Company)
+        companies = load_dataclasses(companies_path, Company)
     else:
         logger.info("No processed cache found, building it...")
         companies = load_or_fetch_sp1500_companies(raw_path)

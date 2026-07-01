@@ -12,11 +12,11 @@ from coola.utils.imports import is_pandas_available
 from zenpyre.utils.dataclass_io import save_dataclasses
 
 from glyphik.data.sp1500 import (
-    Sp1500Company,
+    Company,
     fetch_sp1500_companies,
     load_or_fetch_sp1500_companies,
 )
-from glyphik.data.sp1500.companies import (
+from glyphik.data.sp1500.company import (
     _find_column,
     _find_constituent_table,
     _find_optional_column,
@@ -31,7 +31,7 @@ if is_pandas_available():
 else:  # pragma: no cover
     from coola.utils.fallback.pandas import pandas as pd
 
-MODULE = "glyphik.data.sp1500.companies"
+MODULE = "glyphik.data.sp1500.company"
 
 
 # ---------------------------------------------------------------------------
@@ -75,9 +75,9 @@ def irrelevant_table() -> pd.DataFrame:
 
 
 @pytest.fixture
-def companies() -> list[Sp1500Company]:
+def companies() -> list[Company]:
     return [
-        Sp1500Company(
+        Company(
             ticker="AAPL",
             cik=320193,
             security="Apple Inc.",
@@ -85,7 +85,7 @@ def companies() -> list[Sp1500Company]:
             gics_sub_industry="Technology Hardware",
             index="S&P 500",
         ),
-        Sp1500Company(
+        Company(
             ticker="XYZ",
             cik=None,
             security="Example Mid Corp",
@@ -101,8 +101,8 @@ def companies() -> list[Sp1500Company]:
 ########################################
 
 
-def test_sp1500_company_is_frozen() -> None:
-    company = Sp1500Company(
+def test_company_is_frozen() -> None:
+    company = Company(
         ticker="AAPL",
         cik=320193,
         security="Apple Inc.",
@@ -114,8 +114,8 @@ def test_sp1500_company_is_frozen() -> None:
         company.ticker = "MSFT"
 
 
-def test_sp1500_company_stores_fields() -> None:
-    company = Sp1500Company(
+def test_company_stores_fields() -> None:
+    company = Company(
         ticker="AAPL",
         cik=320193,
         security="Apple Inc.",
@@ -131,8 +131,8 @@ def test_sp1500_company_stores_fields() -> None:
     assert company.index == "S&P 500"
 
 
-def test_sp1500_company_cik_can_be_none() -> None:
-    company = Sp1500Company(
+def test_company_cik_can_be_none() -> None:
+    company = Company(
         ticker="XYZ",
         cik=None,
         security="Example Mid Corp",
@@ -143,8 +143,8 @@ def test_sp1500_company_cik_can_be_none() -> None:
     assert company.cik is None
 
 
-def test_sp1500_company_equality() -> None:
-    company_a = Sp1500Company(
+def test_company_equality() -> None:
+    company_a = Company(
         ticker="AAPL",
         cik=320193,
         security="Apple Inc.",
@@ -152,7 +152,7 @@ def test_sp1500_company_equality() -> None:
         gics_sub_industry="Technology Hardware",
         index="S&P 500",
     )
-    company_b = Sp1500Company(
+    company_b = Company(
         ticker="AAPL",
         cik=320193,
         security="Apple Inc.",
@@ -257,9 +257,9 @@ def test_find_column_error_message_includes_field_and_index(irrelevant_table: pd
 
 
 @pandas_available
-def test_parse_table_returns_list_of_sp1500_company(sp500_table: pd.DataFrame) -> None:
+def test_parse_table_returns_list_of_company(sp500_table: pd.DataFrame) -> None:
     result = _parse_table(sp500_table, "S&P 500")
-    assert all(isinstance(c, Sp1500Company) for c in result)
+    assert all(isinstance(c, Company) for c in result)
 
 
 @pandas_available
@@ -271,7 +271,7 @@ def test_parse_table_one_company_per_row(sp500_table: pd.DataFrame) -> None:
 @pandas_available
 def test_parse_table_field_values(sp500_table: pd.DataFrame) -> None:
     result = _parse_table(sp500_table, "S&P 500")
-    assert result[0] == Sp1500Company(
+    assert result[0] == Company(
         ticker="AAPL",
         cik=320193,
         security="Apple Inc.",
@@ -413,7 +413,7 @@ def test_fetch_sp1500_companies_propagates_parse_error(irrelevant_table: pd.Data
 
 
 def test_load_or_fetch_sp1500_companies_loads_existing_cache(
-    tmp_path: Path, companies: list[Sp1500Company]
+    tmp_path: Path, companies: list[Company]
 ) -> None:
     path = tmp_path / "sp1500.json"
     save_dataclasses(companies, path)
@@ -426,7 +426,7 @@ def test_load_or_fetch_sp1500_companies_loads_existing_cache(
 
 
 def test_load_or_fetch_sp1500_companies_does_not_overwrite_existing_cache(
-    tmp_path: Path, companies: list[Sp1500Company]
+    tmp_path: Path, companies: list[Company]
 ) -> None:
     path = tmp_path / "sp1500.json"
     save_dataclasses(companies, path)
@@ -439,7 +439,7 @@ def test_load_or_fetch_sp1500_companies_does_not_overwrite_existing_cache(
 
 
 def test_load_or_fetch_sp1500_companies_accepts_str_path(
-    tmp_path: Path, companies: list[Sp1500Company]
+    tmp_path: Path, companies: list[Company]
 ) -> None:
     path = tmp_path / "sp1500.json"
     save_dataclasses(companies, path)
@@ -452,7 +452,7 @@ def test_load_or_fetch_sp1500_companies_accepts_str_path(
 
 
 def test_load_or_fetch_sp1500_companies_fetches_when_no_cache(
-    tmp_path: Path, companies: list[Sp1500Company]
+    tmp_path: Path, companies: list[Company]
 ) -> None:
     path = tmp_path / "sp1500.json"
 
@@ -464,7 +464,7 @@ def test_load_or_fetch_sp1500_companies_fetches_when_no_cache(
 
 
 def test_load_or_fetch_sp1500_companies_saves_after_fetching(
-    tmp_path: Path, companies: list[Sp1500Company]
+    tmp_path: Path, companies: list[Company]
 ) -> None:
     path = tmp_path / "sp1500.json"
 
@@ -475,7 +475,7 @@ def test_load_or_fetch_sp1500_companies_saves_after_fetching(
 
 
 def test_load_or_fetch_sp1500_companies_saved_file_is_loadable(
-    tmp_path: Path, companies: list[Sp1500Company]
+    tmp_path: Path, companies: list[Company]
 ) -> None:
     path = tmp_path / "sp1500.json"
 
@@ -486,7 +486,7 @@ def test_load_or_fetch_sp1500_companies_saved_file_is_loadable(
 
 
 def test_load_or_fetch_sp1500_companies_second_call_uses_cache(
-    tmp_path: Path, companies: list[Sp1500Company]
+    tmp_path: Path, companies: list[Company]
 ) -> None:
     path = tmp_path / "sp1500.json"
 
