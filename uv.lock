@@ -1116,7 +1116,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2,<2.0" },
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a12,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a13,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "edgar", "google-genai", "huggingface", "nvidia-ai-endpoints", "ollama", "openai", "sentence-transformers", "text-splitters"]
 
@@ -4991,7 +4991,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a12"
+version = "0.0.1a13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -5002,9 +5002,9 @@ dependencies = [
     { name = "objectory" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/39/8c/edcc6a66cd8d550e8a589e96e3759ccc4fa19f763e6e6606d23cef6c6640/zenpyre-0.0.1a12.tar.gz", hash = "sha256:ca8e5bd40e3c88b92d91112e5c4c138154f9a9bc175d05b4da0b3c5796e9e6cb", size = 32965, upload-time = "2026-07-01T18:40:10.116Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c5/55/783b23244a8f1bc3e8de671394262ce88a5a1a26629f05c01bd9d8384b7d/zenpyre-0.0.1a13.tar.gz", hash = "sha256:84f9f687898683c16662b473c85e8577913e061601e5c1191f02033513f4c891", size = 35048, upload-time = "2026-07-01T19:23:31.819Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1b/c5/ab53b3d49512b18867c4f5c5bf14a5dd6414ca35e97a4b823d05726cfd16/zenpyre-0.0.1a12-py3-none-any.whl", hash = "sha256:f82c92e975dd3f503dff21e5c2bf802b4d295a3c07006dca49f6f372238fc433", size = 60908, upload-time = "2026-07-01T18:40:08.081Z" },
+    { url = "https://files.pythonhosted.org/packages/48/a9/c3aa497d46380f7d85eb5af3512940f2f783a14871fa14d71d4947cc8de6/zenpyre-0.0.1a13-py3-none-any.whl", hash = "sha256:f87066279e0617007d6ce7badd451c7d64aeceb0e29d1da0084674879a91b024", size = 65339, upload-time = "2026-07-01T19:23:30.638Z" },
 ]
 
 [[package]]
