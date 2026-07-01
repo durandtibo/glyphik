@@ -75,5 +75,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     load_dotenv()
-    configure_rich_logging(level=logging.INFO)
+    configure_rich_logging(level=logging.INFO, show_path=False)
     main()
