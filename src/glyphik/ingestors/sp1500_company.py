@@ -3,7 +3,7 @@ Wikipedia."""
 
 from __future__ import annotations
 
-__all__ = ["Sp1500CompaniesIngestor"]
+__all__ = ["Sp1500CompanyIngestor"]
 
 import logging
 from typing import TYPE_CHECKING, Any
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class Sp1500CompaniesIngestor(BaseIngestor[list[Company]], InlineDisplayMixin):
+class Sp1500CompanyIngestor(BaseIngestor[list[Company]], InlineDisplayMixin):
     """Ingestor that loads the S&P 1500 company list.
 
     Loads the list of S&P 1500 companies from a cached JSON file if it
@@ -38,8 +38,8 @@ class Sp1500CompaniesIngestor(BaseIngestor[list[Company]], InlineDisplayMixin):
     Example:
         ```pycon
         >>> from pathlib import Path
-        >>> from glyphik.ingestors import Sp1500CompaniesIngestor
-        >>> ingestor = Sp1500CompaniesIngestor(path=Path("sp1500.json"))
+        >>> from glyphik.ingestors import Sp1500CompanyIngestor
+        >>> ingestor = Sp1500CompanyIngestor(path=Path("sp1500.json"))
         >>> companies = ingestor.ingest()  # doctest: +SKIP
 
         ```
