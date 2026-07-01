@@ -12,8 +12,8 @@ __all__ = [
 ]
 
 from glyphik.data.sp1500.cik import fill_missing_ciks
-from glyphik.data.sp1500.company import (
-    Company,
+from glyphik.data.sp1500.company import Company
+from glyphik.data.sp1500.fetch import (
     fetch_sp1500_companies,
     load_or_fetch_sp1500_companies,
 )
