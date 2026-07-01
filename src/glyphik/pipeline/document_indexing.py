@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 from coola.display import MultilineDisplayMixin
 from coola.utils.format import str_time_human
 from langchain_core.vectorstores import VectorStore
-from zenpyre.documents.ops import assign_ids
+from zenpyre.documents import assign_ids
 from zenpyre.utils.rich import make_spinner
 
 from glyphik.pipeline.base import BasePipeline
