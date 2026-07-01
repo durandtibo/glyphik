@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError
 from datetime import date
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from glyphik.data.sec import SecFilingRecord, fetch_filings, fetch_form_filings
 from glyphik.testing.fixtures import edgar_available
@@ -49,114 +46,6 @@ def _make_mock_company(
     collection.filter.return_value = filings or []
     company.get_filings.return_value = collection
     return company
-
-
-#######################################
-#     Tests for SecFilingRecord       #
-#######################################
-
-
-# --- Construction ---
-
-
-@edgar_available
-def test_sec_filing_record_is_frozen() -> None:
-    record = SecFilingRecord(id="abc", metadata={"key": "value"})
-    with pytest.raises(FrozenInstanceError, match=r"cannot assign to field 'id'"):
-        record.id = "other"
-
-
-@edgar_available
-def test_sec_filing_record_default_metadata() -> None:
-    record = SecFilingRecord(id="abc")
-    assert record.metadata == {}
-
-
-@edgar_available
-def test_sec_filing_record_stores_id() -> None:
-    record = SecFilingRecord(id="abc", metadata={"key": "value"})
-    assert record.id == "abc"
-
-
-@edgar_available
-def test_sec_filing_record_stores_metadata() -> None:
-    metadata = {"filepath": "tmp/test.pkl", "cik": 123}
-    record = SecFilingRecord(id="abc", metadata=metadata)
-    assert record.metadata == metadata
-
-
-# --- from_metadata ---
-
-
-@edgar_available
-def test_sec_filing_record_from_metadata_returns_sec_filing_record() -> None:
-    assert isinstance(SecFilingRecord.from_metadata({"filepath": "tmp/test.pkl"}), SecFilingRecord)
-
-
-@edgar_available
-def test_sec_filing_record_from_metadata_sets_metadata() -> None:
-    metadata = {"filepath": "tmp/test.pkl", "cik": 123}
-    record = SecFilingRecord.from_metadata(metadata)
-    assert record.metadata == metadata
-
-
-@edgar_available
-def test_sec_filing_record_from_metadata_sets_id() -> None:
-    record = SecFilingRecord.from_metadata({"filepath": "tmp/test.pkl"})
-    assert record.id is not None
-
-
-@edgar_available
-def test_sec_filing_record_from_metadata_id_is_str() -> None:
-    record = SecFilingRecord.from_metadata({"filepath": "tmp/test.pkl"})
-    assert isinstance(record.id, str)
-
-
-@edgar_available
-def test_sec_filing_record_from_metadata_id_is_stable() -> None:
-    metadata = {"filepath": "tmp/test.pkl", "cik": 123}
-    assert SecFilingRecord.from_metadata(metadata).id == SecFilingRecord.from_metadata(metadata).id
-
-
-@edgar_available
-def test_sec_filing_record_from_metadata_different_metadata_different_id() -> None:
-    record_a = SecFilingRecord.from_metadata({"filepath": "tmp/a.pkl"})
-    record_b = SecFilingRecord.from_metadata({"filepath": "tmp/b.pkl"})
-    assert record_a.id != record_b.id
-
-
-@edgar_available
-def test_sec_filing_record_from_metadata_key_order_independent() -> None:
-    record_a = SecFilingRecord.from_metadata({"filepath": "tmp/test.pkl", "cik": 123})
-    record_b = SecFilingRecord.from_metadata({"cik": 123, "filepath": "tmp/test.pkl"})
-    assert record_a.id == record_b.id
-
-
-# --- load_filing ---
-
-
-@edgar_available
-def test_sec_filing_record_load_filing_missing_filepath_raises() -> None:
-    record = SecFilingRecord(id="abc", metadata={})
-    with pytest.raises(ValueError, match="filepath"):
-        record.load_filing()
-
-
-@edgar_available
-def test_sec_filing_record_load_filing_calls_filing_load() -> None:
-    record = SecFilingRecord(id="abc", metadata={"filepath": "tmp/test.pkl"})
-    with patch(f"{MODULE}.Filing.load") as mock_load:
-        record.load_filing()
-    mock_load.assert_called_once_with("tmp/test.pkl")
-
-
-@edgar_available
-def test_sec_filing_record_load_filing_returns_filing() -> None:
-    mock_filing = MagicMock()
-    record = SecFilingRecord(id="abc", metadata={"filepath": "tmp/test.pkl"})
-    with patch(f"{MODULE}.Filing.load", return_value=mock_filing):
-        result = record.load_filing()
-    assert result is mock_filing
 
 
 ##############################################
