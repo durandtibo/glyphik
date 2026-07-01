@@ -28,11 +28,14 @@ jobs:
           'all',
           'anthropic',
           'chroma',
+          'duckdb',
           'edgar',
           'google-genai',
           'huggingface',
           'ollama',
           'openai',
+          'sentence-transformers',
+          'text-splitters',
         ]
 
     steps:
