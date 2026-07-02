@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from glyphik.data.sec.filing_content import ContentFormat, extract_filing_content
+from glyphik.data.sec.filing_content import extract_filing_content
 from glyphik.testing.fixtures import edgar_available
 from glyphik.utils.imports import is_edgar_available
 
@@ -54,7 +54,7 @@ def test_extract_filing_content_default_format(mock_filing: Filing) -> None:
     ],
 )
 def test_extract_filing_content_valid_formats(
-    mock_filing: Filing, content_format: ContentFormat, expected_result: str
+    mock_filing: Filing, content_format: str, expected_result: str
 ) -> None:
     """Test that all valid Literal formats successfully extract data."""
     result = extract_filing_content(mock_filing, content_format)
@@ -65,7 +65,7 @@ def test_extract_filing_content_valid_formats(
 @edgar_available
 @pytest.mark.parametrize("content_format", ["TEXT", "Markdown", "hTmL"])
 def test_extract_filing_content_case_insensitivity(
-    mock_filing: Filing, content_format: ContentFormat
+    mock_filing: Filing, content_format: str
 ) -> None:
     """Test that uppercase or mixed-case format strings are handled
     safely."""
@@ -86,7 +86,7 @@ def test_extract_filing_content_xml_returns_none(mock_filing: Filing) -> None:
 @edgar_available
 def test_extract_filing_content_invalid_format(mock_filing: Filing) -> None:
     """Test that passing an unsupported format raises a ValueError."""
-    with pytest.raises(ValueError, match="Invalid format 'pdf'"):
+    with pytest.raises(ValueError, match=r"Invalid format 'pdf'"):
         extract_filing_content(mock_filing, "pdf")
 
 
@@ -95,5 +95,38 @@ def test_extract_filing_content_missing_attribute_raises_error() -> None:
     """Test that a ValueError is raised if the Filing object is missing
     the method."""
     bad_filing = BadFilingMock()
-    with pytest.raises(ValueError, match="does not support the 'text' method"):
+    with pytest.raises(ValueError, match=r"does not support the 'text' method"):
         extract_filing_content(bad_filing, "text")
+
+
+@edgar_available
+def test_extract_filing_content_case_insensitivity_returns_expected(
+    mock_filing: Filing,
+) -> None:
+    """Uppercase/mixed-case formats should not just dispatch, but return
+    the same content as their lowercase equivalent."""
+    result = extract_filing_content(mock_filing, "TEXT")
+    assert result == "Sample text content"
+
+
+@edgar_available
+@pytest.mark.parametrize("content_format", ["text", "markdown", "xml"])
+def test_extract_filing_content_missing_attribute_reflects_requested_format(
+    content_format: str,
+) -> None:
+    """The missing-method error should name the specific format that was
+    requested, not just a hardcoded one."""
+    bad_filing = BadFilingMock()
+    with pytest.raises(ValueError, match=f"does not support the '{content_format}' method"):
+        extract_filing_content(bad_filing, content_format)
+
+
+@edgar_available
+def test_extract_filing_content_non_callable_attribute_raises_error(
+    mock_filing: Filing,
+) -> None:
+    """A ValueError should be raised if the matched attribute exists but
+    is not callable."""
+    mock_filing.text = "not callable"
+    with pytest.raises(ValueError, match=r"not callable"):
+        extract_filing_content(mock_filing, "text")
