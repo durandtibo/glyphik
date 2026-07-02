@@ -64,7 +64,7 @@ def main() -> None:
     store = ingestor.ingest()
 
     logger.info("%s", store)
-    logger.info("document store count=%s", f"{store.count():,}")
+    store.show_columns_info()
 
     docs = store.filter(ticker="MMM", form=SecForm.TEN_K)
     print_pretty([doc.metadata for doc in docs])
