@@ -46,9 +46,9 @@ class Sp1500FilingIngestor(BaseIngestor[list[SecFilingRecord]], MultilineDisplay
         ```pycon
         >>> from datetime import date
         >>> from pathlib import Path
-        >>> from glyphik.ingestors import Sp1500FilingIngestor, SP1500CompaniesIngestor
+        >>> from glyphik.ingestors import Sp1500FilingIngestor, Sp1500CompanyIngestor
         >>> ingestor = Sp1500FilingIngestor(
-        ...     company_ingestor=SP1500CompaniesIngestor(path=Path("sp1500.json")),
+        ...     company_ingestor=Sp1500CompanyIngestor(path=Path("sp1500.json")),
         ...     output_dir=Path("sec"),
         ...     start_date=date(2025, 1, 1),
         ...     end_date=date(2026, 6, 1),
