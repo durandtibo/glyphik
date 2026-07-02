@@ -9,6 +9,7 @@ from langchain_core.documents import Document
 
 from glyphik.data.sec import SecFilingRecord
 from glyphik.data_processors import SecFilingRecordToDocumentProcessor
+from glyphik.testing.fixtures import edgar_available
 
 MODULE = "glyphik.data_processors.sec_record_to_document"
 
@@ -56,6 +57,7 @@ def test_sec_filing_record_to_document_processor_str_contains_class_name() -> No
 # --- process ---
 
 
+@edgar_available
 def test_sec_filing_record_to_document_processor_process_returns_document(
     record: SecFilingRecord,
 ) -> None:
@@ -68,6 +70,7 @@ def test_sec_filing_record_to_document_processor_process_returns_document(
     assert result.page_content == "Sample extracted content"
 
 
+@edgar_available
 def test_sec_filing_record_to_document_processor_process_calls_load_filing(
     record: SecFilingRecord,
 ) -> None:
@@ -78,6 +81,7 @@ def test_sec_filing_record_to_document_processor_process_calls_load_filing(
     record.load_filing.assert_called_once()
 
 
+@edgar_available
 def test_sec_filing_record_to_document_processor_process_calls_extract_filing_content(
     record: SecFilingRecord,
 ) -> None:
@@ -88,6 +92,7 @@ def test_sec_filing_record_to_document_processor_process_calls_extract_filing_co
     mock_extract.assert_called_once_with(record.load_filing.return_value, content_format="xml")
 
 
+@edgar_available
 def test_sec_filing_record_to_document_processor_process_raises_value_error_on_none(
     record: SecFilingRecord,
 ) -> None:
@@ -97,6 +102,7 @@ def test_sec_filing_record_to_document_processor_process_raises_value_error_on_n
             SecFilingRecordToDocumentProcessor().process(record)
 
 
+@edgar_available
 def test_sec_filing_record_to_document_processor_process_copies_metadata(
     record: SecFilingRecord,
 ) -> None:
