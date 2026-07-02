@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from glyphik.data.sec.filing_content import extract_filing_content
+from glyphik.data.sec import extract_filing_content, normalize_content_format
+from glyphik.data.sec.filing_content import _VALID_FORMATS
 from glyphik.testing.fixtures import edgar_available
 from glyphik.utils.imports import is_edgar_available
 
@@ -26,6 +27,54 @@ def mock_filing() -> Filing:
 
 
 class BadFilingMock: ...
+
+
+######################################################
+#     Tests for normalize_content_format             #
+######################################################
+
+
+@pytest.mark.parametrize("content_format", sorted(_VALID_FORMATS))
+def test_normalize_content_format_valid_lowercase(content_format: str) -> None:
+    assert normalize_content_format(content_format) == content_format
+
+
+@pytest.mark.parametrize(
+    ("content_format", "expected"),
+    [
+        ("TEXT", "text"),
+        ("Text", "text"),
+        ("MarkDown", "markdown"),
+        ("HTML", "html"),
+        ("XML", "xml"),
+        ("Full_Text_Submission", "full_text_submission"),
+    ],
+)
+def test_normalize_content_format_case_insensitive(content_format: str, expected: str) -> None:
+    assert normalize_content_format(content_format) == expected
+
+
+def test_normalize_content_format_invalid_raises_value_error() -> None:
+    with pytest.raises(ValueError, match=r"Invalid format 'pdf'"):
+        normalize_content_format("pdf")
+
+
+def test_normalize_content_format_empty_string_raises_value_error() -> None:
+    with pytest.raises(ValueError, match=r"Invalid format ''"):
+        normalize_content_format("")
+
+
+@pytest.mark.parametrize("bad_value", [None, 123, ["text"], {"format": "text"}])
+def test_normalize_content_format_non_string_raises_value_error(bad_value: object) -> None:
+    with pytest.raises(TypeError, match=r"content_format must be a string"):
+        normalize_content_format(bad_value)
+
+
+def test_normalize_content_format_preserves_original_value_in_error_message() -> None:
+    """The error should echo back exactly what the caller passed, not
+    the normalized form, so users can spot typos/casing issues."""
+    with pytest.raises(ValueError, match=r"Invalid format 'PDF'"):
+        normalize_content_format("PDF")
 
 
 ############################################

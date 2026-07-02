@@ -6,14 +6,17 @@ from __future__ import annotations
 __all__ = ["SecFilingRecordToDocumentProcessor"]
 
 import logging
-from typing import Any, get_args
+from typing import Any
 
 from coola.display import InlineDisplayMixin
 from langchain_core.documents import Document
 from zenpyre.data_processors.base import BaseProcessor
 
-from glyphik.data.sec import SecFilingRecord
-from glyphik.data.sec.filing_content import ContentFormat, extract_filing_content
+from glyphik.data.sec import (
+    SecFilingRecord,
+    extract_filing_content,
+    normalize_content_format,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -66,14 +69,7 @@ class SecFilingRecordToDocumentProcessor(
     """
 
     def __init__(self, content_format: str = "text") -> None:
-        valid_formats = get_args(ContentFormat)
-        if content_format not in valid_formats:
-            msg = (
-                f"Invalid content_format '{content_format}'. "
-                f"Must be one of: {', '.join(valid_formats)}"
-            )
-            raise ValueError(msg)
-        self._content_format = content_format
+        self._content_format = normalize_content_format(content_format)
 
     def process(self, data: SecFilingRecord) -> Document:
         """Load the filing from disk and return it as a Document.
