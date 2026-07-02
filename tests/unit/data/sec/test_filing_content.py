@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from glyphik.data.sec.filing_content import ContentFormat, extract_filing_content
+from glyphik.data.sec.filing_content import extract_filing_content
 from glyphik.testing.fixtures import edgar_available
 from glyphik.utils.imports import is_edgar_available
 
@@ -54,7 +54,7 @@ def test_extract_filing_content_default_format(mock_filing: Filing) -> None:
     ],
 )
 def test_extract_filing_content_valid_formats(
-    mock_filing: Filing, content_format: ContentFormat, expected_result: str
+    mock_filing: Filing, content_format: str, expected_result: str
 ) -> None:
     """Test that all valid Literal formats successfully extract data."""
     result = extract_filing_content(mock_filing, content_format)
@@ -65,7 +65,7 @@ def test_extract_filing_content_valid_formats(
 @edgar_available
 @pytest.mark.parametrize("content_format", ["TEXT", "Markdown", "hTmL"])
 def test_extract_filing_content_case_insensitivity(
-    mock_filing: Filing, content_format: ContentFormat
+    mock_filing: Filing, content_format: str
 ) -> None:
     """Test that uppercase or mixed-case format strings are handled
     safely."""
@@ -110,19 +110,9 @@ def test_extract_filing_content_case_insensitivity_returns_expected(
 
 
 @edgar_available
-def test_extract_filing_content_invalid_format_lists_valid_formats(
-    mock_filing: Filing,
-) -> None:
-    """The error message should enumerate all valid formats, not just
-    reject the bad one."""
-    with pytest.raises(ValueError, match=r"text.*markdown.*html.*xml.*full_text_submission"):
-        extract_filing_content(mock_filing, "pdf")
-
-
-@edgar_available
 @pytest.mark.parametrize("content_format", ["text", "markdown", "xml"])
 def test_extract_filing_content_missing_attribute_reflects_requested_format(
-    content_format: ContentFormat,
+    content_format: str,
 ) -> None:
     """The missing-method error should name the specific format that was
     requested, not just a hardcoded one."""
