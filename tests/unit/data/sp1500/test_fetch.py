@@ -117,13 +117,13 @@ def test_find_constituent_table_returns_first_match(sp500_table: pd.DataFrame) -
 
 @pandas_available
 def test_find_constituent_table_no_match_raises(irrelevant_table: pd.DataFrame) -> None:
-    with pytest.raises(ValueError, match="Could not find a constituent table"):
+    with pytest.raises(ValueError, match=r"Could not find a constituent table"):
         _find_constituent_table([irrelevant_table], "S&P 500")
 
 
 @pandas_available
 def test_find_constituent_table_empty_list_raises() -> None:
-    with pytest.raises(ValueError, match="Could not find a constituent table"):
+    with pytest.raises(ValueError, match=r"Could not find a constituent table"):
         _find_constituent_table([], "S&P 500")
 
 
@@ -173,13 +173,13 @@ def test_find_column_returns_match(sp500_table: pd.DataFrame) -> None:
 
 @pandas_available
 def test_find_column_no_match_raises(irrelevant_table: pd.DataFrame) -> None:
-    with pytest.raises(ValueError, match="Could not find a 'ticker' column for S&P 500"):
+    with pytest.raises(ValueError, match=r"Could not find a 'ticker' column for S&P 500"):
         _find_column(irrelevant_table, ("Symbol", "Ticker"), "ticker", "S&P 500")
 
 
 @pandas_available
 def test_find_column_error_message_includes_field_and_index(irrelevant_table: pd.DataFrame) -> None:
-    with pytest.raises(ValueError, match="GICS Sector"):
+    with pytest.raises(ValueError, match=r"GICS Sector"):
         _find_column(irrelevant_table, ("GICS Sector",), "GICS Sector", "S&P MidCap 400")
 
 
@@ -269,7 +269,7 @@ def test_parse_table_strips_whitespace() -> None:
 
 @pandas_available
 def test_parse_table_missing_required_column_raises(irrelevant_table: pd.DataFrame) -> None:
-    with pytest.raises(ValueError, match="Could not find a 'ticker' column for S&P 500"):
+    with pytest.raises(ValueError, match=r"Could not find a 'ticker' column for S&P 500"):
         _parse_table(irrelevant_table, "S&P 500")
 
 
@@ -330,7 +330,7 @@ def test_fetch_sp1500_companies_propagates_parse_error(irrelevant_table: pd.Data
     with (
         patch(f"{MODULE}.pd.read_html", return_value=[irrelevant_table]),
         pytest.raises(
-            ValueError, match="Could not find a constituent table with a ticker column for S&P 500"
+            ValueError, match=r"Could not find a constituent table with a ticker column for S&P 500"
         ),
     ):
         fetch_sp1500_companies()
