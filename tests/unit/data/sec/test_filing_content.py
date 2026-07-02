@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from glyphik.data.sec.filing_content import FilingFormat, extract_filing_content
+from glyphik.data.sec.filing_content import ContentFormat, extract_filing_content
+from glyphik.testing.fixtures import edgar_available
 from glyphik.utils.imports import is_edgar_available
 
 if is_edgar_available():
@@ -32,6 +33,7 @@ class BadFilingMock: ...
 ############################################
 
 
+@edgar_available
 def test_extract_filing_content_default_format(mock_filing: Filing) -> None:
     """Test that the function defaults to 'text' if no format is
     provided."""
@@ -40,8 +42,9 @@ def test_extract_filing_content_default_format(mock_filing: Filing) -> None:
     mock_filing.text.assert_called_once()
 
 
+@edgar_available
 @pytest.mark.parametrize(
-    ("format_type", "expected_result"),
+    ("content_format", "expected_result"),
     [
         ("text", "Sample text content"),
         ("markdown", "# Sample Markdown"),
@@ -51,24 +54,26 @@ def test_extract_filing_content_default_format(mock_filing: Filing) -> None:
     ],
 )
 def test_extract_filing_content_valid_formats(
-    mock_filing: Filing, format_type: FilingFormat, expected_result: str
+    mock_filing: Filing, content_format: ContentFormat, expected_result: str
 ) -> None:
     """Test that all valid Literal formats successfully extract data."""
-    result = extract_filing_content(mock_filing, format_type)
+    result = extract_filing_content(mock_filing, content_format)
     assert result == expected_result
-    getattr(mock_filing, format_type).assert_called_once()
+    getattr(mock_filing, content_format).assert_called_once()
 
 
-@pytest.mark.parametrize("format_type", ["TEXT", "Markdown", "hTmL"])
+@edgar_available
+@pytest.mark.parametrize("content_format", ["TEXT", "Markdown", "hTmL"])
 def test_extract_filing_content_case_insensitivity(
-    mock_filing: Filing, format_type: FilingFormat
+    mock_filing: Filing, content_format: ContentFormat
 ) -> None:
     """Test that uppercase or mixed-case format strings are handled
     safely."""
-    extract_filing_content(mock_filing, format_type)
-    getattr(mock_filing, format_type.lower()).assert_called_once()
+    extract_filing_content(mock_filing, content_format)
+    getattr(mock_filing, content_format.lower()).assert_called_once()
 
 
+@edgar_available
 def test_extract_filing_content_xml_returns_none(mock_filing: Filing) -> None:
     """Test the specific edge case where a non-XML filing returns
     None."""
@@ -78,12 +83,14 @@ def test_extract_filing_content_xml_returns_none(mock_filing: Filing) -> None:
     mock_filing.xml.assert_called_once()
 
 
+@edgar_available
 def test_extract_filing_content_invalid_format(mock_filing: Filing) -> None:
     """Test that passing an unsupported format raises a ValueError."""
     with pytest.raises(ValueError, match="Invalid format 'pdf'"):
         extract_filing_content(mock_filing, "pdf")
 
 
+@edgar_available
 def test_extract_filing_content_missing_attribute_raises_error() -> None:
     """Test that a ValueError is raised if the Filing object is missing
     the method."""
