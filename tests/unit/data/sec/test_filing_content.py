@@ -86,7 +86,7 @@ def test_extract_filing_content_xml_returns_none(mock_filing: Filing) -> None:
 @edgar_available
 def test_extract_filing_content_invalid_format(mock_filing: Filing) -> None:
     """Test that passing an unsupported format raises a ValueError."""
-    with pytest.raises(ValueError, match="Invalid format 'pdf'"):
+    with pytest.raises(ValueError, match=r"Invalid format 'pdf'"):
         extract_filing_content(mock_filing, "pdf")
 
 
@@ -95,5 +95,48 @@ def test_extract_filing_content_missing_attribute_raises_error() -> None:
     """Test that a ValueError is raised if the Filing object is missing
     the method."""
     bad_filing = BadFilingMock()
-    with pytest.raises(ValueError, match="does not support the 'text' method"):
+    with pytest.raises(ValueError, match=r"does not support the 'text' method"):
         extract_filing_content(bad_filing, "text")
+
+
+@edgar_available
+def test_extract_filing_content_case_insensitivity_returns_expected(
+    mock_filing: Filing,
+) -> None:
+    """Uppercase/mixed-case formats should not just dispatch, but return
+    the same content as their lowercase equivalent."""
+    result = extract_filing_content(mock_filing, "TEXT")
+    assert result == "Sample text content"
+
+
+@edgar_available
+def test_extract_filing_content_invalid_format_lists_valid_formats(
+    mock_filing: Filing,
+) -> None:
+    """The error message should enumerate all valid formats, not just
+    reject the bad one."""
+    with pytest.raises(ValueError, match=r"text.*markdown.*html.*xml.*full_text_submission"):
+        extract_filing_content(mock_filing, "pdf")
+
+
+@edgar_available
+@pytest.mark.parametrize("content_format", ["text", "markdown", "xml"])
+def test_extract_filing_content_missing_attribute_reflects_requested_format(
+    content_format: ContentFormat,
+) -> None:
+    """The missing-method error should name the specific format that was
+    requested, not just a hardcoded one."""
+    bad_filing = BadFilingMock()
+    with pytest.raises(ValueError, match=f"does not support the '{content_format}' method"):
+        extract_filing_content(bad_filing, content_format)
+
+
+@edgar_available
+def test_extract_filing_content_non_callable_attribute_raises_error(
+    mock_filing: Filing,
+) -> None:
+    """A ValueError should be raised if the matched attribute exists but
+    is not callable."""
+    mock_filing.text = "not callable"  # type: ignore[assignment]
+    with pytest.raises(ValueError, match=r"not callable"):
+        extract_filing_content(mock_filing, "text")
