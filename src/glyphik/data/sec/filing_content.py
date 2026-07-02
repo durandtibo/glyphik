@@ -3,23 +3,24 @@ object."""
 
 from __future__ import annotations
 
+__all__ = ["ContentFormat", "extract_filing_content"]
+
 from typing import TYPE_CHECKING, Literal, get_args
 
 if TYPE_CHECKING:
     from edgar import Filing
 
-__all__ = ["extract_filing_content"]
 
-FilingFormat = Literal["text", "markdown", "html", "xml", "full_text_submission"]
+ContentFormat = Literal["text", "markdown", "html", "xml", "full_text_submission"]
 
 
-def extract_filing_content(filing: Filing, format_type: FilingFormat = "text") -> str | None:
+def extract_filing_content(filing: Filing, content_format: ContentFormat = "text") -> str | None:
     """Extract content from an edgartools Filing object in the specified
     format.
 
     Args:
         filing: The edgartools Filing object.
-        format_type: The desired output format.
+        content_format: The desired output format.
 
     Returns:
         str | None: The extracted content, or None if the format is not applicable
@@ -28,10 +29,10 @@ def extract_filing_content(filing: Filing, format_type: FilingFormat = "text") -
     Raises:
         ValueError: If an unsupported format_type is provided.
     """
-    valid_formats = get_args(FilingFormat)
-    format_val = str(format_type).lower()
+    valid_formats = get_args(ContentFormat)
+    format_val = str(content_format).lower()
     if format_val not in valid_formats:
-        msg = f"Invalid format '{format_type}'. Must be one of: {', '.join(valid_formats)}"
+        msg = f"Invalid format '{content_format}'. Must be one of: {', '.join(valid_formats)}"
         raise ValueError(msg)
 
     try:
