@@ -29,7 +29,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def build_ingestor(base_dir: Path) -> BaseIngestor:
     """Build the S&P 1500 filing ingestor rooted at ``base_dir``."""
-    db_path = base_dir / "database" / "documents.duckdb"
+    db_path = base_dir / "db" / "documents.duckdb"
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     return FilingDocumentIngestor(
