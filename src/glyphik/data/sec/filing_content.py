@@ -3,7 +3,7 @@ object."""
 
 from __future__ import annotations
 
-__all__ = ["ContentFormat", "extract_filing_content"]
+__all__ = ["ContentFormat", "extract_filing_content", "normalize_content_format"]
 
 from typing import TYPE_CHECKING, Literal, get_args
 
@@ -14,6 +14,36 @@ if TYPE_CHECKING:
 ContentFormat = Literal["text", "markdown", "html", "xml", "full_text_submission"]
 
 _VALID_FORMATS = frozenset(get_args(ContentFormat))
+
+
+def normalize_content_format(content_format: str) -> str:
+    """Validate and normalize a content format string.
+
+    Args:
+        content_format: The format string to validate, e.g. ``"text"``
+            or ``"TEXT"``. Matched case-insensitively against
+            :data:`_VALID_FORMATS`.
+
+    Returns:
+        The lowercased, validated format string.
+
+    Raises:
+        ValueError: If ``content_format`` is not a string, or is not
+            one of :data:`_VALID_FORMATS` (case-insensitively).
+    """
+    if not isinstance(content_format, str):
+        msg = f"content_format must be a string, got {type(content_format).__name__}"
+        raise TypeError(msg)
+
+    format_val = content_format.lower()
+    if format_val not in _VALID_FORMATS:
+        msg = (
+            f"Invalid format '{content_format}'. "
+            f"Must be one of: {', '.join(sorted(_VALID_FORMATS))}"
+        )
+        raise ValueError(msg)
+
+    return format_val
 
 
 def extract_filing_content(filing: Filing, content_format: str = "text") -> str | None:
@@ -38,19 +68,16 @@ def extract_filing_content(filing: Filing, content_format: str = "text") -> str 
             or if the given ``filing`` object does not implement the
             corresponding extraction method.
     """
-    format_val = str(content_format).lower()
-    if format_val not in _VALID_FORMATS:
-        msg = f"Invalid format '{content_format}'. Must be one of: {', '.join(sorted(_VALID_FORMATS))}"
-        raise ValueError(msg)
+    content_format = normalize_content_format(content_format)
 
     try:
-        extraction_method = getattr(filing, format_val)
+        extraction_method = getattr(filing, content_format)
     except AttributeError as exc:
-        msg = f"The provided Filing object does not support the '{format_val}' method."
+        msg = f"The provided Filing object does not support the '{content_format}' method."
         raise ValueError(msg) from exc
 
     try:
         return extraction_method()
     except TypeError as exc:
-        msg = f"The '{format_val}' attribute on the provided Filing object is not callable."
+        msg = f"The '{content_format}' attribute on the provided Filing object is not callable."
         raise ValueError(msg) from exc

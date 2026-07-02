@@ -52,7 +52,7 @@ def test_sec_filing_record_to_document_processor_accepts_all_valid_formats(
 
 
 def test_sec_filing_record_to_document_processor_invalid_content_format_raises() -> None:
-    with pytest.raises(ValueError, match="Invalid content_format 'pdf'"):
+    with pytest.raises(ValueError, match="Invalid format 'pdf'"):
         SecFilingRecordToDocumentProcessor(content_format="pdf")
 
 
