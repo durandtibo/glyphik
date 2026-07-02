@@ -1,4 +1,4 @@
-r"""Define a processor that converts a SecFilingRecord to a LangChain
+"""Define a processor that converts a SecFilingRecord to a LangChain
 Document."""
 
 from __future__ import annotations
@@ -6,7 +6,7 @@ from __future__ import annotations
 __all__ = ["SecFilingRecordToDocumentProcessor"]
 
 import logging
-from typing import Any
+from typing import Any, get_args
 
 from coola.display import InlineDisplayMixin
 from langchain_core.documents import Document
@@ -45,6 +45,14 @@ class SecFilingRecordToDocumentProcessor(
               structure and formatting.
             - ``"html"``: raw HTML — best when downstream processing
               requires the original markup.
+            - ``"xml"``: raw XML — only applicable to filings that
+              expose an XML representation.
+            - ``"full_text_submission"``: the complete raw SEC
+              submission text, including all embedded documents.
+
+    Raises:
+        ValueError: If ``content_format`` is not a recognized
+            :data:`~glyphik.data.sec.filing_content.ContentFormat`.
 
     Example:
         ```pycon
@@ -57,7 +65,14 @@ class SecFilingRecordToDocumentProcessor(
         ```
     """
 
-    def __init__(self, content_format: ContentFormat = "text") -> None:
+    def __init__(self, content_format: str = "text") -> None:
+        valid_formats = get_args(ContentFormat)
+        if content_format not in valid_formats:
+            msg = (
+                f"Invalid content_format '{content_format}'. "
+                f"Must be one of: {', '.join(valid_formats)}"
+            )
+            raise ValueError(msg)
         self._content_format = content_format
 
     def process(self, data: SecFilingRecord) -> Document:
@@ -80,7 +95,9 @@ class SecFilingRecordToDocumentProcessor(
 
         Raises:
             ValueError: If ``"filepath"`` is not set in the record's
-                metadata.
+                metadata, or if no content could be extracted for the
+                configured ``content_format`` (e.g. requesting ``"xml"``
+                for a filing with no XML representation).
             FileNotFoundError: If the filing file does not exist on
                 disk.
         """
@@ -89,8 +106,10 @@ class SecFilingRecordToDocumentProcessor(
         page_content = extract_filing_content(filing, content_format=self._content_format)
 
         if page_content is None:
-            # Fixed the string formatting for the ValueError
-            msg = f"Filing content could not be extracted for record: {data.id}"
+            msg = (
+                f"Filing content could not be extracted in format "
+                f"'{self._content_format}' for record: {data.id}"
+            )
             raise ValueError(msg)
 
         logger.debug("Successfully processed filing record: %s", data.id)
@@ -98,7 +117,8 @@ class SecFilingRecordToDocumentProcessor(
         return Document(
             id=data.id,
             page_content=page_content,
-            metadata=data.metadata.copy(),  # Copied to prevent LangChain from mutating the original
+            # Copy to avoid downstream mutation of the record's own metadata dict.
+            metadata=data.metadata.copy(),
         )
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
