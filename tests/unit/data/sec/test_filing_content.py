@@ -127,6 +127,6 @@ def test_extract_filing_content_non_callable_attribute_raises_error(
 ) -> None:
     """A ValueError should be raised if the matched attribute exists but
     is not callable."""
-    mock_filing.text = "not callable"  # type: ignore[assignment]
+    mock_filing.text = "not callable"
     with pytest.raises(ValueError, match=r"not callable"):
         extract_filing_content(mock_filing, "text")
