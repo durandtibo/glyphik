@@ -262,18 +262,21 @@ def _make_sgml(n_attachments: int) -> MagicMock:
 # --- valid cases ---
 
 
+@edgar_available
 def test_has_valid_sgml_returns_true_with_one_attachment() -> None:
     filing = _make_mock_filing()
     filing.sgml.return_value = _make_sgml(1)
     assert has_valid_sgml(filing) is True
 
 
+@edgar_available
 def test_has_valid_sgml_returns_true_with_multiple_attachments() -> None:
     filing = _make_mock_filing()
     filing.sgml.return_value = _make_sgml(5)
     assert has_valid_sgml(filing) is True
 
 
+@edgar_available
 def test_has_valid_sgml_calls_sgml_once() -> None:
     filing = _make_mock_filing()
     filing.sgml.return_value = _make_sgml(1)
@@ -284,30 +287,35 @@ def test_has_valid_sgml_calls_sgml_once() -> None:
 # --- invalid cases ---
 
 
+@edgar_available
 def test_has_valid_sgml_returns_false_when_sgml_is_none() -> None:
     filing = _make_mock_filing()
     filing.sgml.return_value = None
     assert has_valid_sgml(filing) is False
 
 
+@edgar_available
 def test_has_valid_sgml_returns_false_with_zero_attachments() -> None:
     filing = _make_mock_filing()
     filing.sgml.return_value = _make_sgml(0)
     assert has_valid_sgml(filing) is False
 
 
+@edgar_available
 def test_has_valid_sgml_returns_false_when_sgml_raises() -> None:
     filing = _make_mock_filing()
     filing.sgml.side_effect = ValueError("malformed SGML")
     assert has_valid_sgml(filing) is False
 
 
+@edgar_available
 def test_has_valid_sgml_returns_false_on_network_error() -> None:
     filing = _make_mock_filing()
     filing.sgml.side_effect = ConnectionError("network unreachable")
     assert has_valid_sgml(filing) is False
 
 
+@edgar_available
 def test_has_valid_sgml_returns_false_on_generic_exception() -> None:
     filing = _make_mock_filing()
     filing.sgml.side_effect = Exception("unexpected failure")
@@ -317,12 +325,14 @@ def test_has_valid_sgml_returns_false_on_generic_exception() -> None:
 # --- return type ---
 
 
+@edgar_available
 def test_has_valid_sgml_returns_bool_on_success() -> None:
     filing = _make_mock_filing()
     filing.sgml.return_value = _make_sgml(1)
     assert isinstance(has_valid_sgml(filing), bool)
 
 
+@edgar_available
 def test_has_valid_sgml_returns_bool_on_failure() -> None:
     filing = _make_mock_filing()
     filing.sgml.side_effect = ValueError("boom")
