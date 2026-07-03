@@ -1085,7 +1085,7 @@ wheels = [
 
 [[package]]
 name = "glyphik"
-version = "0.0.1a4"
+version = "0.0.1a5"
 source = { editable = "." }
 dependencies = [
     { name = "coola" },
@@ -1183,7 +1183,7 @@ requires-dist = [
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
     { name = "textual", extras = ["syntax"], marker = "extra == 'textual'", specifier = ">=8.2,<9.0" },
     { name = "textual-dev", marker = "extra == 'textual'", specifier = ">=1.8,<2.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a20,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a21,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "duckdb", "edgar", "google-genai", "huggingface", "nvidia-ai-endpoints", "ollama", "openai", "sentence-transformers", "text-splitters", "textual"]
 
@@ -5484,7 +5484,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a20"
+version = "0.0.1a21"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -5495,9 +5495,9 @@ dependencies = [
     { name = "objectory" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4c/46/334b443986a5a1e83cac8625d4244235285c6b768666ef534a01ac332f12/zenpyre-0.0.1a20.tar.gz", hash = "sha256:6ec2bf9717b5e3f1d58277206b6f91e26cfb4e5571e4397ffed9763c07ce9574", size = 45203, upload-time = "2026-07-03T13:59:53.67Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fb/f0/aaea878603c6f6d17dfcbefd33243b016e0d7101fcfc4ddc0e34c98e6643/zenpyre-0.0.1a21.tar.gz", hash = "sha256:21d27bc83181191af27dcc4d8c567b49c6cab9b40d7f0f4a06dbfb65e1a898ce", size = 45210, upload-time = "2026-07-03T15:52:41.743Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/ec/277e938a55c01c529ef8f460cdd4c058b778516902df08b48961adc14c36/zenpyre-0.0.1a20-py3-none-any.whl", hash = "sha256:194eef81f6b21fbea93e281265252cd812560a30999f529a7f9d2894dc8c93cb", size = 88132, upload-time = "2026-07-03T13:59:52.252Z" },
+    { url = "https://files.pythonhosted.org/packages/70/d8/dca5a6d0deb137b84f99775cddc521d81ff59ae43a8772c38681dea0595a/zenpyre-0.0.1a21-py3-none-any.whl", hash = "sha256:81cc6cd585d67b204781b6587d8130bc50f501d38362a5dc3b3b40b910b58749", size = 88140, upload-time = "2026-07-03T15:52:40.348Z" },
 ]
 
 [[package]]
