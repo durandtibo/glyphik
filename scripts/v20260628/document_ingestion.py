@@ -29,9 +29,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def build_ingestor(base_dir: Path) -> BaseIngestor:
     """Build the S&P 1500 filing ingestor rooted at ``base_dir``."""
-    db_path = base_dir / "db" / "documents.duckdb"
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-
     return SecFilingDocumentStoreIngestor(
         filing_ingestor=Sp1500FilingIngestor(
             company_ingestor=FirstNIngestor(
@@ -43,7 +40,7 @@ def build_ingestor(base_dir: Path) -> BaseIngestor:
             end_date=date(2026, 6, 1),
             forms=[SecForm.TEN_K, SecForm.TEN_Q],
         ),
-        document_store=DuckDBDocumentStore(db_path),
+        document_store=DuckDBDocumentStore(base_dir / "db" / "documents.duckdb"),
         processor=SequenceProcessor(SecFilingRecordToDocumentProcessor()),
     )
 
