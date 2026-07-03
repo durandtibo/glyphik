@@ -89,7 +89,7 @@ def build_ingestor(base_dir: Path) -> BaseIngestor:
                     n=5,
                 ),
                 output_dir=base_dir / "sec",
-                start_date=date(2025, 1, 1),
+                start_date=date(2023, 1, 1),
                 end_date=date(2026, 6, 1),
                 forms=[SecForm.TEN_K, SecForm.TEN_Q],
             ),
@@ -140,7 +140,7 @@ def main() -> None:
 
     ingestor = build_ingestor(base_dir)
     logger.info("%s", ingestor)
-    # vector_store = ingestor.ingest()
+    ingestor.ingest()
     vector_store = get_vector_store(base_dir)
 
     results = search(

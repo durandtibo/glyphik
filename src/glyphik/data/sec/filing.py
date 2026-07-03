@@ -146,10 +146,11 @@ def fetch_form_filings(
         documents.append(
             SecFilingRecord.from_metadata(
                 metadata={
-                    "accession_no": accession,
+                    "accession_number": accession,
                     "cik": cik,
                     "company_name": company.name,
                     "filepath": filepath.as_posix(),
+                    "filing_date": filing_date.isoformat(),
                     "form": form,
                     "source": "SEC EDGAR",
                     "ticker": ticker,
