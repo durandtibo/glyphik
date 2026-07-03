@@ -6,9 +6,11 @@ from __future__ import annotations
 __all__ = ["Sp1500FilingIngestor"]
 
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 from coola.display import MultilineDisplayMixin
+from coola.utils.format import str_time_human
 from coola.utils.path import sanitize_path
 from zenpyre.ingestors.base import BaseIngestor
 
@@ -74,14 +76,22 @@ class Sp1500FilingIngestor(BaseIngestor[list[SecFilingRecord]], MultilineDisplay
         self._forms = forms
 
     def ingest(self) -> list[SecFilingRecord]:
+        logger.info("Starting to ingest the filings for S&P 1500 companies...")
+        t_start = time.perf_counter()
         companies = self._company_ingestor.ingest()
-        return load_or_fetch_filings(
+        filings = load_or_fetch_filings(
             companies=companies,
             output_dir=self._output_dir,
             start_date=self._start_date,
             end_date=self._end_date,
             forms=self._forms,
         )
+        logger.info(
+            "%s filings have been ingested in %s",
+            f"{len(filings):,}",
+            str_time_human(time.perf_counter() - t_start),
+        )
+        return filings
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
         return {

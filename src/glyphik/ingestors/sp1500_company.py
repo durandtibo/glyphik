@@ -6,9 +6,11 @@ from __future__ import annotations
 __all__ = ["Sp1500CompanyIngestor"]
 
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 from coola.display import InlineDisplayMixin
+from coola.utils.format import str_time_human
 from coola.utils.path import sanitize_path
 from zenpyre.ingestors.base import BaseIngestor
 
@@ -57,9 +59,18 @@ class Sp1500CompanyIngestor(BaseIngestor[list[Company]], InlineDisplayMixin):
             either loaded from the cache at :attr:`_path` or freshly
             fetched from Wikipedia and cached.
         """
-        return load_or_fetch_sp1500_companies(
+        logger.info("Starting to ingest the list of S&P 1500 companies...")
+        t_start = time.perf_counter()
+        companies = load_or_fetch_sp1500_companies(
             path=self._path, find_missing_ciks=self._find_missing_ciks
         )
+        logger.info(
+            "%s S&P 1500 companies have been ingested in %s",
+            f"{len(companies):,}",
+            str_time_human(time.perf_counter() - t_start),
+        )
+
+        return companies
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
         return {"path": self._path, "find_missing_ciks": self._find_missing_ciks}

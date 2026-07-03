@@ -132,9 +132,9 @@ def fetch_sp1500_companies() -> list[Company]:
         table = _find_constituent_table(tables, index_name)
         index_companies = _parse_table(table, index_name)
         companies.extend(index_companies)
-        logger.info("Found %s companies for %s.", f"{len(index_companies):,}", index_name)
+        logger.info("Found %s companies for %s", f"{len(index_companies):,}", index_name)
 
-    logger.info("Total companies across S&P 1500: %s.", f"{len(companies):,}")
+    logger.info("Total companies across S&P 1500: %s", f"{len(companies):,}")
     return companies
 
 
@@ -163,7 +163,7 @@ def _find_constituent_table(tables: list[pd.DataFrame], index_name: str) -> pd.D
     for table in tables:
         if any(col in table.columns for col in _TICKER_COLUMNS):
             return table
-    msg = f"Could not find a constituent table with a ticker column for {index_name}."
+    msg = f"Could not find a constituent table with a ticker column for {index_name}"
     raise ValueError(msg)
 
 
@@ -221,7 +221,7 @@ def _find_column(
     """
     column = _find_optional_column(table, candidates)
     if column is None:
-        msg = f"Could not find a {field_name!r} column for {index_name}."
+        msg = f"Could not find a {field_name!r} column for {index_name}"
         raise ValueError(msg)
     return column
 

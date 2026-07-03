@@ -73,11 +73,11 @@ def extract_filing_content(filing: Filing, content_format: str = "text") -> str 
     try:
         extraction_method = getattr(filing, content_format)
     except AttributeError as exc:
-        msg = f"The provided Filing object does not support the '{content_format}' method."
+        msg = f"The provided Filing object does not support the '{content_format}' method"
         raise ValueError(msg) from exc
 
     try:
         return extraction_method()
     except TypeError as exc:
-        msg = f"The '{content_format}' attribute on the provided Filing object is not callable."
+        msg = f"The '{content_format}' attribute on the provided Filing object is not callable"
         raise ValueError(msg) from exc
