@@ -27,6 +27,7 @@ from glyphik.ingestors import (
 )
 
 if TYPE_CHECKING:
+    from langchain_core.documents import Document
     from langchain_core.vectorstores import VectorStore
     from zenpyre.ingestors import BaseIngestor
 
@@ -45,6 +46,11 @@ def get_embedding_model() -> HuggingFaceEmbeddings:
     return HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={"local_files_only": True}
     )
+
+
+def get_document_store(base_dir: Path) -> DuckDBDocumentStore:
+    """Return a persisted DuckDB document store."""
+    return DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb")
 
 
 def get_vector_store(base_dir: Path) -> Chroma:
@@ -87,7 +93,7 @@ def build_ingestor(base_dir: Path) -> BaseIngestor:
                 end_date=date(2026, 6, 1),
                 forms=[SecForm.TEN_K, SecForm.TEN_Q],
             ),
-            document_store=DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb"),
+            document_store=get_document_store(base_dir),
             processor=SequenceProcessor(SecFilingRecordToDocumentProcessor()),
         ),
         text_splitter=get_text_splitter(),
@@ -96,7 +102,9 @@ def build_ingestor(base_dir: Path) -> BaseIngestor:
     )
 
 
-def search(query: str, vector_store: VectorStore, search_kwargs: dict | None = None) -> None:
+def search(
+    query: str, vector_store: VectorStore, search_kwargs: dict | None = None
+) -> list[Document]:
     """Search the vector store and log the top matching documents."""
     logger.info("\n==================================================")
     logger.info("SEARCH QUERY: '%s'", query)
@@ -116,11 +124,13 @@ def search(query: str, vector_store: VectorStore, search_kwargs: dict | None = N
 
     # Display the results
     if not results:
-        logger.info("No relevant documents found.")
-        return
+        logger.info("No relevant documents found")
+        return []
 
     for doc in results:
         print_document(doc)
+
+    return results
 
 
 def main() -> None:
@@ -133,11 +143,14 @@ def main() -> None:
     # vector_store = ingestor.ingest()
     vector_store = get_vector_store(base_dir)
 
-    search(
+    results = search(
         query="What is the income of MMM?",
         vector_store=vector_store,
         search_kwargs={"filter": {"ticker": {"$in": ["MMM"]}}},
     )
+
+    document_store = get_document_store(base_dir)
+    print_document(document_store.get(results[0].metadata["source_document_id"]))
 
 
 if __name__ == "__main__":
