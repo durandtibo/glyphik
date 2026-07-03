@@ -88,7 +88,6 @@ class DocumentStoreIndexingIngestor(BaseIngestor[VectorStore], MultilineDisplayM
             f"{document_store.count():,}",
             str_time_human(time.perf_counter() - t_start),
         )
-
         return self._vector_store
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
