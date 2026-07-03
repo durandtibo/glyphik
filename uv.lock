@@ -1164,7 +1164,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2,<2.0" },
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a18,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a19,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "duckdb", "edgar", "google-genai", "huggingface", "nvidia-ai-endpoints", "ollama", "openai", "sentence-transformers", "text-splitters"]
 
@@ -5039,7 +5039,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a18"
+version = "0.0.1a19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -5050,9 +5050,9 @@ dependencies = [
     { name = "objectory" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/77/29669c3cc89cde5223db246f450ef9ce277b06b2b01170725558de4f20ac/zenpyre-0.0.1a18.tar.gz", hash = "sha256:531150d94aa6f1b6635032911e10649b2ede8eb8c3c1bb8a84afb3bcb1961145", size = 43868, upload-time = "2026-07-03T04:32:11.572Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e8/1d/dc6a4edcda51475b2b22bdc65424baae385c504d4f65d27fbbed1a4cfcab/zenpyre-0.0.1a19.tar.gz", hash = "sha256:4f4ee54d6067ab0fc3e7b1752a519f023f020d9a4fe396a49c30c22b71968ebe", size = 44700, upload-time = "2026-07-03T08:15:26.758Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/87/313da30ec304b56f0a5810b0fd1aa13f1c637d03a4f6c0a9f1a66ae735c5/zenpyre-0.0.1a18-py3-none-any.whl", hash = "sha256:271c56ddada862cf9afb64963a75925b5ba77da7c1707dfdf26bc367a9a655a8", size = 86854, upload-time = "2026-07-03T04:32:10.175Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/6b/0228f87100bd5f782fdc9557c3dd86f9ff6518f5dfdfeba3ee9893ccd22b/zenpyre-0.0.1a19-py3-none-any.whl", hash = "sha256:563b0c273045dbde08c8596db0ba574e8d27611c5180c5fb2981aa7cd1552ab3", size = 87690, upload-time = "2026-07-03T08:15:25.703Z" },
 ]
 
 [[package]]
