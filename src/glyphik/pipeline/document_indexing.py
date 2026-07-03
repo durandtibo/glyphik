@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 from coola.display import MultilineDisplayMixin
 from coola.utils.format import str_time_human
 from langchain_core.vectorstores import VectorStore
-from zenpyre.documents import assign_ids
+from zenpyre.documents import assign_ids, copy_ids_to_metadata
 from zenpyre.utils.rich import make_spinner
 
 from glyphik.pipeline.base import BasePipeline
@@ -128,6 +128,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
             were added to the vector store.
         """
         logger.debug("Processing batch of %s documents...", f"{len(documents):,}")
+        documents = copy_ids_to_metadata(documents, metadata_key="source_document_id")
         chunks = self._text_splitter.split_documents(documents)
         chunks = assign_ids(chunks)
         self._vector_store.add_documents(chunks)
