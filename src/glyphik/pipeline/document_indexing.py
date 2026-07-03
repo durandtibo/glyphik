@@ -37,7 +37,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
     that cannot fit in memory.
 
     Args:
-        loader: A :class:`~langchain_core.document_loaders.BaseLoader`
+        document_loader: A :class:`~langchain_core.document_loaders.BaseLoader`
             used to lazily load raw documents.
         text_splitter: A :class:`~langchain_text_splitters.TextSplitter`
             used to split documents into chunks.
@@ -50,7 +50,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
         ```pycon
         >>> from glyphik.pipeline import DocumentIndexingPipeline
         >>> pipeline = DocumentIndexingPipeline(
-        ...     loader=loader,
+        ...     document_loader=loader,
         ...     text_splitter=text_splitter,
         ...     vector_store=vector_store,
         ...     batch_size=64,
@@ -62,12 +62,12 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
 
     def __init__(
         self,
-        loader: BaseLoader,
+        document_loader: BaseLoader,
         text_splitter: TextSplitter,
         vector_store: VectorStore,
         batch_size: int = 32,
     ) -> None:
-        self._loader = loader
+        self._document_loader = document_loader
         self._text_splitter = text_splitter
         self._vector_store = vector_store
         self._batch_size = batch_size
@@ -92,7 +92,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
         batch: list[Document] = []
         with make_spinner(transient=True) as progress:
             task = progress.add_task("Indexing documents...", total=None)
-            for doc in self._loader.lazy_load():
+            for doc in self._document_loader.lazy_load():
                 batch.append(doc)
                 progress.advance(task)
                 if len(batch) >= self._batch_size:
@@ -136,7 +136,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
         return {
-            "loader": self._loader,
+            "document_loader": self._document_loader,
             "text_splitter": self._text_splitter,
             "vector_store": self._vector_store,
             "batch_size": self._batch_size,

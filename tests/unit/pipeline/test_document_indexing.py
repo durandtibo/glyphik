@@ -28,7 +28,7 @@ def _make_docs(n: int = 6) -> list[Document]:
     return [Document(page_content=f"Cats fact number {i}.") for i in range(n)]
 
 
-def _make_loader(n: int = 6) -> DocumentListLoader:
+def _make_document_loader(n: int = 6) -> DocumentListLoader:
     return DocumentListLoader(_make_docs(n))
 
 
@@ -41,13 +41,13 @@ def _make_vector_store() -> InMemoryVectorStore:
 
 
 def _make_pipeline(
-    loader: BaseLoader | None = None,
+    document_loader: BaseLoader | None = None,
     text_splitter: TextSplitter | None = None,
     vector_store: VectorStore | None = None,
     batch_size: int = 2,
 ) -> DocumentIndexingPipeline:
     return DocumentIndexingPipeline(
-        loader=loader or _make_loader(),
+        document_loader=document_loader or _make_document_loader(),
         text_splitter=text_splitter or _make_text_splitter(),
         vector_store=vector_store or _make_vector_store(),
         batch_size=batch_size,
@@ -84,10 +84,10 @@ def test_document_indexing_pipeline_execute_returns_same_vector_store_instance()
 
 @langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_calls_lazy_load() -> None:
-    loader = MagicMock(spec=BaseLoader)
-    loader.lazy_load.return_value = iter(_make_docs())
-    _make_pipeline(loader=loader).execute()
-    loader.lazy_load.assert_called_once()
+    document_loader = MagicMock(spec=BaseLoader)
+    document_loader.lazy_load.return_value = iter(_make_docs())
+    _make_pipeline(document_loader=document_loader).execute()
+    document_loader.lazy_load.assert_called_once()
 
 
 @langchain_text_splitters_available
@@ -98,9 +98,9 @@ def test_document_indexing_pipeline_execute_calls_add_documents() -> None:
 
 
 @langchain_text_splitters_available
-def test_document_indexing_pipeline_execute_with_empty_loader() -> None:
+def test_document_indexing_pipeline_execute_with_empty_document_loader() -> None:
     vector_store = MagicMock(spec=VectorStore)
-    pipeline = _make_pipeline(loader=_make_loader(0), vector_store=vector_store)
+    pipeline = _make_pipeline(document_loader=_make_document_loader(0), vector_store=vector_store)
     result = pipeline.execute()
     assert result is vector_store
     vector_store.add_documents.assert_not_called()
@@ -114,7 +114,7 @@ def test_document_indexing_pipeline_execute_processes_all_documents() -> None:
     text_splitter = MagicMock(spec=TextSplitter)
     text_splitter.split_documents.side_effect = lambda docs: docs
     pipeline = _make_pipeline(
-        loader=_make_loader(n_docs),
+        document_loader=_make_document_loader(n_docs),
         text_splitter=text_splitter,
         vector_store=vector_store,
         batch_size=batch_size,
@@ -132,7 +132,7 @@ def test_document_indexing_pipeline_execute_docs_exactly_divisible_by_batch() ->
     text_splitter = MagicMock(spec=TextSplitter)
     text_splitter.split_documents.side_effect = lambda docs: docs
     pipeline = _make_pipeline(
-        loader=_make_loader(n_docs),
+        document_loader=_make_document_loader(n_docs),
         text_splitter=text_splitter,
         vector_store=vector_store,
         batch_size=batch_size,
@@ -180,7 +180,7 @@ def test_document_indexing_pipeline_split_and_index_returns_chunks() -> None:
 @langchain_text_splitters_available
 def test_document_indexing_pipeline_get_repr_kwargs_keys() -> None:
     assert set(_make_pipeline()._get_repr_kwargs().keys()) == {
-        "loader",
+        "document_loader",
         "text_splitter",
         "vector_store",
         "batch_size",
@@ -194,17 +194,17 @@ def test_document_indexing_pipeline_get_repr_kwargs_batch_size() -> None:
 
 @langchain_text_splitters_available
 def test_document_indexing_pipeline_get_repr_kwargs_values() -> None:
-    loader = _make_loader()
+    document_loader = _make_document_loader()
     text_splitter = _make_text_splitter()
     vector_store = _make_vector_store()
     pipeline = DocumentIndexingPipeline(
-        loader=loader,
+        document_loader=document_loader,
         text_splitter=text_splitter,
         vector_store=vector_store,
         batch_size=32,
     )
     kwargs = pipeline._get_repr_kwargs()
-    assert kwargs["loader"] is loader
+    assert kwargs["document_loader"] is document_loader
     assert kwargs["text_splitter"] is text_splitter
     assert kwargs["vector_store"] is vector_store
     assert kwargs["batch_size"] == 32

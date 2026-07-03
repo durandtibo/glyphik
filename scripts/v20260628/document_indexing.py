@@ -133,7 +133,7 @@ def get_vector_store(base_dir: Path) -> Chroma:
 def get_pipeline(vector_store: Chroma) -> BasePipeline:
     """Define the document indexing pipeline."""
     return DocumentIndexingPipeline(
-        loader=DocumentListLoader(list(create_large_fake_documents())),
+        document_loader=DocumentListLoader(list(create_large_fake_documents())),
         text_splitter=RecursiveCharacterTextSplitter(
             chunk_size=100, chunk_overlap=20, separators=["\n\n", "\n", ".", " "]
         ),
