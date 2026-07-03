@@ -35,8 +35,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 # Suppress HuggingFace/Chroma warnings for a cleaner console output
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-
 
 def get_embedding_model() -> HuggingFaceEmbeddings:
     """Return the HuggingFace embedding model.
@@ -45,7 +43,7 @@ def get_embedding_model() -> HuggingFaceEmbeddings:
     validation requests when the model is already cached locally.
     """
     return HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL_NAME, model_kwargs={"local_files_only": True}
+        model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={"local_files_only": True}
     )
 
 
