@@ -10,7 +10,7 @@ from zenpyre.ingestors import InMemoryIngestor
 
 from glyphik.ingestors import SecFilingDocumentStoreIngestor
 
-MODULE = "glyphik.ingestors.filing_document"
+MODULE = "glyphik.ingestors.sec_filing_document_store"
 
 
 def _make_record(id_: str) -> MagicMock:
