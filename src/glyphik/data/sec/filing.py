@@ -2,7 +2,7 @@ r"""Download SEC filings using the edgartools library."""
 
 from __future__ import annotations
 
-__all__ = ["fetch_filings", "fetch_form_filings"]
+__all__ = ["fetch_filings", "fetch_form_filings", "has_valid_sgml"]
 
 import datetime
 import logging
@@ -17,10 +17,10 @@ from glyphik.data.sec.record import SecFilingRecord
 from glyphik.utils.imports import is_edgar_available
 
 if TYPE_CHECKING or is_edgar_available():
-    from edgar import Company
+    from edgar import Company, Filing
     from edgar.entity.utils import format_cik
 else:  # pragma: no cover
-    from glyphik.utils.fallback.edgar import Company
+    from glyphik.utils.fallback.edgar import Company, Filing
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -158,3 +158,30 @@ def fetch_form_filings(
         )
 
     return documents
+
+
+def has_valid_sgml(filing: Filing) -> bool:
+    """Check whether a Filing has a valid, parseable SEC SGML structure.
+
+    Attempts to download and parse the filing's raw SGML (.txt/.nc)
+    container via ``filing.sgml()``. A filing is considered valid if
+    parsing succeeds and yields at least one attachment/document.
+
+    Args:
+        filing: The edgar.Filing to check.
+
+    Returns:
+        ``True`` if the filing's SGML container was successfully
+        parsed and contains at least one attachment, ``False``
+        otherwise (including if parsing fails or raises).
+    """
+    try:
+        sgml_data = filing.sgml()
+    except Exception:
+        logger.exception("Failed to parse SGML for filing %s", filing.accession_number)
+        return False
+
+    if sgml_data is None:
+        return False
+
+    return len(sgml_data.attachments) > 0

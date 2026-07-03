@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 from glyphik.data.sec import SecFilingRecord, fetch_filings, fetch_form_filings
+from glyphik.data.sec.filing import has_valid_sgml
 from glyphik.testing.fixtures import edgar_available
 from glyphik.utils.imports import is_edgar_available
 
@@ -245,3 +246,84 @@ def test_fetch_filings_with_ticker(tmp_path: Path) -> None:
         )
     assert isinstance(result, list)
     mock_company.assert_called_once_with("AAPL")
+
+
+#########################################
+#   Tests for has_valid_sgml            #
+#########################################
+
+
+def _make_sgml(n_attachments: int) -> MagicMock:
+    sgml_data = MagicMock()
+    sgml_data.attachments = [MagicMock() for _ in range(n_attachments)]
+    return sgml_data
+
+
+# --- valid cases ---
+
+
+def test_has_valid_sgml_returns_true_with_one_attachment() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.return_value = _make_sgml(1)
+    assert has_valid_sgml(filing) is True
+
+
+def test_has_valid_sgml_returns_true_with_multiple_attachments() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.return_value = _make_sgml(5)
+    assert has_valid_sgml(filing) is True
+
+
+def test_has_valid_sgml_calls_sgml_once() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.return_value = _make_sgml(1)
+    has_valid_sgml(filing)
+    filing.sgml.assert_called_once()
+
+
+# --- invalid cases ---
+
+
+def test_has_valid_sgml_returns_false_when_sgml_is_none() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.return_value = None
+    assert has_valid_sgml(filing) is False
+
+
+def test_has_valid_sgml_returns_false_with_zero_attachments() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.return_value = _make_sgml(0)
+    assert has_valid_sgml(filing) is False
+
+
+def test_has_valid_sgml_returns_false_when_sgml_raises() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.side_effect = ValueError("malformed SGML")
+    assert has_valid_sgml(filing) is False
+
+
+def test_has_valid_sgml_returns_false_on_network_error() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.side_effect = ConnectionError("network unreachable")
+    assert has_valid_sgml(filing) is False
+
+
+def test_has_valid_sgml_returns_false_on_generic_exception() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.side_effect = Exception("unexpected failure")
+    assert has_valid_sgml(filing) is False
+
+
+# --- return type ---
+
+
+def test_has_valid_sgml_returns_bool_on_success() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.return_value = _make_sgml(1)
+    assert isinstance(has_valid_sgml(filing), bool)
+
+
+def test_has_valid_sgml_returns_bool_on_failure() -> None:
+    filing = _make_mock_filing()
+    filing.sgml.side_effect = ValueError("boom")
+    assert isinstance(has_valid_sgml(filing), bool)
