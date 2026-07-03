@@ -15,7 +15,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from zenpyre.data_processors import SequenceProcessor
 from zenpyre.document_stores import DuckDBDocumentStore
 from zenpyre.ingestors import FirstNIngestor
-from zenpyre.utils.rich import configure_rich_logging
+from zenpyre.utils.rich import configure_rich_logging, print_document
 
 from glyphik.data.sec import SecForm
 from glyphik.data_processors import SecFilingRecordToDocumentProcessor
@@ -119,13 +119,8 @@ def search(query: str, vector_store: VectorStore, search_kwargs: dict | None = N
         logger.info("No relevant documents found.")
         return
 
-    for i, doc in enumerate(results, 1):
-        logger.info("\nRESULT %d:", i)
-        logger.info("Text:      %s", doc.page_content)
-        logger.info("Source:    %s", doc.metadata.get("source"))
-        logger.info("Form:      %s", doc.metadata.get("form"))
-        logger.info("filepath:  %s", doc.metadata.get("filepath"))
-    logger.info("==================================================\n")
+    for doc in results:
+        print_document(doc)
 
 
 def main() -> None:
@@ -135,7 +130,8 @@ def main() -> None:
 
     ingestor = build_ingestor(base_dir)
     logger.info("%s", ingestor)
-    vector_store = ingestor.ingest()
+    # vector_store = ingestor.ingest()
+    vector_store = get_vector_store(base_dir)
 
     search(
         query="What is the income of MMM?",
