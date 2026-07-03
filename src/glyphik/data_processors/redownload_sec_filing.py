@@ -9,11 +9,14 @@ import logging
 from typing import Any
 
 from coola.display import InlineDisplayMixin
-from edgar import Company
 from zenpyre.data_processors.base import BaseProcessor
 
 from glyphik.data.sec import SecFilingRecord
 from glyphik.data.sec.filing import has_valid_sgml
+from glyphik.utils.imports import is_edgar_available
+
+if is_edgar_available():  # pragma: no cover
+    from edgar import Company
 
 logger: logging.Logger = logging.getLogger(__name__)
 
