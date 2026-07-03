@@ -20,7 +20,7 @@ def record() -> SecFilingRecord:
             "filepath": "tmp/test.pkl",
             "cik": 320193,
             "form": "10-K",
-            "accession_no": "0000320193-24-000123",
+            "accession_number": "0000320193-24-000123",
         }
     )
 

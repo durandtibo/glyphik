@@ -103,10 +103,11 @@ def test_fetch_form_filings_record_metadata_keys(tmp_path: Path) -> None:
         company=company, output_dir=tmp_path, form="10-K", date_range="2024-01-01:2024-12-31"
     )
     assert set(result[0].metadata.keys()) == {
-        "accession_no",
+        "accession_number",
         "cik",
         "company_name",
         "filepath",
+        "filing_date",
         "form",
         "source",
         "ticker",
@@ -121,9 +122,11 @@ def test_fetch_form_filings_record_metadata_values(tmp_path: Path) -> None:
     result = fetch_form_filings(
         company=company, output_dir=tmp_path, form="10-K", date_range="2024-01-01:2024-12-31"
     )
-    assert result[0].metadata["accession_no"] == "acc-001"
+    assert result[0].metadata["accession_number"] == "acc-001"
     assert result[0].metadata["cik"] == 320193
     assert result[0].metadata["company_name"] == "Test Corp"
+    assert result[0].metadata["filepath"] == (tmp_path / "acc-001.pkl").as_posix()
+    assert result[0].metadata["filing_date"] == "2024-01-15"
     assert result[0].metadata["form"] == "10-K"
     assert result[0].metadata["source"] == "SEC EDGAR"
 

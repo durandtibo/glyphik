@@ -38,7 +38,7 @@ class RedownloadSecFilingProcessor(
           :func:`~glyphik.data.sec.has_valid_sgml`.
 
         The redownload uses the record's ``cik``, ``form``, and
-        ``accession_no`` metadata to locate the filing on EDGAR. The
+        ``accession_number`` metadata to locate the filing on EDGAR. The
         record itself is returned unchanged; this processor's effect is
         the side effect of restoring the file on disk.
 
@@ -76,7 +76,7 @@ class RedownloadSecFilingProcessor(
         or if :attr:`_check_sgml` is ``True`` and the loaded filing
         fails :func:`~glyphik.data.sec.has_valid_sgml`, looks up the
         filing on SEC EDGAR using the record's ``cik``, ``form``, and
-        ``accession_no`` metadata, and saves it to the record's
+        ``accession_number`` metadata, and saves it to the record's
         ``filepath`` so that subsequent loads succeed.
 
         Args:
@@ -96,17 +96,17 @@ class RedownloadSecFilingProcessor(
             filepath = data.metadata["filepath"]
             company = Company(data.metadata["cik"])
             filings = company.get_filings(form=data.metadata["form"]).filter(
-                accession_number=data.metadata["accession_no"]
+                accession_number=data.metadata["accession_number"]
             )
             if len(filings) == 1:
                 filings[0].save(filepath)
             else:
                 logger.warning(
                     "Could not uniquely identify filing to redownload for "
-                    "cik=%s form=%s accession_no=%s (found %d matches)",
+                    "cik=%s form=%s accession_number=%s (found %d matches)",
                     data.metadata["cik"],
                     data.metadata["form"],
-                    data.metadata["accession_no"],
+                    data.metadata["accession_number"],
                     len(filings),
                 )
 
