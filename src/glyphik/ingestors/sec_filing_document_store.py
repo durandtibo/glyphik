@@ -3,7 +3,7 @@ them."""
 
 from __future__ import annotations
 
-__all__ = ["FilingDocumentIngestor"]
+__all__ = ["SecFilingDocumentStoreIngestor"]
 
 import logging
 import time
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class FilingDocumentIngestor(BaseIngestor[BaseDocumentStore], MultilineDisplayMixin):
+class SecFilingDocumentStoreIngestor(BaseIngestor[BaseDocumentStore], MultilineDisplayMixin):
     """Ingestor that converts SEC filing records to LangChain documents
     and adds them to a document store.
 

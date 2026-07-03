@@ -16,7 +16,7 @@ from zenpyre.utils.rich import configure_rich_logging, print_pretty
 from glyphik.data.sec import SecForm
 from glyphik.data_processors import SecFilingRecordToDocumentProcessor
 from glyphik.ingestors import (
-    FilingDocumentIngestor,
+    SecFilingDocumentStoreIngestor,
     Sp1500CompanyIngestor,
     Sp1500FilingIngestor,
 )
@@ -32,7 +32,7 @@ def build_ingestor(base_dir: Path) -> BaseIngestor:
     db_path = base_dir / "db" / "documents.duckdb"
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
-    return FilingDocumentIngestor(
+    return SecFilingDocumentStoreIngestor(
         filing_ingestor=Sp1500FilingIngestor(
             company_ingestor=FirstNIngestor(
                 Sp1500CompanyIngestor(path=base_dir / "sp1500" / "companies.json"),
