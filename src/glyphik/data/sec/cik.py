@@ -67,11 +67,11 @@ def _fetch_ticker_from_cik(cik: int) -> str | None:
     try:
         ticker = Company(cik).get_ticker()
     except CompanyNotFoundError:
-        logger.debug("Company not found for CIK %s.", cik)
+        logger.debug("Company not found for CIK %s", cik)
         return None
 
     if not ticker:
-        logger.debug("No ticker found for CIK %s.", cik)
+        logger.debug("No ticker found for CIK %s", cik)
         return None
 
     return ticker

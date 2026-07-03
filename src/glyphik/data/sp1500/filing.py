@@ -103,7 +103,7 @@ def load_or_fetch_filings(
             progress.advance(task)
 
     logger.info(
-        "Downloaded filings for %s companies in %s.",
+        "Downloaded filings for %s companies in %s",
         f"{len(companies):,}",
         str_time_human(time.perf_counter() - t_start),
     )
@@ -136,7 +136,7 @@ def load_or_fetch_company_filings(
         fetching failed.
     """
     if company.cik is None:
-        logger.warning("Skipping %s: no CIK available.", company.ticker)
+        logger.warning("Skipping %s: no CIK available", company.ticker)
         return []
 
     cache_filepath = output_dir / format_cik(company.cik) / ".cache" / f"{config.cache_key()}.json"

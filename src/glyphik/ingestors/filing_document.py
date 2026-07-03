@@ -6,10 +6,12 @@ from __future__ import annotations
 __all__ = ["FilingDocumentIngestor"]
 
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 from coola.display import MultilineDisplayMixin
 from coola.utils.batching import batchify
+from coola.utils.format import str_time_human
 from zenpyre.document_stores import BaseDocumentStore
 from zenpyre.ingestors.base import BaseIngestor
 
@@ -68,20 +70,29 @@ class FilingDocumentIngestor(BaseIngestor[BaseDocumentStore], MultilineDisplayMi
         Returns:
             The populated :class:`~zenpyre.document_stores.BaseDocumentStore`.
         """
+        logger.info("Starting to ingest filing documents to store...")
+        t_start = time.perf_counter()
+
         filings = self._filing_ingestor.ingest()
+
+        logger.info("Finding the missing documents in the store...")
         present, missing_ids = self._store.check_ids([f.id for f in filings])
         logger.info(
-            "%s filings already in store, %s to add.", f"{len(present):,}", f"{len(missing_ids):,}"
+            "%s filings already in store, %s to add", f"{len(present):,}", f"{len(missing_ids):,}"
         )
 
-        if not missing_ids:
-            return self._store
+        if missing_ids:
+            missing_id_set = set(missing_ids)
+            new_filings = [f for f in filings if f.id in missing_id_set]
+            for batch in batchify(new_filings, size=self._batch_size):
+                docs = self._processor.process(list(batch))
+                self._store.add_documents(docs)
 
-        missing_id_set = set(missing_ids)
-        new_filings = [f for f in filings if f.id in missing_id_set]
-        for batch in batchify(new_filings, size=self._batch_size):
-            docs = self._processor.process(list(batch))
-            self._store.add_documents(docs)
+        logger.info(
+            "%s filing documents have been ingested to the store in %s",
+            f"{len(filings):,}",
+            str_time_human(time.perf_counter() - t_start),
+        )
 
         return self._store
 
