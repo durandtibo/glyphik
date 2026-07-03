@@ -23,10 +23,6 @@ def record() -> SecFilingRecord:
     )
 
 
-def _make_processor() -> RedownloadSecFilingProcessor:
-    return RedownloadSecFilingProcessor()
-
-
 ######################################################
 #     Tests for RedownloadSecFilingProcessor         #
 ######################################################
@@ -36,12 +32,12 @@ def _make_processor() -> RedownloadSecFilingProcessor:
 
 
 def test_redownload_sec_filing_processor_repr_contains_class_name() -> None:
-    processor = _make_processor()
+    processor = RedownloadSecFilingProcessor()
     assert "RedownloadSecFilingProcessor" in repr(processor)
 
 
 def test_redownload_sec_filing_processor_str_contains_class_name() -> None:
-    processor = _make_processor()
+    processor = RedownloadSecFilingProcessor()
     assert "RedownloadSecFilingProcessor" in str(processor)
 
 
@@ -56,7 +52,7 @@ def test_redownload_sec_filing_processor_process_returns_same_record_when_loadab
         patch.object(SecFilingRecord, "load_filing", return_value=MagicMock()),
         patch(f"{MODULE}.Company") as mock_company,
     ):
-        result = _make_processor().process(record)
+        result = RedownloadSecFilingProcessor().process(record)
     assert result is record
     mock_company.assert_not_called()
 
@@ -79,7 +75,7 @@ def test_redownload_sec_filing_processor_process_redownloads_when_not_loadable(
         patch.object(SecFilingRecord, "load_filing", return_value=None),
         patch(f"{MODULE}.Company", return_value=mock_company) as mock_company_cls,
     ):
-        result = _make_processor().process(record)
+        result = RedownloadSecFilingProcessor().process(record)
 
     mock_company_cls.assert_called_once_with(320193)
     mock_filing.save.assert_called_once_with("tmp/test.pkl")
@@ -99,7 +95,7 @@ def test_redownload_sec_filing_processor_process_filters_by_form_and_accession_n
         patch.object(SecFilingRecord, "load_filing", return_value=None),
         patch(f"{MODULE}.Company", return_value=mock_company),
     ):
-        _make_processor().process(record)
+        RedownloadSecFilingProcessor().process(record)
 
     mock_company.get_filings.assert_called_once_with(form="10-K")
     mock_company.get_filings.return_value.filter.assert_called_once_with(
@@ -123,7 +119,7 @@ def test_redownload_sec_filing_processor_process_no_match_does_not_save(
         patch.object(SecFilingRecord, "load_filing", return_value=None),
         patch(f"{MODULE}.Company", return_value=mock_company),
     ):
-        result = _make_processor().process(record)
+        result = RedownloadSecFilingProcessor().process(record)
 
     assert result is record
 
@@ -143,7 +139,7 @@ def test_redownload_sec_filing_processor_process_multiple_matches_does_not_save(
         patch.object(SecFilingRecord, "load_filing", return_value=None),
         patch(f"{MODULE}.Company", return_value=mock_company),
     ):
-        _make_processor().process(record)
+        RedownloadSecFilingProcessor().process(record)
 
     mock_filing_a.save.assert_not_called()
     mock_filing_b.save.assert_not_called()
@@ -162,6 +158,6 @@ def test_redownload_sec_filing_processor_process_returns_record_unchanged_on_no_
         patch.object(SecFilingRecord, "load_filing", return_value=None),
         patch(f"{MODULE}.Company", return_value=mock_company),
     ):
-        result = _make_processor().process(record)
+        result = RedownloadSecFilingProcessor().process(record)
 
     assert result.metadata == record.metadata
