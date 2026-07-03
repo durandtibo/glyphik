@@ -43,7 +43,7 @@ class FilingDocumentIngestor(BaseIngestor[BaseDocumentStore], MultilineDisplayMi
             :class:`~glyphik.data.sec.SecFilingRecord` instances to a
             list of :class:`~langchain_core.documents.Document`
             instances.
-        store: The document store to add new documents to.
+        document_store: The document store to add new documents to.
         batch_size: The number of filings to process and add to the
             store in each batch.  Defaults to ``32``.
     """
@@ -52,12 +52,12 @@ class FilingDocumentIngestor(BaseIngestor[BaseDocumentStore], MultilineDisplayMi
         self,
         filing_ingestor: BaseIngestor[list[SecFilingRecord]],
         processor: BaseProcessor[list[SecFilingRecord], list[Document]],
-        store: BaseDocumentStore,
+        document_store: BaseDocumentStore,
         batch_size: int = 32,
     ) -> None:
         self._filing_ingestor = filing_ingestor
         self._processor = processor
-        self._store = store
+        self._document_store = document_store
         self._batch_size = batch_size
 
     def ingest(self) -> BaseDocumentStore:
@@ -76,7 +76,7 @@ class FilingDocumentIngestor(BaseIngestor[BaseDocumentStore], MultilineDisplayMi
         filings = self._filing_ingestor.ingest()
 
         logger.info("Finding the missing documents in the store...")
-        present, missing_ids = self._store.check_ids([f.id for f in filings])
+        present, missing_ids = self._document_store.check_ids([f.id for f in filings])
         logger.info(
             "%s filings already in store, %s to add", f"{len(present):,}", f"{len(missing_ids):,}"
         )
@@ -86,7 +86,7 @@ class FilingDocumentIngestor(BaseIngestor[BaseDocumentStore], MultilineDisplayMi
             new_filings = [f for f in filings if f.id in missing_id_set]
             for batch in batchify(new_filings, size=self._batch_size):
                 docs = self._processor.process(list(batch))
-                self._store.add_documents(docs)
+                self._document_store.add_documents(docs)
 
         logger.info(
             "%s filing documents have been ingested to the store in %s",
@@ -94,12 +94,12 @@ class FilingDocumentIngestor(BaseIngestor[BaseDocumentStore], MultilineDisplayMi
             str_time_human(time.perf_counter() - t_start),
         )
 
-        return self._store
+        return self._document_store
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
         return {
             "filing_ingestor": self._filing_ingestor,
             "processor": self._processor,
-            "store": self._store,
+            "document_store": self._document_store,
             "batch_size": self._batch_size,
         }
