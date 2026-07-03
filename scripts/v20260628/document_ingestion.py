@@ -43,7 +43,7 @@ def build_ingestor(base_dir: Path) -> BaseIngestor:
             end_date=date(2026, 6, 1),
             forms=[SecForm.TEN_K, SecForm.TEN_Q],
         ),
-        store=DuckDBDocumentStore(db_path),
+        document_store=DuckDBDocumentStore(db_path),
         processor=SequenceProcessor(SecFilingRecordToDocumentProcessor()),
     )
 
