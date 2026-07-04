@@ -7,7 +7,7 @@ import pytest
 from glyphik.data.sec import CompanyIdentifier
 from glyphik.data_processors import EdgarCompanyToIdentifierProcessor
 
-MODULE = "glyphik.data_processors.edgar_company_identifier"
+MODULE = "glyphik.data_processors.edgar_company_to_identifier"
 
 
 @pytest.fixture
