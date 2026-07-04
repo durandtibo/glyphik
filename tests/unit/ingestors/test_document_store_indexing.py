@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+from coola.testing.fixtures import numpy_available
 from langchain_core.documents import Document
 from langchain_core.embeddings.fake import FakeEmbeddings
 from langchain_core.vectorstores import InMemoryVectorStore, VectorStore
@@ -77,11 +78,13 @@ def test_document_store_indexing_ingestor_is_base_ingestor() -> None:
 # --- ingest ---
 
 
+@numpy_available
 @langchain_text_splitters_available
 def test_document_store_indexing_ingestor_ingest_returns_vector_store() -> None:
     assert isinstance(_make_ingestor().ingest(), VectorStore)
 
 
+@numpy_available
 @langchain_text_splitters_available
 def test_document_store_indexing_ingestor_ingest_returns_same_vector_store_instance() -> None:
     vector_store = _make_vector_store()
@@ -89,6 +92,7 @@ def test_document_store_indexing_ingestor_ingest_returns_same_vector_store_insta
     assert ingestor.ingest() is vector_store
 
 
+@numpy_available
 @langchain_text_splitters_available
 def test_document_store_indexing_ingestor_ingest_calls_document_store_ingestor() -> None:
     document_store_ingestor = MagicMock(spec=BaseIngestor)
