@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -61,3 +61,30 @@ def test_company_identifier_from_ticker_raises_when_cik_not_found() -> None:
         pytest.raises(ValueError, match=r"Cannot find CIK for ticker 'AAPL'"),
     ):
         CompanyIdentifier.from_ticker("AAPL")
+
+
+def test_company_identifier_from_edgar_company_with_ticker() -> None:
+    mock_company = Mock(cik=320193)
+    mock_company.get_ticker.return_value = "AAPL"
+    identifier = CompanyIdentifier.from_edgar_company(mock_company)
+    mock_company.get_ticker.assert_called_once_with()
+    assert identifier == CompanyIdentifier(cik=320193, ticker="AAPL")
+
+
+def test_company_identifier_from_edgar_company_without_ticker() -> None:
+    mock_company = Mock(cik=320193)
+    mock_company.get_ticker.return_value = None
+    with patch(f"{MODULE}.fetch_ticker_from_cik", return_value="AAPL") as mock_fetch:
+        identifier = CompanyIdentifier.from_edgar_company(mock_company)
+    mock_fetch.assert_called_once_with(320193)
+    assert identifier == CompanyIdentifier(cik=320193, ticker="AAPL")
+
+
+def test_company_identifier_from_edgar_company_without_ticker_raises_when_cik_not_found() -> None:
+    mock_company = Mock(cik=320193)
+    mock_company.get_ticker.return_value = None
+    with (
+        patch(f"{MODULE}.fetch_ticker_from_cik", return_value=None),
+        pytest.raises(ValueError, match=r"Cannot find ticker for CIK 320193"),
+    ):
+        CompanyIdentifier.from_edgar_company(mock_company)
