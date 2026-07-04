@@ -1,5 +1,3 @@
-"""Unit tests for EdgarCompanyToIdentifierProcessor."""
-
 from __future__ import annotations
 
 from unittest.mock import Mock, patch
