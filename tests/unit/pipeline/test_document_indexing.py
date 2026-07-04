@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+from coola.testing.fixtures import numpy_available
 from langchain_core.document_loaders import BaseLoader
 from langchain_core.documents import Document
 from langchain_core.embeddings.fake import FakeEmbeddings
@@ -70,11 +71,13 @@ def test_document_indexing_pipeline_is_base_pipeline() -> None:
 # --- execute ---
 
 
+@numpy_available
 @langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_returns_vector_store() -> None:
     assert isinstance(_make_pipeline().execute(), VectorStore)
 
 
+@numpy_available
 @langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_returns_same_vector_store_instance() -> None:
     vector_store = _make_vector_store()
@@ -82,6 +85,7 @@ def test_document_indexing_pipeline_execute_returns_same_vector_store_instance()
     assert pipeline.execute() is vector_store
 
 
+@numpy_available
 @langchain_text_splitters_available
 def test_document_indexing_pipeline_execute_calls_lazy_load() -> None:
     document_loader = MagicMock(spec=BaseLoader)
@@ -145,6 +149,7 @@ def test_document_indexing_pipeline_execute_docs_exactly_divisible_by_batch() ->
 # --- _split_and_index ---
 
 
+@numpy_available
 @langchain_text_splitters_available
 def test_document_indexing_pipeline_split_and_index_calls_text_splitter() -> None:
     text_splitter = MagicMock(spec=TextSplitter)
@@ -165,6 +170,7 @@ def test_document_indexing_pipeline_split_and_index_calls_add_documents() -> Non
     vector_store.add_documents.assert_called_once_with(chunks)
 
 
+@numpy_available
 @langchain_text_splitters_available
 def test_document_indexing_pipeline_split_and_index_returns_chunks() -> None:
     chunks = _make_docs(3)
