@@ -6,9 +6,13 @@ from __future__ import annotations
 __all__ = ["CompanyIdentifier"]
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from glyphik.data.sec.cik import fetch_ticker_from_cik
 from glyphik.data.sec.ticker import fetch_cik_from_ticker
+
+if TYPE_CHECKING:
+    import edgar
 
 
 @dataclass(frozen=True)
@@ -62,3 +66,26 @@ class CompanyIdentifier:
             msg = f"Cannot find CIK for ticker {ticker!r}"
             raise ValueError(msg)
         return cls(cik=cik, ticker=ticker)
+
+    @classmethod
+    def from_edgar_company(cls, company: edgar.Company) -> CompanyIdentifier:
+        """Build a :class:`CompanyIdentifier` from an ``edgar.Company``
+        object.
+
+        If the ``edgar.Company`` does not expose a ticker directly, it is
+        resolved from its CIK via :meth:`from_cik`.
+
+        Args:
+            company: The ``edgar.Company`` to build an identifier from.
+
+        Returns:
+            The resolved company identifier.
+
+        Raises:
+            ValueError: If ``company`` has no ticker and no ticker can be
+                found for its CIK.
+        """
+        ticker = company.get_ticker()
+        if ticker is None:
+            return cls.from_cik(company.cik)
+        return cls(cik=company.cik, ticker=ticker)
