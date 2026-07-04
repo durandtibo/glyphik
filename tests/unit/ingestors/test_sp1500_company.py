@@ -1,5 +1,3 @@
-"""Unit tests for Sp1500CompanyIngestor."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
