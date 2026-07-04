@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from datetime import date
     from pathlib import Path
 
-    from glyphik.data.sec.company import CompanyIdentifier
+    from glyphik.data.sec.company_identifier import CompanyIdentifier
 
 
 logger: logging.Logger = logging.getLogger(__name__)

@@ -22,7 +22,7 @@ from glyphik.data.sec.cache_or_fetch_filings import (
     load_or_fetch_filings,
 )
 from glyphik.data.sec.cik import fetch_ticker_from_cik
-from glyphik.data.sec.company import CompanyIdentifier
+from glyphik.data.sec.company_identifier import CompanyIdentifier
 from glyphik.data.sec.fetch_filings import (
     fetch_filings,
     fetch_form_filings,
