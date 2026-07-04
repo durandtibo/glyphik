@@ -15,7 +15,7 @@ from coola.utils.path import sanitize_path
 from zenpyre.utils.dataclass_io import load_dataclasses, save_dataclasses
 from zenpyre.utils.rich import make_progressbar
 
-from glyphik.data.sec.filing import fetch_filings
+from glyphik.data.sec.fetch_filings import fetch_filings
 from glyphik.data.sec.record import SecFilingRecord
 from glyphik.utils.imports import is_edgar_available
 

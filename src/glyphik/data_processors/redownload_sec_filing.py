@@ -11,8 +11,7 @@ from typing import Any
 from coola.display import InlineDisplayMixin
 from zenpyre.data_processors.base import BaseProcessor
 
-from glyphik.data.sec import SecFilingRecord
-from glyphik.data.sec.filing import has_valid_sgml
+from glyphik.data.sec import SecFilingRecord, has_valid_sgml
 from glyphik.utils.imports import is_edgar_available
 
 if is_edgar_available():  # pragma: no cover
