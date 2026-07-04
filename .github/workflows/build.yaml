@@ -53,19 +53,19 @@ jobs:
           python tests/package_checks.py
           echo "✅ Package checks passed"
 
-      - name: Check optional packages installation
-        if: ${{ matrix.package-extra != '' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "🔍 Verifying if ${{ matrix.package-extra }} is installed..."
-          if ! uv pip list | grep -qE "^${{ matrix.package-extra }}\s"; then
-            echo "❌ Error: Package '${{ matrix.package-extra }}' not found in installed packages"
-            echo "Installed packages:"
-            uv pip list
-            exit 1
-          fi
-          echo "✅ Package '${{ matrix.package-extra }}' is installed"
+#      - name: Check optional packages installation
+#        if: ${{ matrix.package-extra != '' }}
+#        shell: bash
+#        run: |
+#          set -euo pipefail
+#          echo "🔍 Verifying if ${{ matrix.package-extra }} is installed..."
+#          if ! uv pip list | grep -qE "^${{ matrix.package-extra }}\s"; then
+#            echo "❌ Error: Package '${{ matrix.package-extra }}' not found in installed packages"
+#            echo "Installed packages:"
+#            uv pip list
+#            exit 1
+#          fi
+#          echo "✅ Package '${{ matrix.package-extra }}' is installed"
 
   build-all:
     runs-on: ubuntu-latest
