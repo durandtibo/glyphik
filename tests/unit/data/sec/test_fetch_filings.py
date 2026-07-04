@@ -6,8 +6,12 @@ from datetime import date
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
-from glyphik.data.sec import SecFilingRecord, fetch_filings, fetch_form_filings
-from glyphik.data.sec.filing import has_valid_sgml
+from glyphik.data.sec import (
+    SecFilingRecord,
+    fetch_filings,
+    fetch_form_filings,
+    has_valid_sgml,
+)
 from glyphik.testing.fixtures import edgar_available
 from glyphik.utils.imports import is_edgar_available
 
@@ -17,7 +21,7 @@ if TYPE_CHECKING:
 if is_edgar_available():
     from edgar import Company, Filing
 
-MODULE = "glyphik.data.sec.filing"
+MODULE = "glyphik.data.sec.fetch_filings"
 
 
 # ---------------------------------------------------------------------------
