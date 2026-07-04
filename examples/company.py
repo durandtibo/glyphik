@@ -11,8 +11,9 @@ import click
 from dotenv import load_dotenv
 from zenpyre.data_processors import SequenceProcessor
 from zenpyre.document_stores import DuckDBDocumentStore
+from zenpyre.documents import sort_by_metadata
 from zenpyre.ingestors import InMemoryIngestor, ProcessorIngestor
-from zenpyre.utils.rich import configure_rich_logging
+from zenpyre.utils.rich import configure_rich_logging, print_document
 
 from glyphik.data.sec import SecForm
 from glyphik.data_processors import (
@@ -54,6 +55,25 @@ def build_ingestor(base_dir: Path, ticker: str) -> BaseIngestor:
     )
 
 
+def download_data(base_dir: Path, ticker: str) -> None:
+    """Download and index SEC filings for the given ticker."""
+    ingestor = build_ingestor(base_dir, ticker=ticker)
+    logger.info("%s", ingestor)
+    ingestor.ingest()
+
+
+def process_data(base_dir: Path, ticker: str) -> None:
+    """Query the document store and print the filings found for the
+    given ticker, ordered by filing date."""
+    doc_store = get_document_store(base_dir)
+    logger.info("%s", doc_store)
+
+    docs = sort_by_metadata(doc_store.filter(ticker=ticker), metadata_key="filing_date")
+    logger.info("Found %d documents", len(docs))
+    for doc in docs:
+        print_document(doc)
+
+
 @click.command()
 @click.option("--ticker", prompt="Enter a ticker", help="The ticker of the company to analyze")
 def main(ticker: str) -> None:
@@ -61,13 +81,8 @@ def main(ticker: str) -> None:
     store."""
     base_dir = Path(__file__).parent.parent / "tmp/examples/company"
 
-    ingestor = build_ingestor(base_dir, ticker=ticker)
-    logger.info("%s", ingestor)
-    ingestor.ingest()
-
-    doc_store = get_document_store(base_dir)
-    logger.info("%s", doc_store)
-    logger.info("document store contains %s documents", f"{doc_store.count():,}")
+    download_data(base_dir=base_dir, ticker=ticker)
+    process_data(base_dir=base_dir, ticker=ticker)
 
 
 if __name__ == "__main__":
