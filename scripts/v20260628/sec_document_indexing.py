@@ -14,16 +14,19 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from zenpyre.data_processors import SequenceProcessor
 from zenpyre.document_stores import DuckDBDocumentStore
-from zenpyre.ingestors import FirstNIngestor
+from zenpyre.ingestors import FirstNIngestor, ProcessorIngestor
 from zenpyre.utils.rich import configure_rich_logging, print_document
 
 from glyphik.data.sec import SecForm
-from glyphik.data_processors import SecFilingRecordToDocumentProcessor
+from glyphik.data_processors import (
+    SecFilingRecordToDocumentProcessor,
+    Sp1500CompanyToIdentifierProcessor,
+)
 from glyphik.ingestors import (
     DocumentStoreIndexingIngestor,
     SecFilingDocumentStoreIngestor,
+    SecFilingIngestor,
     Sp1500CompanyIngestor,
-    Sp1500FilingIngestor,
 )
 
 if TYPE_CHECKING:
@@ -83,10 +86,13 @@ def build_ingestor(base_dir: Path) -> BaseIngestor:
     """Build the S&P 1500 filing ingestor rooted at ``base_dir``."""
     return DocumentStoreIndexingIngestor(
         document_store_ingestor=SecFilingDocumentStoreIngestor(
-            filing_ingestor=Sp1500FilingIngestor(
-                company_ingestor=FirstNIngestor(
-                    Sp1500CompanyIngestor(path=base_dir / "sp1500" / "companies.json"),
-                    n=5,
+            filing_ingestor=SecFilingIngestor(
+                company_ingestor=ProcessorIngestor(
+                    source=FirstNIngestor(
+                        Sp1500CompanyIngestor(path=base_dir / "sp1500" / "companies.json"),
+                        n=5,
+                    ),
+                    processor=SequenceProcessor(Sp1500CompanyToIdentifierProcessor()),
                 ),
                 output_dir=base_dir / "sec",
                 start_date=date(2023, 1, 1),
