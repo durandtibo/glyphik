@@ -1,5 +1,3 @@
-"""Unit tests for Sp1500Company and the S&P 1500 fetching utilities."""
-
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
