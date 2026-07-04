@@ -7,7 +7,7 @@ import pytest
 
 from glyphik.data.sec import CompanyIdentifier
 
-MODULE = "glyphik.data.sec.company"
+MODULE = "glyphik.data.sec.company_identifier"
 
 
 #######################################
