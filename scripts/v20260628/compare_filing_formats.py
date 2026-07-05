@@ -14,7 +14,7 @@ from rich import get_console
 from rich.table import Table
 from zenpyre.data_processors import SequenceProcessor
 from zenpyre.ingestors import InMemoryIngestor, ProcessorIngestor
-from zenpyre.utils.rich import configure_rich_logging
+from zenpyre.utils.rich import configure_rich_logging, make_progressbar
 
 from glyphik.data.sec import SecForm
 from glyphik.data_processors import EdgarCompanyToIdentifierProcessor
@@ -26,12 +26,28 @@ if TYPE_CHECKING:
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-DEFAULT_COLORS = ["green", "yellow", "red", "blue", "magenta", "cyan", "white"]
-
 DEFAULT_TICKERS = ["AAPL"]
 DEFAULT_BASE_DIR = Path(__file__).parent.parent.parent / "tmp/v20260628"
 DEFAULT_START_DATE = date(2025, 1, 1)
 DEFAULT_END_DATE = date(2026, 6, 1)
+
+
+@dataclass
+class Config:
+    """Hold the configuration for the document search pipeline example.
+
+    Args:
+        tickers: The ticker symbols of the companies to analyze.
+        base_dir: The root directory used to store downloaded filings
+            and the document store.
+        start_date: The earliest filing date (inclusive) to ingest.
+        end_date: The latest filing date (inclusive) to ingest.
+    """
+
+    tickers: list[str] = field(default_factory=lambda: DEFAULT_TICKERS)
+    base_dir: Path = field(default_factory=lambda: DEFAULT_BASE_DIR)
+    start_date: date = DEFAULT_START_DATE
+    end_date: date = DEFAULT_END_DATE
 
 
 def compare_filing_formats(filings: list[Filing], formats: list[str]) -> list[dict]:
@@ -65,46 +81,57 @@ def compare_filing_formats(filings: list[Filing], formats: list[str]) -> list[di
     """
     results = []
 
-    for filing in filings:
-        row = {
-            "company": getattr(filing, "company", None) or str(filing),
-            "form": getattr(filing, "form", None),
-            "accession_no": getattr(filing, "accession_no", None),
-        }
+    with make_progressbar() as progress:
+        task = progress.add_task("Comparing filing formats...", total=len(filings))
 
-        for fmt in formats:
-            content = ""
-            try:
-                attr = getattr(filing, fmt)
-                content = attr() if callable(attr) else attr
-                content = content or ""
-            except Exception:  # noqa: BLE001
-                logger.warning("Failed to retrieve %r for %s", fmt, row["company"], exc_info=True)
+        for filing in filings:
+            row = {
+                "company": getattr(filing, "company", None) or str(filing),
+                "form": getattr(filing, "form", None),
+                "accession_no": getattr(filing, "accession_no", None),
+            }
 
-            row[f"{fmt}_chars"] = len(content)
+            progress.update(task, description=f"Processing {row['company']}")
 
-        results.append(row)
+            for fmt in formats:
+                content = ""
+                try:
+                    attr = getattr(filing, fmt)
+                    content = attr() if callable(attr) else attr
+                    content = content or ""
+                except Exception:  # noqa: BLE001
+                    logger.warning(
+                        "Failed to retrieve %r for %s", fmt, row["company"], exc_info=True
+                    )
+
+                row[f"{fmt}_chars"] = len(content)
+
+            results.append(row)
+            progress.advance(task)
 
     return results
 
 
 def print_comparison(results: list[dict], formats: list[str]) -> None:
     """Print a Rich table of per-filing character counts and per-format
-        averages.
+    averages.
 
-        Renders one row per filing with its character count for each
-        requested format, followed by a separated summary row with the
-        average count per format.
+    Renders one row per filing with its character count for each
+    requested format, followed by a separated summary row with the
+    average count per format. The first format in ``formats`` is
+    treated as the reference: every other format's cell shows its
+    count alongside its percentage difference relative to the
+    reference, formatted as "count (+/-pct%)", colored red if greater
+    than the reference and green if lower.
 
     Args:
         results: Per-filing comparison data, as returned by
             ``compare_filing_formats``.
         formats: Names of the formats to render as columns, in the order
-            they should appear. Must match the ``"{format}_chars"`` keys
-            present in ``results``.
-
-    Returns:
-        None. The table is printed directly to the console.
+            they should appear. The first entry is used as the
+            reference format for the percentage-difference figures.
+            Must match the ``"{format}_chars"`` keys present in
+            ``results``.
 
     Example:
         ```pycon
@@ -113,49 +140,41 @@ def print_comparison(results: list[dict], formats: list[str]) -> None:
 
         ```
     """
-    console = get_console()
+    reference, *others = formats
 
     table = Table(title="Filing Format Character Count Comparison", show_lines=False)
-    table.add_column("Company", style="cyan", no_wrap=False, max_width=30)
-    table.add_column("Form", style="magenta")
+    table.add_column("Company", no_wrap=False, max_width=30)
+    table.add_column("Form")
+    table.add_column(reference.capitalize(), justify="right")
 
-    for i, fmt in enumerate(formats):
-        color = DEFAULT_COLORS[i % len(DEFAULT_COLORS)]
-        table.add_column(fmt.capitalize(), justify="right", style=color)
+    for fmt in others:
+        table.add_column(fmt.capitalize(), justify="right")
+
+    def format_cell(value: float, reference_value: float, count_decimals: int = 0) -> str:
+        count_str = f"{value:,.{count_decimals}f}"
+        if not reference_value:
+            return f"{count_str} (n/a)"
+        diff = (value - reference_value) / reference_value * 100
+        sign = "+" if diff >= 0 else ""
+        color = "red" if diff > 0 else "green" if diff < 0 else "white"
+        return f"[{color}]{count_str} ({sign}{diff:.1f}%)[/{color}]"
 
     for r in results:
-        table.add_row(
-            r["company"],
-            str(r["form"]),
-            *[f"{r[f'{fmt}_chars']:,}" for fmt in formats],
-        )
+        row = [r["company"], str(r["form"]), f"{r[f'{reference}_chars']:,}"]
+        row.extend(format_cell(r[f"{fmt}_chars"], r[f"{reference}_chars"]) for fmt in others)
+        table.add_row(*row)
 
     if results:
         table.add_section()
-        avg_row = [
-            f"[bold]{mean(r[f'{fmt}_chars'] for r in results):,.0f}[/bold]" for fmt in formats
-        ]
-        table.add_row("[bold]Average[/bold]", "", *avg_row)
+        avg_reference = mean(r[f"{reference}_chars"] for r in results)
+        avg_row = ["[bold]Average[/bold]", "", f"[bold]{avg_reference:,.1f}[/bold]"]
+        avg_row.extend(
+            f"[bold]{format_cell(mean(r[f'{fmt}_chars'] for r in results), avg_reference, count_decimals=1)}[/bold]"
+            for fmt in others
+        )
+        table.add_row(*avg_row)
 
-    console.print(table)
-
-
-@dataclass
-class Config:
-    """Hold the configuration for the document search pipeline example.
-
-    Args:
-        tickers: The ticker symbols of the companies to analyze.
-        base_dir: The root directory used to store downloaded filings
-            and the document store.
-        start_date: The earliest filing date (inclusive) to ingest.
-        end_date: The latest filing date (inclusive) to ingest.
-    """
-
-    tickers: list[str] = field(default_factory=lambda: DEFAULT_TICKERS)
-    base_dir: Path = field(default_factory=lambda: DEFAULT_BASE_DIR)
-    start_date: date = DEFAULT_START_DATE
-    end_date: date = DEFAULT_END_DATE
+    get_console().print(table)
 
 
 def get_filings(config: Config) -> list[Filing]:
@@ -184,7 +203,7 @@ def get_filings(config: Config) -> list[Filing]:
 
 def main() -> None:
     r"""Define the main function."""
-    config = Config()
+    config = Config(tickers=["AAPL", "MSFT", "NVDA", "GOOGL"])
     filings = get_filings(config)
     logger.info(f"Found {len(filings)} filings.")
 
@@ -192,7 +211,7 @@ def main() -> None:
         logger.warning("No filings found; skipping comparison.")
         return
 
-    formats = ["text", "markdown", "html"]
+    formats = ["text", "markdown", "html", "full_text_submission"]
     results = compare_filing_formats(filings, formats)
     print_comparison(results, formats)
 
