@@ -23,6 +23,7 @@ if is_edgar_available():
     from edgar.entity.utils import format_cik
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from datetime import date
     from pathlib import Path
 
@@ -60,11 +61,11 @@ class Config:
 
 
 def load_or_fetch_filings(
-    companies: list[CompanyIdentifier],
+    companies: Sequence[CompanyIdentifier],
     output_dir: Path | str,
     start_date: date,
     end_date: date,
-    forms: list[str],
+    forms: Sequence[str],
 ) -> list[SecFilingRecord]:
     """Download or load cached SEC filings for a list of companies.
 
