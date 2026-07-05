@@ -108,32 +108,6 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
         inner_input = self._to_inner_input(input["documents"])
         return self._inner_agent.invoke(inner_input, config, **kwargs)
 
-    def batch(
-        self,
-        inputs: list[dict[str, Any]],
-        config: RunnableConfig | list[RunnableConfig] | None = None,
-        **kwargs: Any,
-    ) -> list[T]:
-        """Format the ``max_documents`` most recent documents for each
-        input and batch-invoke the inner agent.
-
-        Args:
-            inputs: A list of dicts, each containing a ``"documents"``
-                key holding the list of documents to analyze, assumed
-                to already be sorted in ascending chronological order.
-            config: Optional runnable configuration(s) forwarded to
-                the inner agent.
-            **kwargs: Additional keyword arguments forwarded to the
-                inner agent's ``batch``.
-
-        Returns:
-            The list of outputs from ``inner_agent.batch``, in the
-            same order as ``inputs``, each computed from a
-            ``{"messages": [HumanMessage(...)]}`` dict input.
-        """
-        inner_inputs = [self._to_inner_input(inp["documents"]) for inp in inputs]
-        return self._inner_agent.batch(inner_inputs, config, **kwargs)
-
     def _to_inner_input(self, documents: list[Any]) -> dict[str, Any]:
         """Format the ``max_documents`` most recent documents and wrap
         them into the inner agent's expected input shape.
