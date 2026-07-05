@@ -2,7 +2,8 @@ r"""Contain pipelines."""
 
 from __future__ import annotations
 
-__all__ = ["BasePipeline", "DocumentIndexingPipeline"]
+__all__ = ["BasePipeline", "DocumentIndexingPipeline", "TickerDocumentAgentPipeline"]
 
 from glyphik.pipeline.base import BasePipeline
 from glyphik.pipeline.document_indexing import DocumentIndexingPipeline
+from glyphik.pipeline.ticker_document_agent import TickerDocumentAgentPipeline
