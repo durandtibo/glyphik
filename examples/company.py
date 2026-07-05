@@ -11,9 +11,8 @@ import click
 from dotenv import load_dotenv
 from zenpyre.data_processors import SequenceProcessor
 from zenpyre.document_stores import DuckDBDocumentStore
-from zenpyre.documents import sort_by_metadata
 from zenpyre.ingestors import InMemoryIngestor, ProcessorIngestor
-from zenpyre.utils.rich import configure_rich_logging, print_document
+from zenpyre.utils.rich import configure_rich_logging
 
 from glyphik.data.sec import SecForm
 from glyphik.data_processors import (
@@ -25,6 +24,7 @@ from glyphik.ingestors import (
     SecFilingDocumentStoreIngestor,
     SecFilingIngestor,
 )
+from glyphik.pipeline import TickerDocumentAgentPipeline
 
 if TYPE_CHECKING:
     from zenpyre.ingestors import BaseIngestor
@@ -65,13 +65,15 @@ def download_data(base_dir: Path, ticker: str) -> None:
 def process_data(base_dir: Path, ticker: str) -> None:
     """Query the document store and print the filings found for the
     given ticker, ordered by filing date."""
-    doc_store = get_document_store(base_dir)
-    logger.info("%s", doc_store)
+    pipeline = TickerDocumentAgentPipeline(
+        tickers=[ticker],
+        document_store=get_document_store(base_dir),
+        agent=None,
+    )
+    logger.info("%s", pipeline)
 
-    docs = sort_by_metadata(doc_store.filter(ticker=ticker), metadata_key="filing_date")
-    logger.info("Found %d documents", len(docs))
-    for doc in docs:
-        print_document(doc)
+    outputs = pipeline.execute()
+    logger.info("Found %d outputs", len(outputs))
 
 
 @click.command()
