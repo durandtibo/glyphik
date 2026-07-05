@@ -34,12 +34,30 @@
 
 Analyses done with `ollama:gemma4:e2b-mlx`.
 
-| Company     | Form |         Text |              Markdown |
-|-------------|------|-------------:|----------------------:|
-| Apple Inc.  | 10-K |       50,403 |       63,052 (+25.1%) |
-| Apple Inc.  | 10-Q |       23,553 |       32,543 (+38.2%) |
-| Apple Inc.  | 10-Q |       16,471 |       23,304 (+41.5%) |
-| Apple Inc.  | 10-Q |       19,055 |       26,718 (+40.2%) |
-| Apple Inc.  | 10-Q |       20,955 |       28,442 (+35.7%) |
-| Apple Inc.  | 10-Q |       17,343 |       23,532 (+35.7%) |
-| **Average** |      | **24,630.0** | **32,931.8 (+33.7%)** |
+| Company        | Form           |         Text |              Markdown |
+|----------------|----------------|-------------:|----------------------:|
+| Apple Inc.     | Apple Inc.     |       50,412 |       63,061 (+25.1%) |
+| Apple Inc.     | Apple Inc.     |       23,562 |       32,552 (+38.2%) |
+| Apple Inc.     | Apple Inc.     |       16,480 |       23,313 (+41.5%) |
+| Apple Inc.     | Apple Inc.     |       19,064 |       26,727 (+40.2%) |
+| Apple Inc.     | Apple Inc.     |       20,964 |       28,451 (+35.7%) |
+| Apple Inc.     | Apple Inc.     |       17,352 |       23,541 (+35.7%) |
+| MICROSOFT CORP | MICROSOFT CORP |       71,921 |       92,246 (+28.3%) |
+| MICROSOFT CORP | MICROSOFT CORP |       50,188 |       66,910 (+33.3%) |
+| MICROSOFT CORP | MICROSOFT CORP |       49,098 |       65,689 (+33.8%) |
+| MICROSOFT CORP | MICROSOFT CORP |       43,262 |       55,966 (+29.4%) |
+| MICROSOFT CORP | MICROSOFT CORP |       49,842 |       65,524 (+31.5%) |
+| MICROSOFT CORP | MICROSOFT CORP |       49,077 |       64,698 (+31.8%) |
+| NVIDIA CORP    | NVIDIA CORP    |       75,058 |       89,281 (+18.9%) |
+| NVIDIA CORP    | NVIDIA CORP    |       77,083 |       92,450 (+19.9%) |
+| NVIDIA CORP    | NVIDIA CORP    |       33,166 |       42,992 (+29.6%) |
+| NVIDIA CORP    | NVIDIA CORP    |       37,460 |       49,765 (+32.8%) |
+| NVIDIA CORP    | NVIDIA CORP    |       34,642 |       46,556 (+34.4%) |
+| NVIDIA CORP    | NVIDIA CORP    |       32,379 |       41,955 (+29.6%) |
+| Alphabet Inc.  | Alphabet Inc.  |       80,929 |       99,218 (+22.6%) |
+| Alphabet Inc.  | Alphabet Inc.  |       80,914 |       99,204 (+22.6%) |
+| Alphabet Inc.  | Alphabet Inc.  |       40,180 |       53,788 (+33.9%) |
+| Alphabet Inc.  | Alphabet Inc.  |       43,752 |       64,171 (+46.7%) |
+| Alphabet Inc.  | Alphabet Inc.  |       43,845 |       64,159 (+46.3%) |
+| Alphabet Inc.  | Alphabet Inc.  |       36,532 |       50,090 (+37.1%) |
+| **Average**    |                | **44,881.8** | **58,429.5 (+30.2%)** |
