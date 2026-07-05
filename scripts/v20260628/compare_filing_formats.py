@@ -119,7 +119,7 @@ def compare_filing_formats(filings: list[Filing], formats: list[str]) -> list[di
         for filing in filings:
             row = {
                 "company": filing.company,
-                "form": filing.company,
+                "form": filing.form,
                 "accession_number": filing.accession_number,
             }
 
@@ -193,7 +193,7 @@ def compare_filing_token_counts(
         for filing in filings:
             row = {
                 "company": filing.company,
-                "form": filing.company,
+                "form": filing.form,
                 "accession_number": filing.accession_number,
             }
 
