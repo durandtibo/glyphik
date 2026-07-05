@@ -3,16 +3,18 @@ r"""Provide code to explore a document search pipeline."""
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import click
 from coola.display import str_pydantic_model
+from coola.utils.path import sanitize_path
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
+from zenpyre.agents import AgentConfig, RunnableWithCache
 from zenpyre.data_processors import SequenceProcessor
 from zenpyre.document_stores import DuckDBDocumentStore
 from zenpyre.ingestors import InMemoryIngestor, ProcessorIngestor
@@ -37,32 +39,89 @@ if TYPE_CHECKING:
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-DEFAULT_MODEL = "ollama:gemma4:e2b-mlx"
-DEFAULT_BASE_DIR = Path(__file__).parent.parent / "tmp/examples/company"
 DEFAULT_START_DATE = date(2025, 1, 1)
 DEFAULT_END_DATE = date(2026, 6, 1)
-DEFAULT_MAX_DOCUMENTS = 4
+DEFAULT_MAX_DOCUMENTS = 1
+
+# NOTE: verify this against the models actually available in your Ollama
+# install (e.g. `ollama list`). "gemma4" / "-mlx" does not match any known
+# released Ollama tag as of this writing.
+DEFAULT_MODEL = "ollama:gemma4:e2b-mlx"
 
 
-@dataclass
-class Config:
-    """Hold the configuration for the document search pipeline example.
+@dataclass(frozen=True)
+class DataConfig:
+    r"""Hold the configuration for a data ingestion pipeline.
 
-    Args:
-        ticker: The ticker symbol of the company to analyze.
-        base_dir: The root directory used to store downloaded filings
-            and the document store.
-        start_date: The earliest filing date (inclusive) to ingest.
-        end_date: The latest filing date (inclusive) to ingest.
-        max_documents: The maximum number of most recent filings to
-            pass to the summarization agent.
+    Attributes:
+        ticker: The ticker symbol of the company to ingest data for.
+            Automatically stripped of leading/trailing whitespace and
+            upper-cased for consistent keys/paths downstream.
+        start_date: The earliest date (inclusive) to ingest.
+        end_date: The latest date (inclusive) to ingest.
+        forms: The SEC forms to ingest. Accepts any iterable (e.g. a
+            list) at construction time; always normalized to a
+            ``tuple`` so the config stays hashable and immutable.
+
+    Raises:
+        ValueError: If ``start_date`` is after ``end_date``.
     """
 
     ticker: str
-    base_dir: Path = field(default_factory=lambda: DEFAULT_BASE_DIR)
     start_date: date = DEFAULT_START_DATE
     end_date: date = DEFAULT_END_DATE
+    forms: tuple[str, ...] = (SecForm.TEN_K, SecForm.TEN_Q)
+
+    def __post_init__(self) -> None:
+        """Normalize the ticker and validate the date range.
+
+        Strips whitespace and upper-cases ``ticker``, converts
+        ``forms`` to a tuple, and checks that ``start_date`` does not
+        come after ``end_date``.
+
+        Raises:
+            ValueError: If ``start_date`` is after ``end_date``.
+        """
+        object.__setattr__(self, "ticker", self.ticker.strip().upper())
+        object.__setattr__(self, "forms", tuple(self.forms))
+        if self.start_date > self.end_date:
+            msg = f"start_date ({self.start_date}) must be <= end_date ({self.end_date})"
+            raise ValueError(msg)
+
+
+@dataclass(frozen=True)
+class DocumentsAgentConfig(AgentConfig):
+    r"""Hold the configuration for the document-summarization agent.
+
+    Extends ``AgentConfig`` with a limit on how many of the most
+    recent documents the agent should process.
+
+    Attributes:
+        max_documents: The maximum number of most recent documents to
+            pass to the agent for summarization.
+    """
+
     max_documents: int = DEFAULT_MAX_DOCUMENTS
+
+
+@dataclass(frozen=True)
+class ExperimentConfig:
+    r"""Hold the full configuration for a pipeline run.
+
+    Bundles the storage location with the data-ingestion and
+    agent-summarization sub-configurations.
+
+    Attributes:
+        base_dir: The root directory used to store pipeline
+            artifacts, such as the document store and downloaded
+            filings.
+        data: The configuration for which filings to ingest.
+        agent: The configuration for the summarization agent.
+    """
+
+    base_dir: Path
+    data: DataConfig
+    agent: DocumentsAgentConfig
 
 
 def get_document_store(base_dir: Path) -> DuckDBDocumentStore:
@@ -79,7 +138,7 @@ def get_document_store(base_dir: Path) -> DuckDBDocumentStore:
     return DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb")
 
 
-def build_ingestor(config: Config) -> BaseIngestor:
+def build_ingestor(config: ExperimentConfig) -> BaseIngestor:
     """Build the S&P 1500 filing ingestor rooted at ``config.base_dir``.
 
     Args:
@@ -93,20 +152,20 @@ def build_ingestor(config: Config) -> BaseIngestor:
     return SecFilingDocumentStoreIngestor(
         filing_ingestor=SecFilingIngestor(
             company_ingestor=ProcessorIngestor(
-                source=SecCompanyIngestor(ingestor=InMemoryIngestor([config.ticker])),
+                source=SecCompanyIngestor(ingestor=InMemoryIngestor([config.data.ticker])),
                 processor=SequenceProcessor(EdgarCompanyToIdentifierProcessor()),
             ),
             output_dir=config.base_dir / "sec",
-            start_date=config.start_date,
-            end_date=config.end_date,
-            forms=[SecForm.TEN_K, SecForm.TEN_Q],
+            start_date=config.data.start_date,
+            end_date=config.data.end_date,
+            forms=config.data.forms,
         ),
         document_store=get_document_store(config.base_dir),
         processor=SequenceProcessor(SecFilingRecordToDocumentProcessor()),
     )
 
 
-def download_data(config: Config) -> None:
+def download_data(config: ExperimentConfig) -> None:
     """Download and index SEC filings for the ticker in ``config``.
 
     Args:
@@ -118,7 +177,7 @@ def download_data(config: Config) -> None:
     ingestor.ingest()
 
 
-def process_data(config: Config) -> None:
+def process_data(config: ExperimentConfig) -> None:
     """Query the document store and print the filings found for the
     ticker in ``config``, ordered by filing date.
 
@@ -132,13 +191,19 @@ def process_data(config: Config) -> None:
             ``config.ticker``, e.g. because no filings were found in
             the document store.
     """
-    model = init_chat_model(model=DEFAULT_MODEL, temperature=0)
+    model = init_chat_model(model=config.agent.model, temperature=config.agent.temperature)
     logger.info("%s", str_pydantic_model(model, exclude_none=True))
-    inner_agent = create_agent(model=model, system_prompt=GENERIC_SYSTEM_PROMPT)
-    agent = RecentDocumentsAgent(inner_agent=inner_agent, max_documents=config.max_documents)
+    inner_agent = create_agent(model=model, system_prompt=config.agent.system_prompt)
+    cache_dir = config.base_dir / "agent_outputs" / config.agent.model / config.agent.cache_key()
+    agent = RunnableWithCache(
+        runnable=RecentDocumentsAgent(
+            inner_agent=inner_agent, max_documents=config.agent.max_documents
+        ),
+        cache_dir=cache_dir,
+    )
 
     pipeline = TickerDocumentAgentPipeline(
-        tickers=[config.ticker],
+        tickers=[config.data.ticker],
         document_store=get_document_store(config.base_dir),
         agent=agent,
     )
@@ -147,10 +212,10 @@ def process_data(config: Config) -> None:
     outputs = pipeline.execute()
     logger.info("Found %d outputs", len(outputs))
     if not outputs:
-        msg = f"No outputs were produced for ticker {config.ticker!r}; is the document store empty?"
+        msg = f"No outputs were produced for ticker {config.data.ticker!r}; is the document store empty?"
         raise RuntimeError(msg)
 
-    print_pretty(outputs[0]["messages"])
+    # print_pretty(outputs[0]["messages"])
     print_markdown(outputs[0]["messages"][-1].content)
 
 
@@ -158,17 +223,17 @@ def process_data(config: Config) -> None:
 @click.option("--ticker", prompt="Enter a ticker", help="The ticker of the company to analyze")
 @click.option(
     "--start-date",
-    type=str,
+    type=click.DateTime(formats=["%Y-%m-%d"]),
     default=DEFAULT_START_DATE.isoformat(),
     show_default=True,
-    help="Earliest filing date to ingest, as an ISO string (YYYY-MM-DD).",
+    help="Earliest filing date to ingest (YYYY-MM-DD).",
 )
 @click.option(
     "--end-date",
-    type=str,
+    type=click.DateTime(formats=["%Y-%m-%d"]),
     default=DEFAULT_END_DATE.isoformat(),
     show_default=True,
-    help="Latest filing date to ingest, as an ISO string (YYYY-MM-DD).",
+    help="Latest filing date to ingest (YYYY-MM-DD).",
 )
 @click.option(
     "--max-documents",
@@ -177,27 +242,43 @@ def process_data(config: Config) -> None:
     show_default=True,
     help="Maximum number of most recent filings to summarize.",
 )
-def main(ticker: str, start_date: str, end_date: str, max_documents: int) -> None:
+def main(ticker: str, start_date: object, end_date: object, max_documents: int) -> None:
     """Run the document indexing pipeline and inspect the vector store.
 
     Args:
         ticker: The ticker symbol of the company to analyze.
-        start_date: The earliest filing date to ingest, as an ISO
-            string (``YYYY-MM-DD``).
-        end_date: The latest filing date to ingest, as an ISO string
-            (``YYYY-MM-DD``).
+        start_date: The earliest filing date to ingest. Parsed and
+            validated by Click as ``YYYY-MM-DD``.
+        end_date: The latest filing date to ingest. Parsed and
+            validated by Click as ``YYYY-MM-DD``.
         max_documents: The maximum number of most recent filings to
             pass to the summarization agent.
     """
-    config = Config(
-        ticker=ticker,
-        start_date=date.fromisoformat(start_date),
-        end_date=date.fromisoformat(end_date),
-        max_documents=max_documents,
-    )
+    try:
+        config = ExperimentConfig(
+            base_dir=sanitize_path(Path(__file__).parent.parent / "tmp/examples/company"),
+            data=DataConfig(
+                ticker=ticker,
+                start_date=start_date.date(),
+                end_date=end_date.date(),
+            ),
+            agent=DocumentsAgentConfig(
+                model=DEFAULT_MODEL,
+                system_prompt=GENERIC_SYSTEM_PROMPT,
+                temperature=0,
+                max_documents=max_documents,
+            ),
+        )
+    except ValueError as e:
+        raise click.BadParameter(str(e)) from e
+
+    print_pretty(config)
 
     download_data(config)
-    process_data(config)
+    try:
+        process_data(config)
+    except RuntimeError as e:
+        raise click.ClickException(str(e)) from e
 
 
 if __name__ == "__main__":

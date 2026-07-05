@@ -572,11 +572,11 @@ wheels = [
 
 [[package]]
 name = "coola"
-version = "1.1.9a0"
+version = "1.1.9a1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/92/0f/aca4828c9fb118f66a7c9b47bf13265cd14f4bd8a93d0e9131897c28991b/coola-1.1.9a0.tar.gz", hash = "sha256:776431e8381a4eefb53350b00965f26a4c856461d4010f4fa0fc7a13c16d431a", size = 103893, upload-time = "2026-07-04T22:04:08.461Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/ca/c68bfddfeb7049fa11ee4980d736dc03c0b207583617755283beccb9b9e0/coola-1.1.9a1.tar.gz", hash = "sha256:edf1cbeb9b8256597994e85e69a06eb7bdd084f4f7d65eea9d4a7547dd04ea35", size = 104440, upload-time = "2026-07-05T22:54:18.87Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/13/0b/7ef6d47a39cf6c0a9db539470f4babd006e2eaf65ebda434df3f550922fa/coola-1.1.9a0-py3-none-any.whl", hash = "sha256:c2adb57f1c7b26bd6974cbae4e602b1092f643ccd55f11cf0c689321c8cbe8a6", size = 188125, upload-time = "2026-07-04T22:04:07.065Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/3e/e4d687a981b6e6e9f2aef4f5af77ea906a932bb58191481fc083ed18df09/coola-1.1.9a1-py3-none-any.whl", hash = "sha256:e7b2e635f936f59a38e9085cc76d317729e22fa8b9d30a2016349a5ce35e5cc2", size = 189302, upload-time = "2026-07-05T22:54:17.159Z" },
 ]
 
 [[package]]
@@ -1149,7 +1149,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "coola", specifier = ">=1.1.9a0,<2.0" },
+    { name = "coola", specifier = ">=1.1.9a1,<2.0" },
     { name = "deepagents", specifier = ">=0.6,<1.0" },
     { name = "duckdb", marker = "extra == 'duckdb'", specifier = ">=1.5,<2.0" },
     { name = "edgartools", marker = "extra == 'edgar'", specifier = ">=5.40,<6.0" },
