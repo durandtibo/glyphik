@@ -23,6 +23,7 @@ else:  # pragma: no cover
     from glyphik.utils.fallback.edgar import Company, Filing
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from pathlib import Path
 
 
@@ -34,7 +35,7 @@ def fetch_filings(
     start_date: date,
     output_dir: Path | str,
     end_date: date | None = None,
-    forms: list[str] | None = None,
+    forms: Sequence[str] | None = None,
     force_download: bool = False,
 ) -> list[SecFilingRecord]:
     """Load or download SEC filings for a company.

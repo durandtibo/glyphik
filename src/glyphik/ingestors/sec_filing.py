@@ -17,6 +17,7 @@ from zenpyre.ingestors.base import BaseIngestor
 from glyphik.data.sec import CompanyIdentifier, SecFilingRecord, load_or_fetch_filings
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from datetime import date
     from pathlib import Path
 
@@ -68,13 +69,13 @@ class SecFilingIngestor(BaseIngestor[list[SecFilingRecord]], MultilineDisplayMix
         output_dir: Path | str,
         start_date: date,
         end_date: date,
-        forms: list[str],
+        forms: Sequence[str],
     ) -> None:
         self._company_ingestor = company_ingestor
         self._output_dir = sanitize_path(output_dir)
         self._start_date = start_date
         self._end_date = end_date
-        self._forms = forms
+        self._forms = list(forms)
 
     def ingest(self) -> list[SecFilingRecord]:
         logger.info("Starting to ingest the SEC filings...")
