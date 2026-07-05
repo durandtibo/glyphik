@@ -10,6 +10,8 @@ from statistics import mean
 from typing import TYPE_CHECKING
 
 from dotenv import load_dotenv
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import HumanMessage, SystemMessage
 from rich import get_console
 from rich.table import Table
 from zenpyre.data_processors import SequenceProcessor
@@ -22,7 +24,7 @@ from glyphik.ingestors import SecCompanyIngestor, SecFilingIngestor
 
 if TYPE_CHECKING:
     from edgar import Filing
-
+    from langchain_core.language_models import BaseChatModel
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -50,6 +52,36 @@ class Config:
     end_date: date = DEFAULT_END_DATE
 
 
+def count_input_tokens(model: BaseChatModel, text: str) -> int:
+    """Count the number of input tokens a text would consume when sent to
+    a chat model.
+
+    Uses the model's own tokenizer via ``get_num_tokens`` when available,
+    so the count reflects the model-specific tokenization scheme (e.g.
+    tiktoken for OpenAI models) rather than a generic approximation.
+
+    Args:
+        model: The chat model that will receive the text.
+        text: The text to tokenize and count.
+
+    Returns:
+        The number of tokens ``text`` would occupy as input to ``model``.
+
+    Example:
+        ```pycon
+        >>> from langchain_openai import ChatOpenAI
+        >>> model = ChatOpenAI(model="gpt-4o-mini")
+        >>> count_input_tokens(model, "Hello, world!")
+        4
+
+        ```
+    """
+    response = model.invoke(
+        [SystemMessage("Read the text and return an empty message."), HumanMessage(content=text)]
+    )
+    return response.usage_metadata["input_tokens"]
+
+
 def compare_filing_formats(filings: list[Filing], formats: list[str]) -> list[dict]:
     """Compare character counts of arbitrary representations of a list of
     edgar Filing objects.
@@ -67,7 +99,7 @@ def compare_filing_formats(filings: list[Filing], formats: list[str]) -> list[di
 
     Returns:
         A list of dicts, one per filing, in the same order as ``filings``.
-        Each dict contains ``"company"``, ``"form"``, ``"accession_no"``,
+        Each dict contains ``"company"``, ``"form"``, ``"accession_number"``,
         and one ``"{format}_chars"`` key per entry in ``formats``. Returns
         an empty list if ``filings`` is empty.
 
@@ -86,9 +118,9 @@ def compare_filing_formats(filings: list[Filing], formats: list[str]) -> list[di
 
         for filing in filings:
             row = {
-                "company": getattr(filing, "company", None) or str(filing),
-                "form": getattr(filing, "form", None),
-                "accession_no": getattr(filing, "accession_no", None),
+                "company": filing.company,
+                "form": filing.company,
+                "accession_number": filing.accession_number,
             }
 
             progress.update(task, description=f"Processing {row['company']}")
@@ -105,6 +137,86 @@ def compare_filing_formats(filings: list[Filing], formats: list[str]) -> list[di
                     )
 
                 row[f"{fmt}_chars"] = len(content)
+
+            results.append(row)
+            progress.advance(task)
+
+    return results
+
+
+def compare_filing_token_counts(
+    filings: list[Filing], formats: list[str], model: BaseChatModel
+) -> list[dict]:
+    """Compare token counts of arbitrary representations of a list of
+    edgar Filing objects, as counted by a given chat model.
+
+    Each requested format must correspond to a zero-argument method or a
+    plain attribute on ``Filing`` that returns a string (e.g. ``"text"``,
+    ``"markdown"``, ``"html"``). If retrieving a format fails or returns
+    ``None`` for a given filing, its token count is recorded as ``0`` and
+    a warning is logged.
+
+    Displays a Rich progress bar tracking filing-level progress while
+    the formats are retrieved and tokenized.
+
+    Args:
+        filings: The edgar Filing objects to compare.
+        formats: Names of zero-arg methods (or attributes) on ``Filing``
+            to compare, e.g. ``["text", "markdown", "html"]``.
+        model: The chat model whose tokenizer is used to count tokens,
+            via ``count_input_tokens``.
+
+    Returns:
+        A list of dicts, one per filing, in the same order as ``filings``.
+        Each dict contains ``"company"``, ``"form"``, ``"accession_number"``,
+        and one ``"{format}_chars"`` key per entry in ``formats``, where
+        the value is a token count rather than a character count. The key
+        name is kept as ``"{format}_chars"`` for compatibility with
+        ``print_comparison``. Returns an empty list if ``filings`` is
+        empty.
+
+    Example:
+        ```pycon
+        >>> from langchain_anthropic import ChatAnthropic
+        >>> model = ChatAnthropic(model="claude-sonnet-4-5")
+        >>> results = compare_filing_token_counts(filings, ["text", "markdown", "html"], model)
+        >>> results[0]["text_chars"]
+        12044
+
+        ```
+    """
+    results = []
+
+    with make_progressbar() as progress:
+        task = progress.add_task("Comparing filing token counts...", total=len(filings))
+
+        for filing in filings:
+            row = {
+                "company": filing.company,
+                "form": filing.company,
+                "accession_number": filing.accession_number,
+            }
+
+            progress.update(task, description=f"Processing {row['company']}")
+
+            for fmt in formats:
+                content = ""
+                try:
+                    attr = getattr(filing, fmt)
+                    content = attr() if callable(attr) else attr
+                    content = content or ""
+                except Exception:  # noqa: BLE001
+                    logger.warning(
+                        "Failed to retrieve %r for %s", fmt, row["company"], exc_info=True
+                    )
+
+                try:
+                    row[f"{fmt}_chars"] = count_input_tokens(model, content) if content else 0
+                except Exception:  # noqa: BLE001
+                    logger.warning(
+                        "Failed to count tokens for %r on %s", fmt, row["company"], exc_info=True
+                    )
+                    row[f"{fmt}_chars"] = 0
 
             results.append(row)
             progress.advance(task)
@@ -203,6 +315,7 @@ def get_filings(config: Config) -> list[Filing]:
 
 def main() -> None:
     r"""Define the main function."""
+    # config = Config(tickers=["AAPL"])
     config = Config(tickers=["AAPL", "MSFT", "NVDA", "GOOGL"])
     filings = get_filings(config)
     logger.info(f"Found {len(filings)} filings.")
@@ -213,6 +326,11 @@ def main() -> None:
 
     formats = ["text", "markdown", "html", "full_text_submission"]
     results = compare_filing_formats(filings, formats)
+    print_comparison(results, formats)
+
+    model = init_chat_model(model="ollama:gemma4:e2b-mlx", temperature=0)
+    formats = ["text", "markdown"]
+    results = compare_filing_token_counts(filings=filings, formats=formats, model=model)
     print_comparison(results, formats)
 
 
