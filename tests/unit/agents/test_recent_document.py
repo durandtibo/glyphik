@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import pytest
 from langchain_core.documents import Document
+from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableLambda
 
 from glyphik.agents.recent_documents import RecentDocumentsAgent
 
 
 def _echo_agent() -> RunnableLambda:
-    return RunnableLambda(lambda text: text)
+    """Return an inner agent that echoes back the content of the single
+    HumanMessage it receives."""
+    return RunnableLambda(lambda inp: inp["messages"][0].content)
 
 
 ######################################################
@@ -109,9 +112,17 @@ def test_recent_documents_agent_invoke_with_metadata_includes_metadata() -> None
     assert result == '<document id="1">\nsource: a.txt\n\ntext\n</document>'
 
 
+def test_recent_documents_agent_invoke_passes_messages_dict_to_inner_agent() -> None:
+    documents = [Document(page_content="text")]
+    inner_agent = RunnableLambda(lambda inp: inp)
+    agent = RecentDocumentsAgent(inner_agent=inner_agent)
+    result = agent.invoke({"documents": documents})
+    assert result == {"messages": [HumanMessage(content='<document id="1">\ntext\n</document>')]}
+
+
 def test_recent_documents_agent_invoke_returns_inner_agent_output() -> None:
     documents = [Document(page_content="text")]
-    inner_agent = RunnableLambda(lambda formatted: {"formatted": formatted})
+    inner_agent = RunnableLambda(lambda inp: {"formatted": inp["messages"][0].content})
     agent = RecentDocumentsAgent(inner_agent=inner_agent)
     result = agent.invoke({"documents": documents})
     assert result == {"formatted": '<document id="1">\ntext\n</document>'}
@@ -139,6 +150,20 @@ def test_recent_documents_agent_batch_returns_full_outputs() -> None:
     ]
 
 
+def test_recent_documents_agent_batch_passes_messages_dicts_to_inner_agent() -> None:
+    inputs = [
+        {"documents": [Document(page_content="old1"), Document(page_content="new1")]},
+        {"documents": [Document(page_content="old2"), Document(page_content="new2")]},
+    ]
+    inner_agent = RunnableLambda(lambda inp: inp)
+    agent = RecentDocumentsAgent(inner_agent=inner_agent, max_documents=1)
+    result = agent.batch(inputs)
+    assert result == [
+        {"messages": [HumanMessage(content='<document id="1">\nnew1\n</document>')]},
+        {"messages": [HumanMessage(content='<document id="1">\nnew2\n</document>')]},
+    ]
+
+
 def test_recent_documents_agent_batch_empty_inputs() -> None:
     agent = RecentDocumentsAgent(inner_agent=_echo_agent())
     assert agent.batch([]) == []
@@ -150,6 +175,22 @@ def test_recent_documents_agent_invoke_and_batch_agree() -> None:
     invoke_result = agent.invoke({"documents": documents})
     batch_result = agent.batch([{"documents": documents}])
     assert [invoke_result] == batch_result
+
+
+# --- _to_inner_input ---
+
+
+def test_recent_documents_agent_to_inner_input_wraps_human_message() -> None:
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=1)
+    documents = [Document(page_content="old"), Document(page_content="new")]
+    result = agent._to_inner_input(documents)
+    assert result == {"messages": [HumanMessage(content='<document id="1">\nnew\n</document>')]}
+
+
+def test_recent_documents_agent_to_inner_input_empty_documents() -> None:
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    result = agent._to_inner_input([])
+    assert result == {"messages": [HumanMessage(content="")]}
 
 
 # --- _format_last_documents ---

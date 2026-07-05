@@ -8,6 +8,7 @@ __all__ = ["RecentDocumentsAgent"]
 from typing import Any, TypeVar
 
 from coola.display import MultilineDisplayMixin
+from langchain_core.messages import HumanMessage
 from langchain_core.runnables import Runnable, RunnableConfig
 from zenpyre.documents import format_documents_as_xml
 
@@ -19,7 +20,8 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
 
     Given an input dict containing a list of documents, this agent
     keeps only the ``max_documents`` most recent ones, formats them
-    as an XML string, and forwards that string to ``inner_agent``.
+    as an XML string, wraps that string in a ``HumanMessage``, and
+    forwards it to ``inner_agent`` as ``{"messages": [HumanMessage(...)]}``.
 
     Assumption:
         The input documents are expected to already be sorted in
@@ -29,7 +31,8 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
 
     Args:
         inner_agent: The wrapped runnable that receives the formatted
-            documents as a single string input.
+            documents as a ``{"messages": [HumanMessage(...)]}`` dict
+            input (e.g. a chat model or a LangGraph-style agent).
         max_documents: The maximum number of most recent documents to
             keep. Must be a positive integer.
         include_metadata: If ``True``, include each document's
@@ -55,7 +58,8 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
         ...     ),
         ... ]
         >>> agent = RecentDocumentsAgent(
-        ...     inner_agent=RunnableLambda(lambda inp: len(inp)), max_documents=3
+        ...     inner_agent=RunnableLambda(lambda inp: len(inp["messages"][0].content)),
+        ...     max_documents=3,
         ... )
         >>> output = agent.invoke({"documents": docs})
         >>> output
@@ -66,7 +70,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
 
     def __init__(
         self,
-        inner_agent: Runnable[str, T],
+        inner_agent: Runnable[dict[str, Any], T],
         max_documents: int = 1,
         include_metadata: bool = False,
     ) -> None:
@@ -96,12 +100,13 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
                 inner agent's ``invoke``.
 
         Returns:
-            The output of ``inner_agent.invoke`` called with the
+            The output of ``inner_agent.invoke`` called with a
+            ``{"messages": [HumanMessage(...)]}`` dict containing the
             formatted string of the ``max_documents`` most recent
             documents.
         """
-        last_documents = self._format_last_documents(input["documents"])
-        return self._inner_agent.invoke(last_documents, config, **kwargs)
+        inner_input = self._to_inner_input(input["documents"])
+        return self._inner_agent.invoke(inner_input, config, **kwargs)
 
     def batch(
         self,
@@ -123,10 +128,26 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
 
         Returns:
             The list of outputs from ``inner_agent.batch``, in the
-            same order as ``inputs``.
+            same order as ``inputs``, each computed from a
+            ``{"messages": [HumanMessage(...)]}`` dict input.
         """
-        formatted_inputs = [self._format_last_documents(inp["documents"]) for inp in inputs]
-        return self._inner_agent.batch(formatted_inputs, config, **kwargs)
+        inner_inputs = [self._to_inner_input(inp["documents"]) for inp in inputs]
+        return self._inner_agent.batch(inner_inputs, config, **kwargs)
+
+    def _to_inner_input(self, documents: list[Any]) -> dict[str, Any]:
+        """Format the ``max_documents`` most recent documents and wrap
+        them into the inner agent's expected input shape.
+
+        Args:
+            documents: The documents to format, assumed to already be
+                sorted in ascending chronological order.
+
+        Returns:
+            A dict of the form ``{"messages": [HumanMessage(...)]}``,
+            where the message content is the XML-formatted string of
+            the ``max_documents`` most recent documents.
+        """
+        return {"messages": [HumanMessage(content=self._format_last_documents(documents))]}
 
     def _format_last_documents(self, documents: list[Any]) -> str:
         """Format the ``max_documents`` most recent documents as XML.
