@@ -21,7 +21,7 @@ from glyphik.pipeline.base import BasePipeline
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from langchain_core.runnables import Runnable
+    from langchain_core.runnables import Runnable, RunnableConfig
     from langchain_core.vectorstores import BaseDocumentStore
 
 T = TypeVar("T")
@@ -54,6 +54,7 @@ class TickerDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             to ``agent.batch``. A value of ``0`` disables batching
             and processes tickers one at a time via ``agent.invoke``.
             Must be non-negative.
+        config: A config to use when invoking the `Runnable`.
 
     Raises:
         ValueError: If ``batch_size`` is negative.
@@ -77,6 +78,7 @@ class TickerDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         document_store: BaseDocumentStore,
         agent: Runnable[dict[str, Any], T],
         batch_size: int = 0,
+        config: RunnableConfig | None = None,
     ) -> None:
         if batch_size < 0:
             msg = f"batch_size must be non-negative, got {batch_size}"
@@ -85,6 +87,7 @@ class TickerDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         self._document_store = document_store
         self._agent = agent
         self._batch_size = batch_size
+        self._config = config
 
     def execute(self) -> list[T]:
         """Run the pipeline over all tickers and return the agent
@@ -120,7 +123,7 @@ class TickerDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             task = progress.add_task("Processing tickers...", total=len(self._tickers))
             for ticker in self._tickers:
                 inp = self._build_agent_input(ticker)
-                response = self._agent.invoke(inp)
+                response = self._agent.invoke(inp, config=self._config)
                 log_token_usage(response)
                 outputs.append(response)
                 progress.advance(task)
@@ -139,7 +142,7 @@ class TickerDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             task = progress.add_task("Processing tickers...", total=len(self._tickers))
             for tickers in batchify(self._tickers, size=self._batch_size):
                 inputs = [self._build_agent_input(ticker) for ticker in tickers]
-                responses = self._agent.batch(inputs)
+                responses = self._agent.batch(inputs, config=self._config)
                 log_token_usage(responses)
                 outputs.extend(responses)
                 progress.advance(task, advance=len(tickers))
