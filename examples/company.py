@@ -8,12 +8,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import click
+from coola.display import str_pydantic_model
 from dotenv import load_dotenv
+from langchain.agents import create_agent
+from langchain.chat_models import init_chat_model
 from zenpyre.data_processors import SequenceProcessor
 from zenpyre.document_stores import DuckDBDocumentStore
 from zenpyre.ingestors import InMemoryIngestor, ProcessorIngestor
-from zenpyre.utils.rich import configure_rich_logging
+from zenpyre.utils.rich import configure_rich_logging, print_markdown, print_pretty
 
+from glyphik.agents import RecentDocumentsAgent
 from glyphik.data.sec import SecForm
 from glyphik.data_processors import (
     EdgarCompanyToIdentifierProcessor,
@@ -25,6 +29,7 @@ from glyphik.ingestors import (
     SecFilingIngestor,
 )
 from glyphik.pipeline import TickerDocumentAgentPipeline
+from glyphik.prompts.summarization import GENERIC_SYSTEM_PROMPT
 
 if TYPE_CHECKING:
     from zenpyre.ingestors import BaseIngestor
@@ -65,15 +70,23 @@ def download_data(base_dir: Path, ticker: str) -> None:
 def process_data(base_dir: Path, ticker: str) -> None:
     """Query the document store and print the filings found for the
     given ticker, ordered by filing date."""
+    model = init_chat_model(model="ollama:gemma4:e2b-mlx", temperature=0)
+    logger.info(str_pydantic_model(model, exclude_none=True))
+    inner_agent = create_agent(model=model, system_prompt=GENERIC_SYSTEM_PROMPT)
+    agent = RecentDocumentsAgent(inner_agent=inner_agent, max_documents=4)
+
     pipeline = TickerDocumentAgentPipeline(
         tickers=[ticker],
         document_store=get_document_store(base_dir),
-        agent=None,
+        agent=agent,
     )
     logger.info("%s", pipeline)
 
     outputs = pipeline.execute()
     logger.info("Found %d outputs", len(outputs))
+
+    print_pretty(outputs[0]["messages"])
+    print_markdown(outputs[0]["messages"][-1].content)
 
 
 @click.command()
