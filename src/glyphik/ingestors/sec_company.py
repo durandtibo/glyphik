@@ -15,10 +15,13 @@ from zenpyre.ingestors.base import BaseIngestor
 
 from glyphik.utils.imports import is_edgar_available
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 if TYPE_CHECKING or is_edgar_available():
-    from edgar import Company
+    import edgar
 else:  # pragma: no cover
-    from glyphik.utils.fallback.edgar import Company
+    from glyphik.utils.fallback.edgar import edgar
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -44,10 +47,10 @@ class SecCompanyIngestor(BaseIngestor[list[Any]], InlineDisplayMixin):
         ```
     """
 
-    def __init__(self, ingestor: BaseIngestor[list[str | int]]) -> None:
+    def __init__(self, ingestor: BaseIngestor[Sequence[str | int]]) -> None:
         self._ingestor = ingestor
 
-    def ingest(self) -> list[Company]:
+    def ingest(self) -> list[edgar.Company]:
         """Build the list of SEC ``Company`` objects.
 
         Fetches the list of CIKs and/or tickers from the wrapped
@@ -61,7 +64,7 @@ class SecCompanyIngestor(BaseIngestor[list[Any]], InlineDisplayMixin):
         t_start = time.perf_counter()
 
         ciks_or_tickers = self._ingestor.ingest()
-        companies = [Company(cik_or_ticker) for cik_or_ticker in ciks_or_tickers]
+        companies = [edgar.Company(cik_or_ticker) for cik_or_ticker in ciks_or_tickers]
 
         logger.info(
             "%s SEC companies have been ingested in %s",
