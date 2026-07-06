@@ -47,13 +47,13 @@ def test_sec_company_ingestor_str_contains_class_name() -> None:
 
 
 def test_sec_company_ingestor_ingest_returns_list() -> None:
-    with patch(f"{MODULE}.Company"):
+    with patch(f"{MODULE}.edgar.Company"):
         result = _make_ingestor(InMemoryIngestor(data=[])).ingest()
     assert isinstance(result, list)
 
 
 def test_sec_company_ingestor_ingest_returns_empty_list_for_empty_input() -> None:
-    with patch(f"{MODULE}.Company"):
+    with patch(f"{MODULE}.edgar.Company"):
         result = _make_ingestor(InMemoryIngestor(data=[])).ingest()
     assert result == []
 
@@ -61,7 +61,7 @@ def test_sec_company_ingestor_ingest_returns_empty_list_for_empty_input() -> Non
 def test_sec_company_ingestor_ingest_builds_one_company_per_input(
     ciks_or_tickers: list[str | int],
 ) -> None:
-    with patch(f"{MODULE}.Company") as mock_company:
+    with patch(f"{MODULE}.edgar.Company") as mock_company:
         result = _make_ingestor(InMemoryIngestor(data=ciks_or_tickers, copy=False)).ingest()
     assert len(result) == len(ciks_or_tickers)
     assert mock_company.call_count == len(ciks_or_tickers)
@@ -70,7 +70,7 @@ def test_sec_company_ingestor_ingest_builds_one_company_per_input(
 def test_sec_company_ingestor_ingest_passes_cik_or_ticker_to_company(
     ciks_or_tickers: list[str | int],
 ) -> None:
-    with patch(f"{MODULE}.Company") as mock_company:
+    with patch(f"{MODULE}.edgar.Company") as mock_company:
         _make_ingestor(InMemoryIngestor(data=ciks_or_tickers, copy=False)).ingest()
     mock_company.assert_any_call("AAPL")
     mock_company.assert_any_call(789019)
@@ -79,7 +79,7 @@ def test_sec_company_ingestor_ingest_passes_cik_or_ticker_to_company(
 def test_sec_company_ingestor_ingest_returns_company_instances(
     ciks_or_tickers: list[str | int],
 ) -> None:
-    with patch(f"{MODULE}.Company") as mock_company:
+    with patch(f"{MODULE}.edgar.Company") as mock_company:
         mock_company.side_effect = lambda cik_or_ticker: cik_or_ticker
         result = _make_ingestor(InMemoryIngestor(data=ciks_or_tickers, copy=False)).ingest()
     assert result == ciks_or_tickers
@@ -88,6 +88,6 @@ def test_sec_company_ingestor_ingest_returns_company_instances(
 def test_sec_company_ingestor_ingest_can_be_called_multiple_times(
     ciks_or_tickers: list[str | int],
 ) -> None:
-    with patch(f"{MODULE}.Company"):
+    with patch(f"{MODULE}.edgar.Company"):
         ingestor = _make_ingestor(InMemoryIngestor(data=ciks_or_tickers, copy=False))
         assert len(ingestor.ingest()) == len(ingestor.ingest())
