@@ -49,9 +49,12 @@ class StructuredLLMAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
         r"""Invoke the LLM and return the parsed structured output.
 
         Args:
-            input: The input passed to the underlying LLM, e.g.
-                ``{"messages": [...]}``. The configured system prompt
-                is prepended to any messages before invocation.
+            input: A dict expected to optionally contain a
+                ``"messages"`` key holding the conversation so far.
+                Only this key is used; any other keys are ignored,
+                since the underlying chat model only accepts a
+                message list. The configured system prompt is
+                prepended to the messages before invocation.
             config: Optional runnable configuration forwarded to the
                 underlying LLM.
             **kwargs: Additional keyword arguments forwarded to the
@@ -64,8 +67,8 @@ class StructuredLLMAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
             ValueError: If the LLM output could not be parsed into
                 ``self._output_type``.
         """
-        payload = self._with_system_prompt(input)
-        result = self._structured_llm.invoke(payload, config, **kwargs)
+        messages = self._build_messages(input)
+        result = self._structured_llm.invoke(messages, config, **kwargs)
         return self._unwrap(result)
 
     def _unwrap(self, result: dict[str, Any]) -> T:
@@ -91,25 +94,33 @@ class StructuredLLMAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
             raise ValueError(msg)
         return result["parsed"]
 
-    def _with_system_prompt(self, input: dict[str, Any]) -> dict[str, Any]:  # noqa: A002
-        """Return a copy of ``input`` with the system prompt prepended.
+    def _build_messages(self, input: dict[str, Any]) -> list[Any]:  # noqa: A002
+        """Build the message list to send to the underlying chat model.
+
+        Chat models (and the runnable returned by
+        ``with_structured_output``) accept ``LanguageModelInput`` —
+        a string, a ``PromptValue``, or a list of messages — not an
+        arbitrary dict. This extracts ``input["messages"]`` and
+        prepends the configured system prompt, discarding any other
+        keys in ``input`` since the chat model has no use for them.
 
         If ``input["messages"]`` already starts with a
         :class:`~langchain_core.messages.SystemMessage`, it is replaced
         rather than duplicated.
 
         Args:
-            input: The original input dict, expected to optionally
-                contain a ``"messages"`` key.
+            input: The agent-level input dict, expected to optionally
+                contain a ``"messages"`` key holding a list of
+                ``BaseMessage``-like objects.
 
         Returns:
-            A new dict with ``self._system_prompt`` as the first
-            message, ahead of any existing non-system messages.
+            A list of messages with ``self._system_prompt`` as the
+            first message, ahead of any existing non-system messages.
         """
         messages = list(input.get("messages", []))
         if messages and isinstance(messages[0], SystemMessage):
             messages = messages[1:]
-        return {**input, "messages": [SystemMessage(content=self._system_prompt), *messages]}
+        return [SystemMessage(content=self._system_prompt), *messages]
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
         """Return the fields shown in this object's multiline repr.
