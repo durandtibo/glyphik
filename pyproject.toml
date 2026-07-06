@@ -12,7 +12,7 @@ only-include = ["src"]
 
 [project]
 name = "glyphik"
-version = "0.0.1a9"
+version = "0.0.1a10"
 description = "Utilities for LangChain"
 readme = "README.md"
 authors = [

@@ -8,6 +8,7 @@ __all__ = ["StructuredLLMAgent"]
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from coola.display import MultilineDisplayMixin
+from coola.utils.string import truncate_str
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import Runnable, RunnableConfig
 
@@ -131,6 +132,6 @@ class StructuredLLMAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
         """
         return {
             "llm": self._llm,
-            "system_prompt": self._system_prompt,
+            "system_prompt": truncate_str(self._system_prompt),
             "output_type": self._output_type,
         }
