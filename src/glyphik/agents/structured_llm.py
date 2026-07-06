@@ -11,6 +11,10 @@ from coola.display import MultilineDisplayMixin
 from coola.utils.string import truncate_str
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import Runnable, RunnableConfig
+from zenpyre.utils.json_to_structured import (
+    JsonStructuredOutputParseError,
+    parse_json_to_structured,
+)
 
 if TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
@@ -76,24 +80,41 @@ class StructuredLLMAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
         """Extract the parsed output from a raw structured-output
         result.
 
+        If the underlying chat model already parsed the output
+        successfully, that parsed value is returned directly. If
+        parsing failed (e.g. the model didn't emit a proper tool call,
+        which is common with small or local models), this falls back
+        to manually parsing the raw message content as JSON via
+        :func:`parse_json_to_structured` before giving up.
+
         Args:
             result: The dict returned by the underlying LLM when
                 ``include_raw=True``, containing ``"raw"``,
                 ``"parsed"``, and ``"parsing_error"`` keys.
 
         Returns:
-            The value under ``"parsed"``.
+            The value under ``"parsed"``, or the result of manually
+            parsing ``result["raw"].content`` if the initial parsing
+            failed.
 
         Raises:
-            ValueError: If ``result["parsing_error"]`` is not ``None``.
+            ValueError: If ``result["parsing_error"]`` is not ``None``
+                and the raw content also cannot be parsed into
+                ``self._output_type``.
         """
-        if result["parsing_error"] is not None:
+        if result["parsing_error"] is None:
+            return result["parsed"]
+
+        raw_content = result["raw"].content
+        try:
+            return parse_json_to_structured(raw_content, self._output_type)
+        except JsonStructuredOutputParseError as e:
             msg = (
                 f"Failed to parse LLM output into {self._output_type!r}: "
-                f"{result['parsing_error']!r}"
+                f"{result['parsing_error']!r}. Fallback manual JSON parsing "
+                f"also failed: {e}"
             )
-            raise ValueError(msg)
-        return result["parsed"]
+            raise ValueError(msg) from e
 
     def _build_messages(self, input: dict[str, Any]) -> list[Any]:  # noqa: A002
         """Build the message list to send to the underlying chat model.

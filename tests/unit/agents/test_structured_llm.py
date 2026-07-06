@@ -68,6 +68,12 @@ def _failed_result(error: Exception) -> dict[str, Any]:
     return {"raw": AIMessage(content=""), "parsed": None, "parsing_error": error}
 
 
+def _failed_result_with_raw(error: Exception, raw_content: str) -> dict[str, Any]:
+    """Return an ``include_raw``-style failed-parse result with custom
+    raw content."""
+    return {"raw": AIMessage(content=raw_content), "parsed": None, "parsing_error": error}
+
+
 ######################################################
 #     Tests for StructuredLLMAgent                  #
 ######################################################
@@ -172,6 +178,22 @@ def test_structured_llm_agent_invoke_raises_on_parsing_error() -> None:
         agent.invoke({"messages": [HumanMessage(content="hi")]})
 
 
+def test_structured_llm_agent_invoke_falls_back_to_manual_json_parsing() -> None:
+    error = ValueError("no tool call emitted")
+    llm = _fake_llm([_failed_result_with_raw(error, '{"value": "hello"}')])
+    agent = StructuredLLMAgent(llm=llm, system_prompt="You are helpful.", output_type=Answer)
+    result = agent.invoke({"messages": [HumanMessage(content="hi")]})
+    assert result == Answer(value="hello")
+
+
+def test_structured_llm_agent_invoke_raises_when_both_parsing_paths_fail() -> None:
+    error = ValueError("no tool call emitted")
+    llm = _fake_llm([_failed_result_with_raw(error, "not json at all")])
+    agent = StructuredLLMAgent(llm=llm, system_prompt="You are helpful.", output_type=Answer)
+    with pytest.raises(ValueError, match="Failed to parse LLM output"):
+        agent.invoke({"messages": [HumanMessage(content="hi")]})
+
+
 # --- batch ---
 
 
@@ -224,6 +246,62 @@ def test_structured_llm_agent_unwrap_raises_with_output_type_and_error_in_messag
     with pytest.raises(ValueError, match="Answer") as exc_info:
         agent._unwrap(_failed_result(error))
     assert "boom" in str(exc_info.value)
+
+
+# --- _unwrap: fallback to parse_json_to_structured ---
+
+
+def test_structured_llm_agent_unwrap_falls_back_to_manual_json_parsing() -> None:
+    llm = _fake_llm([_parsed_result("a")])
+    agent = StructuredLLMAgent(llm=llm, system_prompt="You are helpful.", output_type=Answer)
+    error = ValueError("no tool call emitted")
+    result = agent._unwrap(_failed_result_with_raw(error, '{"value": "hello"}'))
+    assert result == Answer(value="hello")
+
+
+def test_structured_llm_agent_unwrap_fallback_handles_fenced_json() -> None:
+    llm = _fake_llm([_parsed_result("a")])
+    agent = StructuredLLMAgent(llm=llm, system_prompt="You are helpful.", output_type=Answer)
+    error = ValueError("no tool call emitted")
+    raw_content = '```json\n{"value": "hello"}\n```'
+    result = agent._unwrap(_failed_result_with_raw(error, raw_content))
+    assert result == Answer(value="hello")
+
+
+def test_structured_llm_agent_unwrap_fallback_handles_json_with_surrounding_prose() -> None:
+    llm = _fake_llm([_parsed_result("a")])
+    agent = StructuredLLMAgent(llm=llm, system_prompt="You are helpful.", output_type=Answer)
+    error = ValueError("no tool call emitted")
+    raw_content = 'Sure, here you go:\n{"value": "hello"}\nHope that helps!'
+    result = agent._unwrap(_failed_result_with_raw(error, raw_content))
+    assert result == Answer(value="hello")
+
+
+def test_structured_llm_agent_unwrap_raises_when_fallback_also_fails() -> None:
+    llm = _fake_llm([_parsed_result("a")])
+    agent = StructuredLLMAgent(llm=llm, system_prompt="You are helpful.", output_type=Answer)
+    error = ValueError("no tool call emitted")
+    with pytest.raises(ValueError, match="Answer") as exc_info:
+        agent._unwrap(_failed_result_with_raw(error, "not json at all"))
+    assert "Fallback manual JSON parsing also failed" in str(exc_info.value)
+
+
+def test_structured_llm_agent_unwrap_raises_when_fallback_json_fails_validation() -> None:
+    llm = _fake_llm([_parsed_result("a")])
+    agent = StructuredLLMAgent(llm=llm, system_prompt="You are helpful.", output_type=Answer)
+    error = ValueError("no tool call emitted")
+    # Missing the required "value" field.
+    raw_content = '{"other_field": "oops"}'
+    with pytest.raises(ValueError, match="Fallback manual JSON parsing also failed"):
+        agent._unwrap(_failed_result_with_raw(error, raw_content))
+
+
+def test_structured_llm_agent_unwrap_original_error_preserved_in_message() -> None:
+    llm = _fake_llm([_parsed_result("a")])
+    agent = StructuredLLMAgent(llm=llm, system_prompt="You are helpful.", output_type=Answer)
+    error = ValueError("original parsing error")
+    with pytest.raises(ValueError, match="original parsing error"):
+        agent._unwrap(_failed_result_with_raw(error, "not json"))
 
 
 # --- _build_messages ---
