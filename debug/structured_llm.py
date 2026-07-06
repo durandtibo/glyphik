@@ -62,6 +62,7 @@ def main() -> None:
             traceback before being re-raised.
     """
     agent = build_agent()
+    logger.info("Agent: %s", agent)
 
     logger.info("Sending review text to agent: %s", REVIEW_TEXT)
     try:
