@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import click
 from coola.display import str_pydantic_model
@@ -124,18 +124,19 @@ class ExperimentConfig:
     agent: DocumentsAgentConfig
 
 
-def get_document_store(base_dir: Path) -> DuckDBDocumentStore:
+def get_document_store(base_dir: Path, **kwargs: Any) -> DuckDBDocumentStore:
     """Return a persisted DuckDB document store.
 
     Args:
         base_dir: The root directory used to store pipeline
             artifacts. The document store is created at
             ``base_dir / "document_store" / "documents.duckdb"``.
+        **kwargs: Additional keyword arguments.
 
     Returns:
         A DuckDB-backed document store rooted at ``base_dir``.
     """
-    return DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb")
+    return DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb", **kwargs)
 
 
 def build_ingestor(config: ExperimentConfig) -> BaseIngestor:
@@ -204,7 +205,7 @@ def process_data(config: ExperimentConfig) -> None:
 
     pipeline = TickerDocumentAgentPipeline(
         tickers=[config.data.ticker],
-        document_store=get_document_store(config.base_dir),
+        document_store=get_document_store(config.base_dir, read_only=True),
         agent=agent,
     )
     logger.info("%s", pipeline)
