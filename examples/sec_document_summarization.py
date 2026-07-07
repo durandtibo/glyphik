@@ -11,17 +11,19 @@ from typing import TYPE_CHECKING, Any
 import click
 from coola.display import str_pydantic_model
 from coola.utils.path import sanitize_path
+from coola.utils.string import slugify
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
-from zenpyre.agents import AgentConfig, RunnableWithCache
+from zenpyre.agents import AgentConfig
 from zenpyre.data_processors import SequenceProcessor
 from zenpyre.document_stores import DuckDBDocumentStore
 from zenpyre.ingestors import InMemoryIngestor, ProcessorIngestor
+from zenpyre.runnables import CachingRunnable
 from zenpyre.utils.rich import configure_rich_logging, print_markdown, print_pretty
 
 from glyphik.agents import RecentDocumentsAgent
-from glyphik.data.sec import SecForm
+from glyphik.data.sec import CompanyIdentifier, SecForm
 from glyphik.data_processors import (
     EdgarCompanyToIdentifierProcessor,
     SecFilingRecordToDocumentProcessor,
@@ -31,7 +33,7 @@ from glyphik.ingestors import (
     SecFilingDocumentStoreIngestor,
     SecFilingIngestor,
 )
-from glyphik.pipeline import TickerDocumentAgentPipeline
+from glyphik.pipeline import CompanyDocumentAgentPipeline
 from glyphik.prompts.summarization import GENERIC_SYSTEM_PROMPT
 
 if TYPE_CHECKING:
@@ -195,18 +197,19 @@ def process_data(config: ExperimentConfig) -> None:
     model = init_chat_model(model=config.agent.model, temperature=config.agent.temperature)
     logger.info("%s", str_pydantic_model(model, exclude_none=True))
     inner_agent = create_agent(model=model, system_prompt=config.agent.system_prompt)
-    cache_dir = config.base_dir / "agent_outputs" / config.agent.model / config.agent.cache_key()
-    agent = RunnableWithCache(
-        runnable=RecentDocumentsAgent(
-            inner_agent=inner_agent, max_documents=config.agent.max_documents
-        ),
-        cache_dir=cache_dir,
+    cache_dir = (
+        config.base_dir / "agent_outputs" / slugify(config.agent.model) / config.agent.cache_key()
+    )
+    agent = RecentDocumentsAgent(
+        inner_agent=CachingRunnable(inner_agent, cache_dir=cache_dir),
+        max_documents=config.agent.max_documents,
     )
 
-    pipeline = TickerDocumentAgentPipeline(
-        tickers=[config.data.ticker],
+    pipeline = CompanyDocumentAgentPipeline(
+        companies=[CompanyIdentifier.from_ticker(config.data.ticker)],
         document_store=get_document_store(config.base_dir, read_only=True),
         agent=agent,
+        log_documents_metadata=True,
     )
     logger.info("%s", pipeline)
 
@@ -216,8 +219,9 @@ def process_data(config: ExperimentConfig) -> None:
         msg = f"No outputs were produced for ticker {config.data.ticker!r}; is the document store empty?"
         raise RuntimeError(msg)
 
-    # print_pretty(outputs[0]["messages"])
-    print_markdown(outputs[0]["messages"][-1].content)
+    for output in outputs:
+        print_pretty(output)
+        print_markdown(output["messages"][-1].content)
 
 
 @click.command()
