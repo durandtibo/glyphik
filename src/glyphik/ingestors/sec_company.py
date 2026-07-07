@@ -26,7 +26,7 @@ else:  # pragma: no cover
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class SecCompanyIngestor(BaseIngestor[list[Any]], InlineDisplayMixin):
+class SecCompanyIngestor(BaseIngestor[list[edgar.Company]], InlineDisplayMixin):
     """Ingestor that builds SEC ``Company`` objects.
 
     Wraps another ingestor that produces a list of CIK numbers and/or

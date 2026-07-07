@@ -5,19 +5,17 @@ from __future__ import annotations
 
 __all__ = ["Sp1500CompanyToIdentifierProcessor"]
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from coola.display import InlineDisplayMixin
 from zenpyre.data_processors import BaseProcessor
 
 from glyphik.data.sec import CompanyIdentifier
-
-if TYPE_CHECKING:
-    from glyphik.data.sp1500 import Company
+from glyphik.data.sp1500.company import Company
 
 
 class Sp1500CompanyToIdentifierProcessor(
-    BaseProcessor["Company", CompanyIdentifier], InlineDisplayMixin
+    BaseProcessor[Company, CompanyIdentifier], InlineDisplayMixin
 ):
     """Convert an :class:`~glyphik.data.sp1500.Company` object into a
     :class:`~glyphik.data.sec.CompanyIdentifier`.
