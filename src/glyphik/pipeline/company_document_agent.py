@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from langchain_core.runnables import Runnable, RunnableConfig
-    from zenpyre.document_stores import BaseDocumentStore
+    from langchain_core.vectorstores import BaseDocumentStore
 
     from glyphik.data.sec import CompanyIdentifier
 
@@ -57,6 +57,16 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             and processes companies one at a time via ``agent.invoke``.
             Must be non-negative.
         config: A config to use when invoking the ``Runnable``.
+        continue_on_error: If ``False`` (the default), an exception
+            raised by ``agent`` for any company propagates immediately
+            and aborts the whole run. If ``True``, a failing company is
+            logged as a warning and skipped instead: processing
+            continues with the remaining companies, and the returned
+            list simply omits that company's output (so it may be
+            shorter than ``companies`` if any failed). Only
+            :class:`Exception` subclasses are caught this way --
+            :class:`BaseException` types such as ``KeyboardInterrupt``
+            always propagate regardless of this setting.
 
     Raises:
         ValueError: If ``batch_size`` is negative.
@@ -73,6 +83,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         ...     document_store=document_store,
         ...     agent=agent,
         ...     batch_size=8,
+        ...     continue_on_error=True,
         ... )
         >>> outputs = pipeline.execute()
 
@@ -86,6 +97,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         agent: Runnable[dict[str, Any], T],
         batch_size: int = 0,
         config: RunnableConfig | None = None,
+        continue_on_error: bool = False,
     ) -> None:
         if batch_size < 0:
             msg = f"batch_size must be non-negative, got {batch_size}"
@@ -95,6 +107,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         self._agent = agent
         self._batch_size = batch_size
         self._config = config
+        self._continue_on_error = continue_on_error
 
     def execute(self) -> list[T]:
         """Run the pipeline over all companies and return the agent
@@ -107,9 +120,16 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         usage is logged for every response (only when nonzero, per
         ``log_token_usage``'s default behavior).
 
+        If ``self._continue_on_error`` is ``True``, a company whose
+        agent call raises an exception is logged as a warning and
+        skipped rather than aborting the run; see
+        :attr:`continue_on_error` on the class docstring for details.
+
         Returns:
             The list of agent outputs, one per company, in the same
-            order as ``self._companies``.
+            order as ``self._companies``. If ``continue_on_error`` is
+            ``True`` and some companies failed, the list omits their
+            outputs and is correspondingly shorter.
         """
         logger.info("Starting company document agent pipeline...")
         t_start = time.perf_counter()
@@ -122,16 +142,29 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
     def _execute_sequential(self) -> list[T]:
         """Process companies one at a time via ``agent.invoke``.
 
+        If ``self._continue_on_error`` is ``True``, a company whose
+        ``agent.invoke`` call raises an :class:`Exception` is logged as
+        a warning and skipped instead of aborting the run.
+
         Returns:
-            The list of agent outputs, one per company, in the same
-            order as ``self._companies``.
+            The list of agent outputs, one per company that succeeded,
+            in the same order as ``self._companies``.
         """
         outputs: list[T] = []
         with make_progressbar(transient=True) as progress:
             task = progress.add_task("Processing companies...", total=len(self._companies))
             for company in self._companies:
                 inp = self._build_agent_input(company)
-                response = self._agent.invoke(inp, config=self._config)
+                try:
+                    response = self._agent.invoke(inp, config=self._config)
+                except Exception:
+                    if not self._continue_on_error:
+                        raise
+                    logger.warning(
+                        "Skipping company %s after agent failure", company, exc_info=True
+                    )
+                    progress.advance(task)
+                    continue
                 log_token_usage(response)
                 outputs.append(response)
                 progress.advance(task)
@@ -141,18 +174,35 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         """Process companies in groups of ``self._batch_size`` via
         ``agent.batch``.
 
+        If ``self._continue_on_error`` is ``True``, ``agent.batch`` is
+        called with ``return_exceptions=True`` so a failing company
+        does not abort the rest of the batch: its exception is returned
+        in place of a normal output, logged as a warning, and excluded
+        from the returned list. Otherwise, any exception raised while
+        processing a batch propagates immediately.
+
         Returns:
-            The list of agent outputs, one per company, in the same
-            order as ``self._companies``.
+            The list of agent outputs, one per company that succeeded,
+            in the same order as ``self._companies``.
         """
         outputs: list[T] = []
         with make_progressbar(transient=True) as progress:
             task = progress.add_task("Processing companies...", total=len(self._companies))
             for companies in batchify(self._companies, size=self._batch_size):
                 inputs = [self._build_agent_input(company) for company in companies]
-                responses = self._agent.batch(inputs, config=self._config)
-                log_token_usage(responses)
-                outputs.extend(responses)
+                responses = self._agent.batch(
+                    inputs, config=self._config, return_exceptions=self._continue_on_error
+                )
+                successes = []
+                for company, response in zip(companies, responses, strict=True):
+                    if self._continue_on_error and isinstance(response, BaseException):
+                        logger.warning(
+                            "Skipping company %s after agent failure: %s", company, response
+                        )
+                        continue
+                    successes.append(response)
+                log_token_usage(successes)
+                outputs.extend(successes)
                 progress.advance(task, advance=len(companies))
         return outputs
 
@@ -171,6 +221,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             "agent": self._agent,
             "batch_size": self._batch_size,
             "config": self._config,
+            "continue_on_error": self._continue_on_error,
         }
 
     def _build_agent_input(self, company: CompanyIdentifier) -> dict[str, Any]:
