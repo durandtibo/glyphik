@@ -144,6 +144,27 @@ def test_company_document_agent_pipeline_stores_continue_on_error(
     assert pipeline._continue_on_error is True
 
 
+def test_company_document_agent_pipeline_default_log_documents_metadata(
+    document_store: InMemoryDocumentStore,
+) -> None:
+    pipeline = CompanyDocumentAgentPipeline(
+        companies=[AAPL], document_store=document_store, agent=_fake_agent()
+    )
+    assert pipeline._log_documents_metadata is False
+
+
+def test_company_document_agent_pipeline_stores_log_documents_metadata(
+    document_store: InMemoryDocumentStore,
+) -> None:
+    pipeline = CompanyDocumentAgentPipeline(
+        companies=[AAPL],
+        document_store=document_store,
+        agent=_fake_agent(),
+        log_documents_metadata=True,
+    )
+    assert pipeline._log_documents_metadata is True
+
+
 def test_company_document_agent_pipeline_repr_contains_class_name(
     document_store: InMemoryDocumentStore,
 ) -> None:
@@ -354,6 +375,53 @@ def test_company_document_agent_pipeline_execute_batch_continue_on_error_no_fail
         {"company": AAPL, "n_documents": 2},
         {"company": MSFT, "n_documents": 1},
     ]
+
+
+# --- _build_agent_input (log_documents_metadata) ---
+
+
+def test_company_document_agent_pipeline_build_agent_input_log_documents_metadata_does_not_raise(
+    document_store: InMemoryDocumentStore,
+) -> None:
+    pipeline = CompanyDocumentAgentPipeline(
+        companies=[AAPL],
+        document_store=document_store,
+        agent=_fake_agent(),
+        log_documents_metadata=True,
+    )
+    # Just verify enabling the option does not raise, and that the
+    # documents are still returned correctly (sorted by filing date).
+    result = pipeline._build_agent_input(AAPL)
+    assert result == {
+        "company": AAPL,
+        "documents": [
+            Document(
+                id="2",
+                page_content="aapl doc 2",
+                metadata={"cik": AAPL.cik, "filing_date": "2022-01-01"},
+            ),
+            Document(
+                id="1",
+                page_content="aapl doc 1",
+                metadata={"cik": AAPL.cik, "filing_date": "2023-01-01"},
+            ),
+        ],
+    }
+
+
+def test_company_document_agent_pipeline_build_agent_input_log_documents_metadata_no_matching_documents(
+    document_store: InMemoryDocumentStore,
+) -> None:
+    # Even with no matching documents, enabling the option should not
+    # raise -- print_documents_metadata is called with an empty list.
+    pipeline = CompanyDocumentAgentPipeline(
+        companies=[GOOG],
+        document_store=document_store,
+        agent=_fake_agent(),
+        log_documents_metadata=True,
+    )
+    result = pipeline._build_agent_input(GOOG)
+    assert result == {"company": GOOG, "documents": []}
 
 
 # --- _build_agent_input ---
