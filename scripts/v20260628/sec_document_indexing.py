@@ -6,7 +6,7 @@ import logging
 import os
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
@@ -51,9 +51,9 @@ def get_embedding_model() -> HuggingFaceEmbeddings:
     )
 
 
-def get_document_store(base_dir: Path) -> DuckDBDocumentStore:
+def get_document_store(base_dir: Path, **kwargs: Any) -> DuckDBDocumentStore:
     """Return a persisted DuckDB document store."""
-    return DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb")
+    return DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb", **kwargs)
 
 
 def get_vector_store(base_dir: Path) -> Chroma:
@@ -155,7 +155,7 @@ def main() -> None:
         search_kwargs={"filter": {"ticker": {"$in": ["MMM"]}}},
     )
 
-    document_store = get_document_store(base_dir)
+    document_store = get_document_store(base_dir, read_only=True)
     print_document(document_store.get(results[0].metadata["source_document_id"]))
 
 
