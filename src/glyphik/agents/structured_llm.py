@@ -15,6 +15,7 @@ from zenpyre.utils.json_to_structured import (
     JsonStructuredOutputParseError,
     parse_json_to_structured,
 )
+from zenpyre.utils.token_usage import log_token_usage
 
 if TYPE_CHECKING:
     from langchain_core.language_models import BaseChatModel
@@ -102,6 +103,7 @@ class StructuredLLMAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
                 and the raw content also cannot be parsed into
                 ``self._output_type``.
         """
+        log_token_usage(result)
         if result["parsing_error"] is None:
             return result["parsed"]
 
