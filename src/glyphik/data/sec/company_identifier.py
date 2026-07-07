@@ -3,13 +3,13 @@ company by its ticker symbol and SEC Central Index Key (CIK)."""
 
 from __future__ import annotations
 
-__all__ = ["CompanyIdentifier"]
+__all__ = ["CompanyIdentifier", "CompanyIdentifierHasher"]
 
 import json
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
 
-from coola.hashing import hash_string
+from coola.hashing import BaseHasher, HasherRegistry, get_default_registry, hash_string
 
 from glyphik.data.sec.cik import fetch_ticker_from_cik
 from glyphik.data.sec.ticker import fetch_cik_from_ticker
@@ -137,3 +137,43 @@ class CompanyIdentifier:
             ```
         """
         return hash_string(json.dumps(asdict(self), sort_keys=True), length=length)
+
+
+class CompanyIdentifierHasher(BaseHasher[CompanyIdentifier]):
+    r"""Hasher for :class:`~glyphik.data.sec.CompanyIdentifier` objects.
+
+    This hasher delegates to
+    :meth:`~glyphik.data.sec.CompanyIdentifier.content_hash`, which
+    computes a hash from the identifier's ``cik`` and ``ticker``
+    fields, so two identifiers with equal content produce the same
+    hash regardless of object identity.
+
+    Example:
+        ```pycon
+        >>> from glyphik.data.sec import CompanyIdentifier
+        >>> from glyphik.data.sec.company_identifier import CompanyIdentifierHasher
+        >>> from coola.hashing import HasherRegistry
+        >>> registry = HasherRegistry()
+        >>> hasher = CompanyIdentifierHasher()
+        >>> hasher
+        CompanyIdentifierHasher()
+        >>> identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+        >>> len(hasher.hash(identifier, registry=registry))
+        64
+
+        ```
+    """
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__qualname__}()"
+
+    def hash(
+        self,
+        data: CompanyIdentifier,
+        registry: HasherRegistry,  # noqa: ARG002
+        length: int = 64,
+    ) -> str:
+        return data.content_hash(length=length)
+
+
+get_default_registry().register(CompanyIdentifier, CompanyIdentifierHasher(), exist_ok=True)

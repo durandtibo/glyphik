@@ -4,10 +4,17 @@ from dataclasses import FrozenInstanceError
 from unittest.mock import Mock, patch
 
 import pytest
+from coola.hashing import HasherRegistry, hash_object
 
 from glyphik.data.sec import CompanyIdentifier
+from glyphik.data.sec.company_identifier import CompanyIdentifierHasher
 
 MODULE = "glyphik.data.sec.company_identifier"
+
+
+@pytest.fixture
+def registry() -> HasherRegistry:
+    return HasherRegistry()
 
 
 #######################################
@@ -161,3 +168,127 @@ def test_company_identifier_content_hash_differs_from_builtin_hash() -> None:
     # and isn't guaranteed to be stable across processes).
     identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
     assert identifier.content_hash() != hash(identifier)
+
+
+#############################################
+#     Tests for CompanyIdentifierHasher     #
+#############################################
+
+
+def test_company_identifier_hasher_repr() -> None:
+    assert repr(CompanyIdentifierHasher()) == "CompanyIdentifierHasher()"
+
+
+def test_company_identifier_hasher_str() -> None:
+    assert str(CompanyIdentifierHasher()) == "CompanyIdentifierHasher()"
+
+
+def test_company_identifier_hasher_hash_returns_str(registry: HasherRegistry) -> None:
+    hasher = CompanyIdentifierHasher()
+    identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert isinstance(hasher.hash(identifier, registry=registry), str)
+
+
+def test_company_identifier_hasher_hash_default_length(registry: HasherRegistry) -> None:
+    hasher = CompanyIdentifierHasher()
+    identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert len(hasher.hash(identifier, registry=registry)) == 64
+
+
+@pytest.mark.parametrize(
+    "length",
+    [
+        pytest.param(2, id="min-valid"),
+        pytest.param(32, id="middle"),
+        pytest.param(64, id="default"),
+        pytest.param(128, id="max-valid"),
+    ],
+)
+def test_company_identifier_hasher_hash_length(registry: HasherRegistry, length: int) -> None:
+    hasher = CompanyIdentifierHasher()
+    identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert len(hasher.hash(identifier, registry=registry, length=length)) == length
+
+
+def test_company_identifier_hasher_hash_same_identifier_same_hash(
+    registry: HasherRegistry,
+) -> None:
+    hasher = CompanyIdentifierHasher()
+    identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert hasher.hash(identifier, registry=registry) == hasher.hash(identifier, registry=registry)
+
+
+def test_company_identifier_hasher_hash_equal_identifiers_same_hash(
+    registry: HasherRegistry,
+) -> None:
+    hasher = CompanyIdentifierHasher()
+    identifier_a = CompanyIdentifier(cik=320193, ticker="AAPL")
+    identifier_b = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert hasher.hash(identifier_a, registry=registry) == hasher.hash(
+        identifier_b, registry=registry
+    )
+
+
+def test_company_identifier_hasher_hash_different_cik_different_hash(
+    registry: HasherRegistry,
+) -> None:
+    hasher = CompanyIdentifierHasher()
+    identifier_a = CompanyIdentifier(cik=320193, ticker="AAPL")
+    identifier_b = CompanyIdentifier(cik=789019, ticker="AAPL")
+    assert hasher.hash(identifier_a, registry=registry) != hasher.hash(
+        identifier_b, registry=registry
+    )
+
+
+def test_company_identifier_hasher_hash_different_ticker_different_hash(
+    registry: HasherRegistry,
+) -> None:
+    hasher = CompanyIdentifierHasher()
+    identifier_a = CompanyIdentifier(cik=320193, ticker="AAPL")
+    identifier_b = CompanyIdentifier(cik=320193, ticker="MSFT")
+    assert hasher.hash(identifier_a, registry=registry) != hasher.hash(
+        identifier_b, registry=registry
+    )
+
+
+def test_company_identifier_hasher_hash_matches_content_hash(registry: HasherRegistry) -> None:
+    hasher = CompanyIdentifierHasher()
+    identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert hasher.hash(identifier, registry=registry) == identifier.content_hash()
+
+
+def test_company_identifier_hasher_hash_matches_content_hash_with_length(
+    registry: HasherRegistry,
+) -> None:
+    hasher = CompanyIdentifierHasher()
+    identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert hasher.hash(identifier, registry=registry, length=32) == identifier.content_hash(
+        length=32
+    )
+
+
+def test_company_identifier_hasher_hash_ignores_registry(registry: HasherRegistry) -> None:
+    """The registry is accepted for interface compatibility but should
+    not affect the resulting hash, since CompanyIdentifierHasher
+    delegates entirely to CompanyIdentifier.content_hash."""
+    hasher = CompanyIdentifierHasher()
+    identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert hasher.hash(identifier, registry=HasherRegistry()) == hasher.hash(
+        identifier, registry=registry
+    )
+
+
+#################################
+#     Tests for hash_object     #
+#################################
+
+
+def test_hash_object_company_identifier() -> None:
+    identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert hash_object(identifier) == identifier.content_hash()
+
+
+@pytest.mark.parametrize("length", [16, 32])
+def test_hash_object_company_identifier_length(length: int) -> None:
+    identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+    assert hash_object(identifier, length=length) == identifier.content_hash(length=length)
