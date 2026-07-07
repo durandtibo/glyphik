@@ -13,7 +13,7 @@ from coola.display import MultilineDisplayMixin
 from coola.utils.batching import batchify
 from coola.utils.format import str_time_human
 from zenpyre.documents import sort_by_metadata
-from zenpyre.utils.rich import make_progressbar
+from zenpyre.utils.rich import make_progressbar, print_documents_metadata
 from zenpyre.utils.token_usage import log_token_usage
 
 from glyphik.pipeline.base import BasePipeline
@@ -67,6 +67,12 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             :class:`Exception` subclasses are caught this way --
             :class:`BaseException` types such as ``KeyboardInterrupt``
             always propagate regardless of this setting.
+        log_documents_metadata: If ``True``, log each company's
+            document metadata (via
+            ``zenpyre.utils.rich.print_documents_metadata``) right
+            after its documents are retrieved and sorted, before being
+            passed to ``agent``. Useful for inspecting which documents
+            were selected for each company. Defaults to ``False``.
 
     Raises:
         ValueError: If ``batch_size`` is negative.
@@ -98,6 +104,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         batch_size: int = 0,
         config: RunnableConfig | None = None,
         continue_on_error: bool = False,
+        log_documents_metadata: bool = False,
     ) -> None:
         if batch_size < 0:
             msg = f"batch_size must be non-negative, got {batch_size}"
@@ -108,6 +115,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         self._batch_size = batch_size
         self._config = config
         self._continue_on_error = continue_on_error
+        self._log_documents_metadata = log_documents_metadata
 
     def execute(self) -> list[T]:
         """Run the pipeline over all companies and return the agent
@@ -222,10 +230,16 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             "batch_size": self._batch_size,
             "config": self._config,
             "continue_on_error": self._continue_on_error,
+            "log_documents_metadata": self._log_documents_metadata,
         }
 
     def _build_agent_input(self, company: CompanyIdentifier) -> dict[str, Any]:
         """Retrieve and sort the documents for a single company.
+
+        If ``self._log_documents_metadata`` is ``True``, the sorted
+        documents' metadata is logged via
+        ``zenpyre.utils.rich.print_documents_metadata`` before being
+        returned.
 
         Args:
             company: The company to look up in the document store,
@@ -240,4 +254,6 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         documents = sort_by_metadata(
             self._document_store.filter(cik=company.cik), metadata_key="filing_date"
         )
+        if self._log_documents_metadata:
+            print_documents_metadata(documents)
         return {"company": company, "documents": documents}
