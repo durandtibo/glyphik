@@ -1,12 +1,15 @@
-r"""Provide a utility to fetch the current S&P 1500 constituents from
-Wikipedia."""
+r"""Provide the :class:`CompanyIdentifier` dataclass used to identify a
+company by its ticker symbol and SEC Central Index Key (CIK)."""
 
 from __future__ import annotations
 
 __all__ = ["CompanyIdentifier"]
 
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
+
+from coola.hashing import hash_string
 
 from glyphik.data.sec.cik import fetch_ticker_from_cik
 from glyphik.data.sec.ticker import fetch_cik_from_ticker
@@ -20,8 +23,8 @@ class CompanyIdentifier:
     """A single company identifier.
 
     Args:
-        ticker: The stock ticker symbol (e.g. ``"AAPL"``).
         cik: The SEC Central Index Key (CIK).
+        ticker: The stock ticker symbol (e.g. ``"AAPL"``).
     """
 
     cik: int
@@ -89,3 +92,48 @@ class CompanyIdentifier:
         if ticker is None:
             return cls.from_cik(company.cik)
         return cls(cik=company.cik, ticker=ticker)
+
+    def content_hash(self, length: int = 64) -> str:
+        """Compute a stable hash of this identifier's content.
+
+        The identifier is first serialized to a canonical JSON string
+        (its fields sorted by key, so field declaration order does not
+        affect the result), then hashed with BLAKE2b via
+        :func:`coola.hashing.hash_string`.
+
+        This is distinct from the built-in ``hash()`` / ``__hash__``
+        that :func:`dataclasses.dataclass` generates automatically for
+        frozen dataclasses: Python's string hashing is randomized per
+        process (via ``PYTHONHASHSEED``) unless explicitly disabled, so
+        ``hash(identifier)`` can differ between runs and must not be
+        used for caching to disk, cache keys shared across processes,
+        or persisted identifiers. ``content_hash`` is deterministic
+        across processes, interpreter restarts, and machines, and is
+        safe to use for those purposes.
+
+        Args:
+            length: The desired length of the returned hex string. Must
+                be an even number between 2 and 128 inclusive, since
+                each byte of the BLAKE2b digest encodes as two hex
+                characters. Defaults to 64 (32-byte digest).
+
+        Returns:
+            A lowercase hexadecimal string of exactly ``length``
+                characters, uniquely determined by ``cik`` and
+                ``ticker``.
+
+        Raises:
+            ValueError: If ``length`` is not an even number between 2
+                and 128 (propagated from
+                :func:`coola.hashing.hash_string`).
+
+        Example:
+            ```pycon
+            >>> from glyphik.data.sec import CompanyIdentifier
+            >>> identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
+            >>> len(identifier.content_hash())
+            64
+
+            ```
+        """
+        return hash_string(json.dumps(asdict(self), sort_keys=True), length=length)
