@@ -41,20 +41,22 @@ _HEADERS: dict[str, str] = {"User-Agent": "Mozilla/5.0"}
 
 
 def load_or_fetch_sp1500_companies(
-    path: Path | str, find_missing_ciks: bool = True
+    path: Path | str | None, find_missing_ciks: bool = True
 ) -> list[Company]:
     """Load S&P 1500 companies from a cached JSON file, or fetch and
     cache them if no cache exists.
 
-    If ``path`` already exists, the companies are loaded from it via
-    :func:`load_dataclasses`.  Otherwise, the companies are fetched
-    from Wikipedia via :func:`fetch_sp1500_companies`, optionally
-    enriched with missing CIK numbers via :func:`fill_missing_ciks`,
-    and saved to ``path`` via :func:`save_dataclasses` for future
-    calls.
+    If ``path`` is given and already exists, the companies are loaded
+    from it via :func:`load_dataclasses`. Otherwise, the companies are
+    fetched from Wikipedia via :func:`fetch_sp1500_companies`,
+    optionally enriched with missing CIK numbers via
+    :func:`fill_missing_ciks`, and -- if ``path`` is given -- saved to
+    ``path`` via :func:`save_dataclasses` for future calls.
 
     Args:
-        path: The path to the JSON cache file.
+        path: The path to the JSON cache file. If ``None``, caching is
+            disabled entirely: companies are always freshly fetched and
+            nothing is loaded from or saved to disk.
         find_missing_ciks: If ``True`` (the default), calls
             :func:`fill_missing_ciks` after fetching to look up CIK
             numbers for companies whose ``cik`` is ``None`` (e.g.
@@ -74,16 +76,20 @@ def load_or_fetch_sp1500_companies(
 
         ```
     """
-    path = sanitize_path(path)
-    if path.is_file():
-        logger.info("Loading cached S&P 1500 companies from %s...", path)
-        return load_dataclasses(path, Company)
+    if path is not None:
+        path = sanitize_path(path)
+        if path.is_file():
+            logger.info("Loading cached S&P 1500 companies from %s...", path)
+            return load_dataclasses(path, Company)
+        logger.info("No cache found at %s, fetching from Wikipedia...", path)
+    else:
+        logger.info("No cache path given, fetching from Wikipedia...")
 
-    logger.info("No cache found at %s, fetching from Wikipedia...", path)
     companies = fetch_sp1500_companies()
     if find_missing_ciks:
         companies = fill_missing_ciks(companies)
-    save_dataclasses(companies, path)
+    if path is not None:
+        save_dataclasses(companies, path)
     return companies
 
 
