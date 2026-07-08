@@ -14,7 +14,8 @@ from coola.utils.format import str_time_human
 from coola.utils.path import sanitize_path
 from zenpyre.ingestors.base import BaseIngestor
 
-from glyphik.data.sp1500 import Company, load_or_fetch_sp1500_companies
+from glyphik.data.sp1500.company import Company
+from glyphik.data.sp1500.fetch import load_or_fetch_sp1500_companies
 
 if TYPE_CHECKING:
     from pathlib import Path
