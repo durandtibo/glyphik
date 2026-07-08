@@ -11,7 +11,7 @@ from glyphik.data.sp1500 import Company, get_sp1500_company_identifiers
 if TYPE_CHECKING:
     from pathlib import Path
 
-MODULE = "glyphik.data.sp1500.identifiers"
+MODULE = "glyphik.data.sp1500.company_identifier"
 
 
 @pytest.fixture
@@ -152,7 +152,7 @@ def test_get_sp1500_company_identifiers_company_without_cik_logs_warning(
         patch.object(
             CompanyIdentifier, "from_ticker", return_value=CompanyIdentifier(cik=1, ticker="XYZ")
         ),
-        caplog.at_level("WARNING"),
+        caplog.at_level("INFO"),
     ):
         get_sp1500_company_identifiers()
 
