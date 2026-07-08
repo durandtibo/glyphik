@@ -341,11 +341,6 @@ def test_fetch_sp1500_companies_propagates_parse_error(irrelevant_table: pd.Data
 #################################################
 
 
-#################################################
-#     Tests for load_or_fetch_sp1500_companies  #
-#################################################
-
-
 # --- Cache exists ---
 
 
@@ -524,3 +519,107 @@ def test_load_or_fetch_sp1500_companies_find_missing_ciks_true_result(
         result = load_or_fetch_sp1500_companies(path, find_missing_ciks=True)
 
     assert result == enriched
+
+
+# --- path is None (caching disabled) ---
+
+
+def test_load_or_fetch_sp1500_companies_path_none_calls_fetch(companies: list[Company]) -> None:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies) as mock_fetch,
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies),
+    ):
+        result = load_or_fetch_sp1500_companies(None)
+
+    mock_fetch.assert_called_once()
+    assert result == companies
+
+
+def test_load_or_fetch_sp1500_companies_path_none_does_not_call_load(
+    companies: list[Company],
+) -> None:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies),
+        patch(f"{MODULE}.load_dataclasses") as mock_load,
+    ):
+        load_or_fetch_sp1500_companies(None)
+
+    mock_load.assert_not_called()
+
+
+def test_load_or_fetch_sp1500_companies_path_none_does_not_call_save(
+    companies: list[Company],
+) -> None:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies),
+        patch(f"{MODULE}.save_dataclasses") as mock_save,
+    ):
+        load_or_fetch_sp1500_companies(None)
+
+    mock_save.assert_not_called()
+
+
+def test_load_or_fetch_sp1500_companies_path_none_does_not_call_sanitize_path(
+    companies: list[Company],
+) -> None:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies),
+        patch(f"{MODULE}.sanitize_path") as mock_sanitize,
+    ):
+        load_or_fetch_sp1500_companies(None)
+
+    mock_sanitize.assert_not_called()
+
+
+def test_load_or_fetch_sp1500_companies_path_none_always_fetches_on_repeat_calls(
+    companies: list[Company],
+) -> None:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies) as mock_fetch,
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies),
+    ):
+        load_or_fetch_sp1500_companies(None)
+        load_or_fetch_sp1500_companies(None)
+
+    # Unlike a real path, None disables caching entirely, so each call
+    # must fetch fresh -- there is nothing to cache to.
+    assert mock_fetch.call_count == 2
+
+
+def test_load_or_fetch_sp1500_companies_path_none_calls_fill_missing_ciks_by_default(
+    companies: list[Company],
+) -> None:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=companies) as mock_fill,
+    ):
+        load_or_fetch_sp1500_companies(None)
+
+    mock_fill.assert_called_once_with(companies)
+
+
+def test_load_or_fetch_sp1500_companies_path_none_skips_fill_when_find_missing_ciks_false(
+    companies: list[Company],
+) -> None:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=companies),
+        patch(f"{MODULE}.fill_missing_ciks") as mock_fill,
+    ):
+        load_or_fetch_sp1500_companies(None, find_missing_ciks=False)
+
+    mock_fill.assert_not_called()
+
+
+def test_load_or_fetch_sp1500_companies_path_none_empty_fetch_result() -> None:
+    with (
+        patch(f"{MODULE}.fetch_sp1500_companies", return_value=[]),
+        patch(f"{MODULE}.fill_missing_ciks", return_value=[]),
+        patch(f"{MODULE}.save_dataclasses") as mock_save,
+    ):
+        result = load_or_fetch_sp1500_companies(None)
+
+    assert result == []
+    mock_save.assert_not_called()
