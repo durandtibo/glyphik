@@ -15,7 +15,7 @@ from coola.utils.path import sanitize_path
 from zenpyre.ingestors.base import BaseIngestor
 
 from glyphik.data.sec import SecFilingRecord
-from glyphik.data.sp1500.filing import load_or_fetch_filings
+from glyphik.data.sp1500 import load_or_fetch_filings
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
