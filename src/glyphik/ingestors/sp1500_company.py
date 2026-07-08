@@ -31,7 +31,10 @@ class Sp1500CompanyIngestor(BaseIngestor[list[Company]], InlineDisplayMixin):
     :func:`~glyphik.data.sp1500.fill_missing_ciks`.
 
     Args:
-        path: Path to the JSON cache file.
+        path: Path to the JSON cache file. If ``None``, caching is
+            disabled entirely: the company list is always freshly
+            fetched from Wikipedia on every :meth:`ingest` call, and
+            nothing is loaded from or saved to disk.
         find_missing_ciks: If ``True`` (the default), looks up CIK
             numbers for companies whose ``cik`` is ``None`` after
             fetching.  Has no effect when loading from an existing
@@ -47,8 +50,8 @@ class Sp1500CompanyIngestor(BaseIngestor[list[Company]], InlineDisplayMixin):
         ```
     """
 
-    def __init__(self, path: Path | str, find_missing_ciks: bool = True) -> None:
-        self._path = sanitize_path(path)
+    def __init__(self, path: Path | str | None, find_missing_ciks: bool = True) -> None:
+        self._path = sanitize_path(path) if path is not None else None
         self._find_missing_ciks = find_missing_ciks
 
     def ingest(self) -> list[Company]:
@@ -57,7 +60,9 @@ class Sp1500CompanyIngestor(BaseIngestor[list[Company]], InlineDisplayMixin):
         Returns:
             A list of :class:`~glyphik.data.sp1500.Company` instances,
             either loaded from the cache at :attr:`_path` or freshly
-            fetched from Wikipedia and cached.
+            fetched from Wikipedia and cached. If :attr:`_path` is
+            ``None``, the list is always freshly fetched and never
+            cached.
         """
         logger.info("Starting to ingest the list of S&P 1500 companies...")
         t_start = time.perf_counter()

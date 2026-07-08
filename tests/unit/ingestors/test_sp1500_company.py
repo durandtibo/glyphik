@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from glyphik.data.sp1500 import Company
 from glyphik.ingestors import Sp1500CompanyIngestor
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 MODULE = "glyphik.ingestors.sp1500_company"
 
@@ -79,6 +76,45 @@ def test_sp1500_company_ingestor_repr_contains_path(tmp_path: Path) -> None:
     assert str(path) in repr(Sp1500CompanyIngestor(path=path))
 
 
+# --- Constructor: path=None (caching disabled) ---
+
+
+def test_sp1500_company_ingestor_path_none_stores_none() -> None:
+    ingestor = Sp1500CompanyIngestor(path=None)
+    assert ingestor._path is None
+
+
+def test_sp1500_company_ingestor_path_none_repr_contains_none() -> None:
+    assert "None" in repr(Sp1500CompanyIngestor(path=None))
+
+
+def test_sp1500_company_ingestor_path_none_does_not_call_sanitize_path() -> None:
+    with patch(f"{MODULE}.sanitize_path") as mock_sanitize:
+        Sp1500CompanyIngestor(path=None)
+    mock_sanitize.assert_not_called()
+
+
+# --- Constructor: empty string path ---
+#
+# Regression test: the constructor used to check `if path` (truthy),
+# which silently treated an empty string the same as path=None. It now
+# checks `if path is not None`, so an empty string is sanitized like any
+# other real (if unusual) path instead of silently disabling caching.
+
+
+def test_sp1500_company_ingestor_empty_string_path_is_not_treated_as_none() -> None:
+    ingestor = Sp1500CompanyIngestor(path="")
+    assert ingestor._path is not None
+    assert isinstance(ingestor._path, Path)
+
+
+def test_sp1500_company_ingestor_empty_string_path_calls_sanitize_path() -> None:
+    with patch(f"{MODULE}.sanitize_path", return_value=Path("/sentinel")) as mock_sanitize:
+        ingestor = Sp1500CompanyIngestor(path="")
+    mock_sanitize.assert_called_once_with("")
+    assert ingestor._path == Path("/sentinel")
+
+
 # --- ingest ---
 
 
@@ -116,3 +152,35 @@ def test_sp1500_company_ingestor_ingest_can_be_called_multiple_times(
     with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies):
         ingestor = Sp1500CompanyIngestor(path=tmp_path / "sp1500.json")
         assert ingestor.ingest() == ingestor.ingest()
+
+
+# --- ingest: path=None (caching disabled) ---
+
+
+def test_sp1500_company_ingestor_ingest_path_none_calls_load_or_fetch_with_none(
+    companies: list[Company],
+) -> None:
+    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies) as mock_load:
+        result = Sp1500CompanyIngestor(path=None).ingest()
+    mock_load.assert_called_once_with(path=None, find_missing_ciks=True)
+    assert result == companies
+
+
+def test_sp1500_company_ingestor_ingest_path_none_passes_find_missing_ciks_false(
+    companies: list[Company],
+) -> None:
+    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies) as mock_load:
+        Sp1500CompanyIngestor(path=None, find_missing_ciks=False).ingest()
+    mock_load.assert_called_once_with(path=None, find_missing_ciks=False)
+
+
+def test_sp1500_company_ingestor_ingest_path_none_can_be_called_multiple_times(
+    companies: list[Company],
+) -> None:
+    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies) as mock_load:
+        ingestor = Sp1500CompanyIngestor(path=None)
+        assert ingestor.ingest() == ingestor.ingest()
+    # Each call must go through load_or_fetch_sp1500_companies again,
+    # since path=None disables caching -- there is nothing to short
+    # circuit on at the ingestor level either.
+    assert mock_load.call_count == 2
