@@ -52,7 +52,7 @@ dependencies = [
     "pydantic >=2.0,<3.0",
     "python-dotenv >= 1.2,<2.0",
     "rich >=15.0,<16.0",
-    "zenpyre >=0.0.1a34,<1.0",
+    "zenpyre >=0.0.1a35,<1.0",
 ]
 
 [project.optional-dependencies]

@@ -1191,7 +1191,7 @@ requires-dist = [
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
     { name = "textual", extras = ["syntax"], marker = "extra == 'textual'", specifier = ">=8.2,<9.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a34,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a35,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "duckdb", "edgar", "google-genai", "huggingface", "ollama", "openai", "sentence-transformers", "text-splitters", "textual"]
 
@@ -4491,7 +4491,7 @@ wheels = [
 
 [[package]]
 name = "transformers"
-version = "5.13.0"
+version = "5.13.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "huggingface-hub" },
@@ -4504,9 +4504,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ec/e1/720ff7ff666b04279fea5bb7ac3ef8675e98f0ddbc1b8cb8bc9f3889d62e/transformers-5.13.0.tar.gz", hash = "sha256:940c1428e42a4238f9ccf0cd41e63c590701aa63c19fd2ce3d7d602222d68495", size = 9195801, upload-time = "2026-07-03T16:05:39.362Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/f7/418169401560cec2b61512e6bf37b0cfb4c8e27700cfa868a1de073cb65d/transformers-5.13.1.tar.gz", hash = "sha256:1e2452d6778a7482158df5d5dacf6bf775d5b2fdcfce33caaf7f6b0e5f3e3397", size = 9196891, upload-time = "2026-07-11T09:15:50.845Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/3a/d99704c5effe10c6339c98cb236259161103e159bb99a78468b6729572ec/transformers-5.13.0-py3-none-any.whl", hash = "sha256:8adbc1d20bd5463cd6876b2eb7cb31971e1065788e7dc6bc12bab597a7c504b7", size = 11503730, upload-time = "2026-07-03T16:05:35.569Z" },
+    { url = "https://files.pythonhosted.org/packages/29/47/54eacf96b5c835bbd6ca631aa2740e7705ed63d9e3a8afd2d2cc6d09cae5/transformers-5.13.1-py3-none-any.whl", hash = "sha256:53f0ea8aa397e29244c2377ba981bcaf0c87adcf44fbdd447ef6306522afcacd", size = 11503977, upload-time = "2026-07-11T09:15:46.801Z" },
 ]
 
 [[package]]
@@ -5385,7 +5385,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a34"
+version = "0.0.1a35"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -5397,9 +5397,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/4a/c23eb1c41435f282d9dea964f020872ba60e9c314e1f53c645bab5c38c2c/zenpyre-0.0.1a34.tar.gz", hash = "sha256:6daa99eccf37e8a0bf22f142f251e02eeaf88151b043082d9b41e9eeeab8baf4", size = 102141, upload-time = "2026-07-11T08:59:16.497Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3a/e6/c2712dd87f9d601cb037b217439cf532fdf36a51388e8fdcc50f5e4c56e7/zenpyre-0.0.1a35.tar.gz", hash = "sha256:b6ba65074e73b2192aed3d890704912eb41e65a86e52b0a990b4a8a5384bfa9b", size = 103341, upload-time = "2026-07-11T17:10:02.025Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/ab/272926777968f437637e2864d4b14b13e74a85af3d8f2ef5a842099bca4c/zenpyre-0.0.1a34-py3-none-any.whl", hash = "sha256:1b7c6adeec52c7c620af215dc2c1a9f742cebaaf26ba2411eb049e0a5fe0a36f", size = 176667, upload-time = "2026-07-11T08:59:14.619Z" },
+    { url = "https://files.pythonhosted.org/packages/78/a7/712f9304f47fc85f137310bbf6cae044541730685cf381825e4397050511/zenpyre-0.0.1a35-py3-none-any.whl", hash = "sha256:83df98226821bfd861b87b0c9d7eaa14387fb9e376b34a2a47ea65c16bdf0840", size = 178702, upload-time = "2026-07-11T17:09:59.867Z" },
 ]
 
 [[package]]
