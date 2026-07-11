@@ -916,6 +916,18 @@ wheels = [
 ]
 
 [[package]]
+name = "faker"
+version = "40.28.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cc/2d/3ead106cef42eab305e15f9c089dcc68a40387d5ce04af18585af4ebbb44/faker-40.28.1.tar.gz", hash = "sha256:2a63fb51abab8790636d4030a094cf942404cbccc9c288d1cad70e2e3e9ecd58", size = 2022717, upload-time = "2026-07-01T22:23:43.763Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/92/a6/6111b9f13c1564b0e2f5dbeeb611fd00dc731e6add2336f62b798598c73d/faker-40.28.1-py3-none-any.whl", hash = "sha256:e8d3f5c469100a553d246dce7937c291308068a5ec6c9c3a228d7878b50720be", size = 2061052, upload-time = "2026-07-01T22:23:41.946Z" },
+]
+
+[[package]]
 name = "feu"
 version = "0.7.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1124,6 +1136,9 @@ duckdb = [
 edgar = [
     { name = "edgartools" },
 ]
+faker = [
+    { name = "faker" },
+]
 google-genai = [
     { name = "langchain-google-genai" },
 ]
@@ -1176,6 +1191,7 @@ requires-dist = [
     { name = "deepagents", specifier = ">=0.6,<1.0" },
     { name = "duckdb", marker = "extra == 'duckdb'", specifier = ">=1.5,<2.0" },
     { name = "edgartools", marker = "extra == 'edgar'", specifier = ">=5.40,<6.0" },
+    { name = "faker", marker = "extra == 'faker'", specifier = ">=40.0,<41.0" },
     { name = "iden", specifier = ">=0.4.1,<1.0" },
     { name = "langchain", specifier = ">=1.3,<2.0" },
     { name = "langchain-anthropic", marker = "extra == 'anthropic'", specifier = ">=1.4,<2.0" },
@@ -1186,14 +1202,14 @@ requires-dist = [
     { name = "langchain-ollama", marker = "extra == 'ollama'", specifier = ">=1.1,<2.0" },
     { name = "langchain-openai", marker = "extra == 'openai'", specifier = ">=1.2,<2.0" },
     { name = "langchain-text-splitters", marker = "extra == 'text-splitters'", specifier = ">=1.0,<2.0" },
-    { name = "pydantic", specifier = ">=2.0,<3.0" },
+    { name = "pydantic", specifier = ">=2.10,<3.0" },
     { name = "python-dotenv", specifier = ">=1.2,<2.0" },
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
     { name = "textual", extras = ["syntax"], marker = "extra == 'textual'", specifier = ">=8.2,<9.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a35,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a36,<1.0" },
 ]
-provides-extras = ["anthropic", "chroma", "duckdb", "edgar", "google-genai", "huggingface", "ollama", "openai", "sentence-transformers", "text-splitters", "textual"]
+provides-extras = ["anthropic", "chroma", "duckdb", "faker", "edgar", "google-genai", "huggingface", "ollama", "openai", "sentence-transformers", "text-splitters", "textual"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2237,7 +2253,7 @@ wheels = [
 
 [[package]]
 name = "mkdocstrings"
-version = "1.0.5"
+version = "1.0.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
@@ -2247,9 +2263,9 @@ dependencies = [
     { name = "mkdocs-autorefs" },
     { name = "pymdown-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/46/8c/05934c546eb38321e5f24e786b24c7a0dc5f2b35968f6e04dce9cfbb738d/mkdocstrings-1.0.5.tar.gz", hash = "sha256:3a9528223afd6bf459ea85541b600ef3542826bbeb4ab534553f4b3c4e6e5e48", size = 100318, upload-time = "2026-07-10T10:49:10.026Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/53/71/f85bdf13355073ae15a7375f09879375a830553552e58c1c4b7e0bbc5c8b/mkdocstrings-1.0.6.tar.gz", hash = "sha256:a0b8c2bdd29a6416c80d717aa369bbf7831946bd9f23c2a66db1b1dbe7693dbd", size = 100649, upload-time = "2026-07-11T19:38:05.732Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/82/2a2d44f2c09563d321ab2690835f066267fe000623c90c0caf44e296cbbb/mkdocstrings-1.0.5-py3-none-any.whl", hash = "sha256:150eff6e8c370cc8d2ba4e452ece1275fe83ad34d8cc5884a89a0ed141618c49", size = 35543, upload-time = "2026-07-10T10:49:08.689Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/5b/4c1902e8bdd5c4db63284e9d101dece4038d4025d6d88850ffe0a1578980/mkdocstrings-1.0.6-py3-none-any.whl", hash = "sha256:2703708697487d1b6d6d7b412e176fa436edf120c1bf81dc9e126b12d00893c7", size = 35787, upload-time = "2026-07-11T19:38:04.417Z" },
 ]
 
 [package.optional-dependencies]
@@ -5385,7 +5401,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a35"
+version = "0.0.1a36"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -5397,9 +5413,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3a/e6/c2712dd87f9d601cb037b217439cf532fdf36a51388e8fdcc50f5e4c56e7/zenpyre-0.0.1a35.tar.gz", hash = "sha256:b6ba65074e73b2192aed3d890704912eb41e65a86e52b0a990b4a8a5384bfa9b", size = 103341, upload-time = "2026-07-11T17:10:02.025Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/c5/a101cbaab193926cd2ddd7b2c2374c1b8475f83e4a88261f2bc3d949803c/zenpyre-0.0.1a36.tar.gz", hash = "sha256:6978e9510d611f7e6c4c03dc088dd2e5392507dd22e17e2334dff950c82feef1", size = 106419, upload-time = "2026-07-11T19:59:03.152Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/78/a7/712f9304f47fc85f137310bbf6cae044541730685cf381825e4397050511/zenpyre-0.0.1a35-py3-none-any.whl", hash = "sha256:83df98226821bfd861b87b0c9d7eaa14387fb9e376b34a2a47ea65c16bdf0840", size = 178702, upload-time = "2026-07-11T17:09:59.867Z" },
+    { url = "https://files.pythonhosted.org/packages/15/bc/2359bd42bc5dbe9daf44b92d77f393d3a80d0582846577d1386ca678688a/zenpyre-0.0.1a36-py3-none-any.whl", hash = "sha256:83e36ad84cc1da5ca1e90e1ef85deb5401d31f01d1dfec9c466ee0402ff7131d", size = 185068, upload-time = "2026-07-11T19:59:01.749Z" },
 ]
 
 [[package]]

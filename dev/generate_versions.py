@@ -33,7 +33,7 @@ def fetch_package_versions(base_dir: Path) -> dict[str, list[str]]:
     deps = read_pyproject_dependencies(pyproject_path) + read_pyproject_optional_dependencies(
         pyproject_path
     )
-    major_deps, minor_deps = partition_package_bounds(deps, [])
+    major_deps, minor_deps = partition_package_bounds(deps, ["faker"])
 
     return sort_by_keys(
         fetch_latest_major_versions_map(major_deps, include_lower_bound=True)
