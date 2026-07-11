@@ -14,7 +14,7 @@ from coola.utils.format import str_time_human
 from coola.utils.path import sanitize_path
 from zenpyre.ingestors.base import BaseIngestor
 
-from glyphik.data.sp1500 import Company, load_or_fetch_sp1500_companies
+from glyphik.data.sp1500 import Company, load_or_fetch_companies
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -66,7 +66,7 @@ class Sp1500CompanyIngestor(BaseIngestor[list[Company]], InlineDisplayMixin):
         """
         logger.info("Starting to ingest the list of S&P 1500 companies...")
         t_start = time.perf_counter()
-        companies = load_or_fetch_sp1500_companies(
+        companies = load_or_fetch_companies(
             path=self._path, find_missing_ciks=self._find_missing_ciks
         )
         logger.info(

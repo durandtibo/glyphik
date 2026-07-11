@@ -3,7 +3,7 @@ Wikipedia."""
 
 from __future__ import annotations
 
-__all__ = ["Company", "fetch_sp1500_companies", "load_or_fetch_sp1500_companies"]
+__all__ = ["Company", "fetch_companies", "load_or_fetch_companies"]
 
 import logging
 from typing import TYPE_CHECKING
@@ -40,7 +40,7 @@ _CIK_COLUMNS: tuple[str, ...] = ("CIK",)
 _HEADERS: dict[str, str] = {"User-Agent": "Mozilla/5.0"}
 
 
-def load_or_fetch_sp1500_companies(
+def load_or_fetch_companies(
     path: Path | str | None, find_missing_ciks: bool = True
 ) -> list[Company]:
     """Load S&P 1500 companies from a cached JSON file, or fetch and
@@ -71,8 +71,8 @@ def load_or_fetch_sp1500_companies(
 
     Example:
         ```pycon
-        >>> from glyphik.data.sp1500 import load_or_fetch_sp1500_companies
-        >>> companies = load_or_fetch_sp1500_companies("sp1500.json")  # doctest: +SKIP
+        >>> from glyphik.data.sp1500 import load_or_fetch_companies
+        >>> companies = load_or_fetch_companies("sp1500.json")  # doctest: +SKIP
 
         ```
     """
@@ -85,7 +85,7 @@ def load_or_fetch_sp1500_companies(
     else:
         logger.info("No cache path given, fetching from Wikipedia...")
 
-    companies = fetch_sp1500_companies()
+    companies = fetch_companies()
     if find_missing_ciks:
         companies = fill_missing_ciks(companies)
     if path is not None:
@@ -93,7 +93,7 @@ def load_or_fetch_sp1500_companies(
     return companies
 
 
-def fetch_sp1500_companies() -> list[Company]:
+def fetch_companies() -> list[Company]:
     """Fetch the current approximate S&P 1500 constituents from Wikipedia.
 
     Scrapes the constituent tables of the S&P 500, S&P MidCap 400, and

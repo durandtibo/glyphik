@@ -119,7 +119,7 @@ def test_sp1500_company_ingestor_empty_string_path_calls_sanitize_path() -> None
 
 
 def test_sp1500_company_ingestor_ingest_returns_list(tmp_path: Path) -> None:
-    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=[]):
+    with patch(f"{MODULE}.load_or_fetch_companies", return_value=[]):
         result = Sp1500CompanyIngestor(path=tmp_path / "sp1500.json").ingest()
     assert isinstance(result, list)
 
@@ -127,21 +127,21 @@ def test_sp1500_company_ingestor_ingest_returns_list(tmp_path: Path) -> None:
 def test_sp1500_company_ingestor_ingest_returns_companies(
     tmp_path: Path, companies: list[Company]
 ) -> None:
-    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies):
+    with patch(f"{MODULE}.load_or_fetch_companies", return_value=companies):
         result = Sp1500CompanyIngestor(path=tmp_path / "sp1500.json").ingest()
     assert result == companies
 
 
 def test_sp1500_company_ingestor_ingest_calls_load_or_fetch(tmp_path: Path) -> None:
     path = tmp_path / "sp1500.json"
-    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=[]) as mock_load:
+    with patch(f"{MODULE}.load_or_fetch_companies", return_value=[]) as mock_load:
         Sp1500CompanyIngestor(path=path).ingest()
     mock_load.assert_called_once_with(path=path, find_missing_ciks=True)
 
 
 def test_sp1500_company_ingestor_ingest_passes_find_missing_ciks_false(tmp_path: Path) -> None:
     path = tmp_path / "sp1500.json"
-    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=[]) as mock_load:
+    with patch(f"{MODULE}.load_or_fetch_companies", return_value=[]) as mock_load:
         Sp1500CompanyIngestor(path=path, find_missing_ciks=False).ingest()
     mock_load.assert_called_once_with(path=path, find_missing_ciks=False)
 
@@ -149,7 +149,7 @@ def test_sp1500_company_ingestor_ingest_passes_find_missing_ciks_false(tmp_path:
 def test_sp1500_company_ingestor_ingest_can_be_called_multiple_times(
     tmp_path: Path, companies: list[Company]
 ) -> None:
-    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies):
+    with patch(f"{MODULE}.load_or_fetch_companies", return_value=companies):
         ingestor = Sp1500CompanyIngestor(path=tmp_path / "sp1500.json")
         assert ingestor.ingest() == ingestor.ingest()
 
@@ -160,7 +160,7 @@ def test_sp1500_company_ingestor_ingest_can_be_called_multiple_times(
 def test_sp1500_company_ingestor_ingest_path_none_calls_load_or_fetch_with_none(
     companies: list[Company],
 ) -> None:
-    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies) as mock_load:
+    with patch(f"{MODULE}.load_or_fetch_companies", return_value=companies) as mock_load:
         result = Sp1500CompanyIngestor(path=None).ingest()
     mock_load.assert_called_once_with(path=None, find_missing_ciks=True)
     assert result == companies
@@ -169,7 +169,7 @@ def test_sp1500_company_ingestor_ingest_path_none_calls_load_or_fetch_with_none(
 def test_sp1500_company_ingestor_ingest_path_none_passes_find_missing_ciks_false(
     companies: list[Company],
 ) -> None:
-    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies) as mock_load:
+    with patch(f"{MODULE}.load_or_fetch_companies", return_value=companies) as mock_load:
         Sp1500CompanyIngestor(path=None, find_missing_ciks=False).ingest()
     mock_load.assert_called_once_with(path=None, find_missing_ciks=False)
 
@@ -177,10 +177,10 @@ def test_sp1500_company_ingestor_ingest_path_none_passes_find_missing_ciks_false
 def test_sp1500_company_ingestor_ingest_path_none_can_be_called_multiple_times(
     companies: list[Company],
 ) -> None:
-    with patch(f"{MODULE}.load_or_fetch_sp1500_companies", return_value=companies) as mock_load:
+    with patch(f"{MODULE}.load_or_fetch_companies", return_value=companies) as mock_load:
         ingestor = Sp1500CompanyIngestor(path=None)
         assert ingestor.ingest() == ingestor.ingest()
-    # Each call must go through load_or_fetch_sp1500_companies again,
+    # Each call must go through load_or_fetch_companies again,
     # since path=None disables caching -- there is nothing to short
     # circuit on at the ingestor level either.
     assert mock_load.call_count == 2
