@@ -210,7 +210,6 @@ def process_data(config: ExperimentConfig) -> None:
             ``config.ticker``, e.g. because no filings were found in
             the document store.
     """
-    print_pretty(config.agent)
     model = init_chat_model(**config.agent.chat_model.to_kwargs())
     logger.info("%s", str_pydantic_model(model, exclude_none=True))
     inner_agent = create_agent(model=model, system_prompt=config.agent.system_prompt)
