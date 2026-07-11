@@ -286,7 +286,7 @@ def main(ticker: str, start_date: object, end_date: object, max_documents: int) 
                 start_date=start_date.date(),
                 end_date=end_date.date(),
             ),
-            agent=DocumentsAgentConfig(
+            agent=DocumentsAgentConfig.from_kwargs(
                 chat_model=ChatModelConfig.from_kwargs(model=DEFAULT_MODEL, temperature=0),
                 system_prompt=GENERIC_SYSTEM_PROMPT,
                 max_documents=max_documents,
