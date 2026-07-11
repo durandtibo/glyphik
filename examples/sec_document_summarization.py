@@ -210,6 +210,7 @@ def process_data(config: ExperimentConfig) -> None:
             ``config.ticker``, e.g. because no filings were found in
             the document store.
     """
+    print_pretty(config.agent)
     model = init_chat_model(**config.agent.chat_model.to_kwargs())
     logger.info("%s", str_pydantic_model(model, exclude_none=True))
     inner_agent = create_agent(model=model, system_prompt=config.agent.system_prompt)
@@ -286,7 +287,7 @@ def main(ticker: str, start_date: object, end_date: object, max_documents: int) 
                 start_date=start_date.date(),
                 end_date=end_date.date(),
             ),
-            agent=DocumentsAgentConfig(
+            agent=DocumentsAgentConfig.from_kwargs(
                 chat_model=ChatModelConfig.from_kwargs(model=DEFAULT_MODEL, temperature=0),
                 system_prompt=GENERIC_SYSTEM_PROMPT,
                 max_documents=max_documents,
