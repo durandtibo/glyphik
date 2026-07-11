@@ -3,13 +3,13 @@ identifiers."""
 
 from __future__ import annotations
 
-__all__ = ["get_sp1500_company_identifiers"]
+__all__ = ["get_company_identifiers"]
 
 import logging
 from typing import TYPE_CHECKING
 
 from glyphik.data.sec import CompanyIdentifier
-from glyphik.data.sp1500.fetch import load_or_fetch_sp1500_companies
+from glyphik.data.sp1500.fetch import load_or_fetch_companies
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def get_sp1500_company_identifiers(path: Path | str | None = None) -> list[CompanyIdentifier]:
+def get_company_identifiers(path: Path | str | None = None) -> list[CompanyIdentifier]:
     r"""Fetch the identifiers (ticker + CIK) of every S&P 1500 company.
 
     Loads the S&P 1500 company list via
@@ -60,12 +60,12 @@ def get_sp1500_company_identifiers(path: Path | str | None = None) -> list[Compa
 
     Example:
         ```pycon
-        >>> from glyphik.data.sp1500 import get_sp1500_company_identifiers
-        >>> identifiers = get_sp1500_company_identifiers()  # doctest: +SKIP
+        >>> from glyphik.data.sp1500 import get_company_identifiers
+        >>> identifiers = get_company_identifiers()  # doctest: +SKIP
 
         ```
     """
-    companies = load_or_fetch_sp1500_companies(path=path, find_missing_ciks=True)
+    companies = load_or_fetch_companies(path=path, find_missing_ciks=True)
 
     identifiers: list[CompanyIdentifier] = []
     for company in companies:
