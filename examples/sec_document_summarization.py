@@ -3,7 +3,7 @@ r"""Provide code to explore a document search pipeline."""
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -16,10 +16,18 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from zenpyre.agents import AgentConfig
+from zenpyre.chat_models import ChatModelConfig
 from zenpyre.data_processors import SequenceProcessor
 from zenpyre.document_stores import DuckDBDocumentStore
+from zenpyre.documents.analysis import (
+    compute_content_stats_exact,
+    compute_metadata_stats,
+    print_content_stats_report,
+    print_metadata_stats_report,
+)
 from zenpyre.ingestors import InMemoryIngestor, ProcessorIngestor
 from zenpyre.runnables import CachingRunnable
+from zenpyre.utils.config import BaseConfig
 from zenpyre.utils.rich import configure_rich_logging, print_markdown, print_pretty
 
 from glyphik.agents import RecentDocumentsAgent
@@ -50,9 +58,11 @@ DEFAULT_MAX_DOCUMENTS = 1
 # released Ollama tag as of this writing.
 DEFAULT_MODEL = "ollama:gemma4:e2b-mlx"
 
+DEFAULT_TICKERS = ["AAPL", "IBM", "MSFT", "NVDA", "GOOGL"]
+
 
 @dataclass(frozen=True)
-class DataConfig:
+class DataConfig(BaseConfig):
     r"""Hold the configuration for a data ingestion pipeline.
 
     Attributes:
@@ -89,6 +99,9 @@ class DataConfig:
         if self.start_date > self.end_date:
             msg = f"start_date ({self.start_date}) must be <= end_date ({self.end_date})"
             raise ValueError(msg)
+
+    def to_kwargs(self) -> dict[str, Any]:
+        return asdict(self)
 
 
 @dataclass(frozen=True)
@@ -138,7 +151,10 @@ def get_document_store(base_dir: Path, **kwargs: Any) -> DuckDBDocumentStore:
     Returns:
         A DuckDB-backed document store rooted at ``base_dir``.
     """
-    return DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb", **kwargs)
+    store = DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb", **kwargs)
+    print_content_stats_report(compute_content_stats_exact(store.lazy_all()))
+    print_metadata_stats_report(compute_metadata_stats(store.lazy_all()))
+    return store
 
 
 def build_ingestor(config: ExperimentConfig) -> BaseIngestor:
@@ -194,11 +210,14 @@ def process_data(config: ExperimentConfig) -> None:
             ``config.ticker``, e.g. because no filings were found in
             the document store.
     """
-    model = init_chat_model(model=config.agent.model, temperature=config.agent.temperature)
+    model = init_chat_model(**config.agent.chat_model.to_kwargs())
     logger.info("%s", str_pydantic_model(model, exclude_none=True))
     inner_agent = create_agent(model=model, system_prompt=config.agent.system_prompt)
     cache_dir = (
-        config.base_dir / "agent_outputs" / slugify(config.agent.model) / config.agent.cache_key()
+        config.base_dir
+        / "agent_outputs"
+        / slugify(config.agent.chat_model.model)
+        / config.agent.cache_key()
     )
     agent = RecentDocumentsAgent(
         inner_agent=CachingRunnable(inner_agent, cache_dir=cache_dir),
@@ -220,7 +239,7 @@ def process_data(config: ExperimentConfig) -> None:
         raise RuntimeError(msg)
 
     for output in outputs:
-        print_pretty(output)
+        # print_pretty(output)
         print_markdown(output["messages"][-1].content)
 
 
@@ -268,9 +287,8 @@ def main(ticker: str, start_date: object, end_date: object, max_documents: int) 
                 end_date=end_date.date(),
             ),
             agent=DocumentsAgentConfig(
-                model=DEFAULT_MODEL,
+                chat_model=ChatModelConfig.from_kwargs(model=DEFAULT_MODEL, temperature=0),
                 system_prompt=GENERIC_SYSTEM_PROMPT,
-                temperature=0,
                 max_documents=max_documents,
             ),
         )
