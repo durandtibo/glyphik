@@ -325,6 +325,18 @@ def test_recent_documents_agent_format_last_documents_uses_document_format() -> 
     assert result == '<document id="1">\nnew\n</document>'
 
 
+@pytest.mark.parametrize("log_documents_metadata", [True, False])
+def test_recent_documents_agent_format_last_documents_log_documents_metadata(
+    log_documents_metadata: bool,
+) -> None:
+    agent = RecentDocumentsAgent(
+        inner_agent=_echo_agent(), max_documents=1, log_documents_metadata=log_documents_metadata
+    )
+    documents = [Document(page_content="old"), Document(page_content="new")]
+    result = agent._format_last_documents(documents)
+    assert result == '<document id="1">\nnew\n</document>'
+
+
 # --- _get_documents ---
 
 
