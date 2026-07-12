@@ -79,13 +79,6 @@ jobs:
       package-name: langgraph
       package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).langgraph) }}
 
-  objectory:
-    needs: get-versions
-    uses: ./.github/workflows/test-package-dep.yaml
-    with:
-      package-name: objectory
-      package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).objectory) }}
-
   rich:
     needs: get-versions
     uses: ./.github/workflows/test-package-dep.yaml
