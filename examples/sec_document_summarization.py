@@ -219,13 +219,13 @@ def process_data(config: ExperimentConfig) -> None:
     agent = RecentDocumentsAgent(
         inner_agent=CachingRunnable(inner_agent, cache_dir=cache_dir),
         max_documents=config.agent.max_documents,
+        log_documents_metadata=True,
     )
 
     pipeline = CompanyDocumentAgentPipeline(
         companies=[CompanyIdentifier.from_ticker(config.data.ticker)],
         document_store=get_document_store(config.base_dir, read_only=True),
         agent=agent,
-        log_documents_metadata=True,
     )
     logger.info("%s", pipeline)
 
