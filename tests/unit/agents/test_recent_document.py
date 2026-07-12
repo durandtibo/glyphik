@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage
@@ -48,6 +50,16 @@ def test_recent_documents_agent_stores_include_metadata() -> None:
     assert agent._include_metadata is True
 
 
+def test_recent_documents_agent_default_document_format() -> None:
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    assert agent._document_format == "xml"
+
+
+def test_recent_documents_agent_stores_document_format() -> None:
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), document_format="markdown")
+    assert agent._document_format == "markdown"
+
+
 def test_recent_documents_agent_max_documents_zero_raises() -> None:
     with pytest.raises(ValueError, match="max_documents must be a positive integer"):
         RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=0)
@@ -58,6 +70,11 @@ def test_recent_documents_agent_max_documents_negative_raises() -> None:
         RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=-1)
 
 
+def test_recent_documents_agent_invalid_document_format_raises() -> None:
+    with pytest.raises(ValueError, match="document_format must be one of"):
+        RecentDocumentsAgent(inner_agent=_echo_agent(), document_format="yaml")
+
+
 def test_recent_documents_agent_repr_contains_class_name() -> None:
     agent = RecentDocumentsAgent(inner_agent=_echo_agent())
     assert "RecentDocumentsAgent" in repr(agent)
@@ -66,6 +83,11 @@ def test_recent_documents_agent_repr_contains_class_name() -> None:
 def test_recent_documents_agent_str_contains_class_name() -> None:
     agent = RecentDocumentsAgent(inner_agent=_echo_agent())
     assert "RecentDocumentsAgent" in str(agent)
+
+
+def test_recent_documents_agent_repr_contains_document_format() -> None:
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    assert "xml" in repr(agent)
 
 
 # --- invoke ---
@@ -132,6 +154,83 @@ def test_recent_documents_agent_invoke_empty_documents() -> None:
     agent = RecentDocumentsAgent(inner_agent=_echo_agent())
     result = agent.invoke({"documents": []})
     assert result == ""
+
+
+def test_recent_documents_agent_invoke_missing_documents_key_raises() -> None:
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    with pytest.raises(KeyError, match="input dict must contain a 'documents' key"):
+        agent.invoke({})
+
+
+# --- ainvoke ---
+
+
+def test_recent_documents_agent_ainvoke_keeps_only_last_max_documents() -> None:
+    documents = [
+        Document(page_content="oldest"),
+        Document(page_content="middle"),
+        Document(page_content="newest"),
+    ]
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=2)
+
+    result = asyncio.run(agent.ainvoke({"documents": documents}))
+
+    assert result == (
+        '<document id="1">\nmiddle\n</document>\n\n<document id="2">\nnewest\n</document>'
+    )
+
+
+def test_recent_documents_agent_ainvoke_default_max_documents_keeps_only_last() -> None:
+    documents = [Document(page_content="oldest"), Document(page_content="newest")]
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+
+    result = asyncio.run(agent.ainvoke({"documents": documents}))
+
+    assert result == '<document id="1">\nnewest\n</document>'
+
+
+def test_recent_documents_agent_ainvoke_passes_messages_dict_to_inner_agent() -> None:
+    documents = [Document(page_content="text")]
+    inner_agent = RunnableLambda(lambda inp: inp)
+    agent = RecentDocumentsAgent(inner_agent=inner_agent)
+
+    result = asyncio.run(agent.ainvoke({"documents": documents}))
+
+    assert result == {"messages": [HumanMessage(content='<document id="1">\ntext\n</document>')]}
+
+
+def test_recent_documents_agent_ainvoke_returns_inner_agent_output() -> None:
+    documents = [Document(page_content="text")]
+    inner_agent = RunnableLambda(lambda inp: {"formatted": inp["messages"][0].content})
+    agent = RecentDocumentsAgent(inner_agent=inner_agent)
+
+    result = asyncio.run(agent.ainvoke({"documents": documents}))
+
+    assert result == {"formatted": '<document id="1">\ntext\n</document>'}
+
+
+def test_recent_documents_agent_ainvoke_empty_documents() -> None:
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+
+    result = asyncio.run(agent.ainvoke({"documents": []}))
+
+    assert result == ""
+
+
+def test_recent_documents_agent_ainvoke_missing_documents_key_raises() -> None:
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    with pytest.raises(KeyError, match="input dict must contain a 'documents' key"):
+        asyncio.run(agent.ainvoke({}))
+
+
+def test_recent_documents_agent_ainvoke_and_invoke_agree() -> None:
+    documents = [Document(page_content="old"), Document(page_content="new")]
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=1)
+
+    invoke_result = agent.invoke({"documents": documents})
+    ainvoke_result = asyncio.run(agent.ainvoke({"documents": documents}))
+
+    assert invoke_result == ainvoke_result
 
 
 # --- batch ---
@@ -217,3 +316,24 @@ def test_recent_documents_agent_format_last_documents_multiple_documents() -> No
 def test_recent_documents_agent_format_last_documents_empty_documents() -> None:
     agent = RecentDocumentsAgent(inner_agent=_echo_agent())
     assert agent._format_last_documents([]) == ""
+
+
+def test_recent_documents_agent_format_last_documents_uses_document_format() -> None:
+    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=1)
+    documents = [Document(page_content="old"), Document(page_content="new")]
+    result = agent._format_last_documents(documents)
+    assert result == '<document id="1">\nnew\n</document>'
+
+
+# --- _get_documents ---
+
+
+def test_recent_documents_agent_get_documents_returns_list() -> None:
+    documents = [Document(page_content="a")]
+    result = RecentDocumentsAgent._get_documents({"documents": documents})
+    assert result is documents
+
+
+def test_recent_documents_agent_get_documents_missing_key_raises() -> None:
+    with pytest.raises(KeyError, match="input dict must contain a 'documents' key"):
+        RecentDocumentsAgent._get_documents({})

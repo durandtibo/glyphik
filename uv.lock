@@ -1207,7 +1207,7 @@ requires-dist = [
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
     { name = "textual", extras = ["syntax"], marker = "extra == 'textual'", specifier = ">=8.2,<9.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a40,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a41,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "duckdb", "faker", "edgar", "google-genai", "huggingface", "ollama", "openai", "sentence-transformers", "text-splitters", "textual"]
 
@@ -5401,7 +5401,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a40"
+version = "0.0.1a41"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -5413,9 +5413,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d1/23/09dc7ce805ef331ab2fdabd5d40fb0a8cdf3a7edb40d0dee7fd06b8e28aa/zenpyre-0.0.1a40.tar.gz", hash = "sha256:566456c06cfdd43a608a44129e7d9ed0abe96c2ae6387ccdff3d17ab91b34305", size = 108201, upload-time = "2026-07-11T23:47:05.13Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/17/35/984c5f7c2154818510acb9778c9433b395f0d072f2a11cdff18d7e63acab/zenpyre-0.0.1a41.tar.gz", hash = "sha256:35ed81c02df43a02850be2a42c7c9087f2c3d649787a4a5bdd010cefc02a6858", size = 108804, upload-time = "2026-07-12T00:16:24.042Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a3/01/b3d4864e563ba578fee435ae41338a03251fbafdb8ef1a6bafc754716e09/zenpyre-0.0.1a40-py3-none-any.whl", hash = "sha256:b9baa9caccf9fc92479e65bdcbd1b5cd5d802be4bad55bc78f160729175de488", size = 187257, upload-time = "2026-07-11T23:47:03.685Z" },
+    { url = "https://files.pythonhosted.org/packages/44/76/9a647678ee7f614af3465e83fde2248a664855bbd4ed16a1bbbabdec50f3/zenpyre-0.0.1a41-py3-none-any.whl", hash = "sha256:0c3d23d0c91f31224038fb498b12f30a129a051511635807ba1c3854b9134816", size = 187877, upload-time = "2026-07-12T00:16:22.496Z" },
 ]
 
 [[package]]
