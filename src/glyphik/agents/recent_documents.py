@@ -11,6 +11,7 @@ from coola.display import MultilineDisplayMixin
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import Runnable, RunnableConfig
 from zenpyre.documents import format_documents
+from zenpyre.utils.rich import print_documents_metadata
 
 T = TypeVar("T")
 
@@ -46,6 +47,8 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
             metadata in the formatted string. Defaults to ``False``.
         document_format: The format used to render the documents (e.g.
             ``"xml"``, ``"markdown"``). Defaults to ``"xml"``.
+        log_documents_metadata: If ``True``, log the document metadata
+            for the selected documents. Defaults to ``False``.
 
     Raises:
         ValueError: If ``max_documents`` is not a positive integer, or
@@ -83,6 +86,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
         max_documents: int = 1,
         include_metadata: bool = False,
         document_format: str = "xml",
+        log_documents_metadata: bool = False,
     ) -> None:
         if max_documents < 1:
             msg = f"max_documents must be a positive integer, got {max_documents}"
@@ -97,6 +101,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
         self._max_documents = max_documents
         self._include_metadata = include_metadata
         self._document_format = document_format
+        self._log_documents_metadata = log_documents_metadata
 
     def invoke(
         self,
@@ -207,8 +212,11 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
             ``max_documents`` entries). If ``documents`` is empty,
             returns whatever ``format_documents([])`` produces.
         """
+        docs = documents[-self._max_documents :]
+        if self._log_documents_metadata:
+            print_documents_metadata(docs)
         return format_documents(
-            documents[-self._max_documents :],
+            docs,
             include_metadata=self._include_metadata,
             output_format=self._document_format,
         )
@@ -227,4 +235,5 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
             "max_documents": self._max_documents,
             "include_metadata": self._include_metadata,
             "document_format": self._document_format,
+            "log_documents_metadata": self._log_documents_metadata,
         }
