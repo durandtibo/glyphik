@@ -3,7 +3,7 @@ r"""Provide code to explore a document search pipeline."""
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -27,7 +27,7 @@ from zenpyre.documents.analysis import (
 )
 from zenpyre.ingestors import InMemoryIngestor, ProcessorIngestor
 from zenpyre.runnables import CachingRunnable
-from zenpyre.utils.config import BaseConfig
+from zenpyre.utils.config import ExtraFieldsConfig
 from zenpyre.utils.rich import configure_rich_logging, print_markdown, print_pretty
 
 from glyphik.agents import RecentDocumentsAgent
@@ -62,7 +62,7 @@ DEFAULT_TICKERS = ["AAPL", "IBM", "MSFT", "NVDA", "GOOGL"]
 
 
 @dataclass(frozen=True)
-class DataConfig(BaseConfig):
+class DataConfig(ExtraFieldsConfig):
     r"""Hold the configuration for a data ingestion pipeline.
 
     Attributes:
@@ -99,9 +99,6 @@ class DataConfig(BaseConfig):
         if self.start_date > self.end_date:
             msg = f"start_date ({self.start_date}) must be <= end_date ({self.end_date})"
             raise ValueError(msg)
-
-    def to_kwargs(self) -> dict[str, Any]:
-        return asdict(self)
 
 
 @dataclass(frozen=True)
