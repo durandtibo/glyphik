@@ -24,57 +24,57 @@ Update if ``zenpyre.documents`` adds or removes supported formats.
 class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
     """Wrap an agent to analyze only the ``max_documents`` most recent documents.
 
-        Given an input dict containing a list of documents, this agent
-        keeps only the ``max_documents`` most recent ones, formats them
-        as a string (XML by default), wraps that string in a
-        ``HumanMessage``, and forwards it to ``inner_agent`` as
-        ``{"messages": [HumanMessage(...)]}``.
+    Given an input dict containing a list of documents, this agent
+    keeps only the ``max_documents`` most recent ones, formats them
+    as a string (XML by default), wraps that string in a
+    ``HumanMessage``, and forwards it to ``inner_agent`` as
+    ``{"messages": [HumanMessage(...)]}``.
 
-        Assumption:
-            The input documents are expected to already be sorted in
-            ascending chronological order (oldest first). This agent does
-            not sort them; it simply takes the last ``max_documents``
-            entries.
+    Assumption:
+        The input documents are expected to already be sorted in
+        ascending chronological order (oldest first). This agent does
+        not sort them; it simply takes the last ``max_documents``
+        entries.
 
     Args:
-            inner_agent: The wrapped runnable that receives the formatted
-                documents as a ``{"messages": [HumanMessage(...)]}`` dict
-                input (e.g. a chat model or a LangGraph-style agent).
-            max_documents: The maximum number of most recent documents to
-                keep. Must be a positive integer.
-            include_metadata: If ``True``, include each document's
-                metadata in the formatted string. Defaults to ``False``.
-            document_format: The format used to render the documents (e.g.
-                ``"xml"``, ``"markdown"``). Defaults to ``"xml"``.
+        inner_agent: The wrapped runnable that receives the formatted
+            documents as a ``{"messages": [HumanMessage(...)]}`` dict
+            input (e.g. a chat model or a LangGraph-style agent).
+        max_documents: The maximum number of most recent documents to
+            keep. Must be a positive integer.
+        include_metadata: If ``True``, include each document's
+            metadata in the formatted string. Defaults to ``False``.
+        document_format: The format used to render the documents (e.g.
+            ``"xml"``, ``"markdown"``). Defaults to ``"xml"``.
 
     Raises:
-            ValueError: If ``max_documents`` is not a positive integer, or
-                if ``document_format`` is not a supported format.
+        ValueError: If ``max_documents`` is not a positive integer, or
+            if ``document_format`` is not a supported format.
 
     Example:
-    ```pycon
-    >>> from langchain_core.documents import Document
-    >>> from langchain_core.runnables import RunnableLambda
-    >>> from glyphik.agents import RecentDocumentsAgent
-    >>> docs = [
-    ...     Document(
-    ...         page_content="The cat sat on the mat.",
-    ...         metadata={"source": "story.txt", "author": "Alice"},
-    ...     ),
-    ...     Document(
-    ...         page_content="The dog chased the ball.",
-    ...         metadata={"source": "story.txt", "author": "Bob"},
-    ...     ),
-    ... ]
-    >>> agent = RecentDocumentsAgent(
-    ...     inner_agent=RunnableLambda(lambda inp: len(inp["messages"][0].content)),
-    ...     max_documents=3,
-    ... )
-    >>> output = agent.invoke({"documents": docs})
-    >>> output
-    109
+        ```pycon
+        >>> from langchain_core.documents import Document
+        >>> from langchain_core.runnables import RunnableLambda
+        >>> from glyphik.agents import RecentDocumentsAgent
+        >>> docs = [
+        ...     Document(
+        ...         page_content="The cat sat on the mat.",
+        ...         metadata={"source": "story.txt", "author": "Alice"},
+        ...     ),
+        ...     Document(
+        ...         page_content="The dog chased the ball.",
+        ...         metadata={"source": "story.txt", "author": "Bob"},
+        ...     ),
+        ... ]
+        >>> agent = RecentDocumentsAgent(
+        ...     inner_agent=RunnableLambda(lambda inp: len(inp["messages"][0].content)),
+        ...     max_documents=3,
+        ... )
+        >>> output = agent.invoke({"documents": docs})
+        >>> output
+        109
 
-    ```
+        ```
     """
 
     def __init__(
