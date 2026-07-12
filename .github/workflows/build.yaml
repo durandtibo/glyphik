@@ -25,10 +25,12 @@ jobs:
           'chroma',
           'duckdb',
           'edgar',
+          'faker',
           'google-genai',
           'huggingface',
           'ollama',
           'openai',
+          'polars',
           'sentence-transformers',
           'text-splitters',
         ]
