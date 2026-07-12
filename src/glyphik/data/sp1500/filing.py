@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from coola.hashing import hash_object
 from coola.utils.format import str_time_human
 from coola.utils.path import sanitize_path
-from zenpyre.utils.dataclass_io import load_dataclasses, save_dataclasses
+from zenpyre.utils.dataclass import load_dataclasses, save_dataclasses
 from zenpyre.utils.rich import make_progressbar
 
 from glyphik.data.sec import SecFilingRecord, fetch_filings

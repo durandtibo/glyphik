@@ -12,7 +12,7 @@ only-include = ["src"]
 
 [project]
 name = "glyphik"
-version = "0.0.1a12"
+version = "0.0.1a13"
 description = "Utilities for LangChain"
 readme = "README.md"
 authors = [
@@ -52,7 +52,7 @@ dependencies = [
     "pydantic >=2.10,<3.0",
     "python-dotenv >= 1.2,<2.0",
     "rich >=15.0,<16.0",
-    "zenpyre >=0.0.1a41,<1.0",
+    "zenpyre >=0.0.1a44,<1.0",
 ]
 
 [project.optional-dependencies]

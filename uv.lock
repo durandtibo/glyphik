@@ -1097,19 +1097,19 @@ wheels = [
 
 [[package]]
 name = "gitpython"
-version = "3.1.50"
+version = "3.1.51"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "gitdb" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/f6/354ae6491228b5eb40e10d89c4d13c651fe1cf7556e35ebdded50cff57ce/gitpython-3.1.50.tar.gz", hash = "sha256:80da2d12504d52e1f998772dc5baf6e553f8d2fcfe1fcc226c9d9a2ee3372dcc", size = 219798, upload-time = "2026-05-06T04:01:26.571Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/30/a8a0c15f9480dc91b5b7f11ebd26105e5f80898d7ff02da197fef35d8395/gitpython-3.1.51.tar.gz", hash = "sha256:22c9c94bb6b0b9f3c7157c684fece45a414cea204586b600beae6cd4570dcd6d", size = 223519, upload-time = "2026-07-12T13:40:07.922Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/7a/1c6e3562dfd8950adbb11ffbc65d21e7c89d01a6e4f137fa981056de25c5/gitpython-3.1.50-py3-none-any.whl", hash = "sha256:d352abe2908d07355014abdd21ddf798c2a961469239afec4962e9da884858f9", size = 212507, upload-time = "2026-05-06T04:01:23.799Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/11/1232bb1ba52a230f20ff08e1b3df7cd9d43a71b61cc0a1c37941064fe4c7/gitpython-3.1.51-py3-none-any.whl", hash = "sha256:d5b29685708f3c80a56db040b665bfd69492c8e150b5848532af8013b686c5a4", size = 215246, upload-time = "2026-07-12T13:40:06.43Z" },
 ]
 
 [[package]]
 name = "glyphik"
-version = "0.0.1a12"
+version = "0.0.1a13"
 source = { editable = "." }
 dependencies = [
     { name = "coola" },
@@ -1207,7 +1207,7 @@ requires-dist = [
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
     { name = "textual", extras = ["syntax"], marker = "extra == 'textual'", specifier = ">=8.2,<9.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a41,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a44,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "duckdb", "faker", "edgar", "google-genai", "huggingface", "ollama", "openai", "sentence-transformers", "text-splitters", "textual"]
 
@@ -5401,7 +5401,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a41"
+version = "0.0.1a44"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -5413,9 +5413,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/17/35/984c5f7c2154818510acb9778c9433b395f0d072f2a11cdff18d7e63acab/zenpyre-0.0.1a41.tar.gz", hash = "sha256:35ed81c02df43a02850be2a42c7c9087f2c3d649787a4a5bdd010cefc02a6858", size = 108804, upload-time = "2026-07-12T00:16:24.042Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/eb/d1/4486881a0609079f6f5010d9415c2ffcd320153ad155feccb1e1a03d6910/zenpyre-0.0.1a44.tar.gz", hash = "sha256:54495f416f2e997c0a07c4e6eaaf59bb6605090f0425843be42d07ffd96ef1ae", size = 113635, upload-time = "2026-07-12T15:53:08.247Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/76/9a647678ee7f614af3465e83fde2248a664855bbd4ed16a1bbbabdec50f3/zenpyre-0.0.1a41-py3-none-any.whl", hash = "sha256:0c3d23d0c91f31224038fb498b12f30a129a051511635807ba1c3854b9134816", size = 187877, upload-time = "2026-07-12T00:16:22.496Z" },
+    { url = "https://files.pythonhosted.org/packages/88/3e/f6ae0ec0844d867f2af2ebfa08d5594aec5395f2151dbdd2ef4adb807af4/zenpyre-0.0.1a44-py3-none-any.whl", hash = "sha256:b58ad67db290e3c693cde76820344a2d5c570bfb5aa564301c2291e9bb0666c8", size = 194578, upload-time = "2026-07-12T15:53:06.655Z" },
 ]
 
 [[package]]
