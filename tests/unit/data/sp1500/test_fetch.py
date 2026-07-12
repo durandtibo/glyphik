@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from coola.testing.fixtures import pandas_available
 from coola.utils.imports import is_pandas_available
-from zenpyre.utils.dataclass_io import save_dataclasses
+from zenpyre.utils.dataclass import save_dataclasses
 
 from glyphik.data.sp1500 import (
     Company,

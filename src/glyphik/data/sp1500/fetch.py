@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from coola.utils.imports import is_pandas_available
 from coola.utils.path import sanitize_path
-from zenpyre.utils.dataclass_io import load_dataclasses, save_dataclasses
+from zenpyre.utils.dataclass import load_dataclasses, save_dataclasses
 
 from glyphik.data.sp1500.cik import fill_missing_ciks
 from glyphik.data.sp1500.company import Company
