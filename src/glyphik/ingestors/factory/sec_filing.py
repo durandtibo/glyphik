@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from datetime import date
     from pathlib import Path
+    from typing import Self
 
     from zenpyre.ingestors.base import BaseIngestor
 
@@ -123,7 +124,7 @@ class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], Multiline
         end_date: date | str,
         forms: Sequence[str],
         max_companies: int | None = None,
-    ) -> SecFilingIngestorFactory:
+    ) -> Self:
         """Create a factory that ingests SEC filings for S&P 1500
         companies.
 
