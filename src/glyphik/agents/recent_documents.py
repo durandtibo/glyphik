@@ -28,7 +28,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
     Given an input dict containing a list of documents, this agent
     keeps only the ``max_documents`` most recent ones, formats them
     as a string (XML by default), wraps that string in a
-    ``HumanMessage``, and forwards it to ``inner_agent`` as
+    ``HumanMessage``, and forwards it to ``agent`` as
     ``{"messages": [HumanMessage(...)]}``.
 
     Assumption:
@@ -38,7 +38,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
         entries.
 
     Args:
-        inner_agent: The wrapped runnable that receives the formatted
+        agent: The wrapped runnable that receives the formatted
             documents as a ``{"messages": [HumanMessage(...)]}`` dict
             input (e.g. a chat model or a LangGraph-style agent).
         max_documents: The maximum number of most recent documents to
@@ -70,7 +70,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
         ...     ),
         ... ]
         >>> agent = RecentDocumentsAgent(
-        ...     inner_agent=RunnableLambda(lambda inp: len(inp["messages"][0].content)),
+        ...     agent=RunnableLambda(lambda inp: len(inp["messages"][0].content)),
         ...     max_documents=3,
         ... )
         >>> output = agent.invoke({"documents": docs})
@@ -82,7 +82,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
 
     def __init__(
         self,
-        inner_agent: Runnable[dict[str, Any], T],
+        agent: Runnable[dict[str, Any], T],
         max_documents: int = 1,
         include_metadata: bool = False,
         document_format: str = "xml",
@@ -97,7 +97,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
                 f"got {document_format!r}"
             )
             raise ValueError(msg)
-        self._inner_agent = inner_agent
+        self._agent = agent
         self._max_documents = max_documents
         self._include_metadata = include_metadata
         self._document_format = document_format
@@ -122,7 +122,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
                 inner agent's ``invoke``.
 
         Returns:
-            The output of ``inner_agent.invoke`` called with a
+            The output of ``agent.invoke`` called with a
             ``{"messages": [HumanMessage(...)]}`` dict containing the
             formatted string of the ``max_documents`` most recent
             documents.
@@ -132,7 +132,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
                 key.
         """
         inner_input = self._to_inner_input(self._get_documents(input))
-        return self._inner_agent.invoke(inner_input, config, **kwargs)
+        return self._agent.invoke(inner_input, config, **kwargs)
 
     async def ainvoke(
         self,
@@ -152,7 +152,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
                 inner agent's ``ainvoke``.
 
         Returns:
-            The output of ``inner_agent.ainvoke`` called with a
+            The output of ``agent.ainvoke`` called with a
             ``{"messages": [HumanMessage(...)]}`` dict containing the
             formatted string of the ``max_documents`` most recent
             documents.
@@ -162,7 +162,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
                 key.
         """
         inner_input = self._to_inner_input(self._get_documents(input))
-        return await self._inner_agent.ainvoke(inner_input, config, **kwargs)
+        return await self._agent.ainvoke(inner_input, config, **kwargs)
 
     @staticmethod
     def _get_documents(input: dict[str, Any]) -> list[Any]:  # noqa: A002
@@ -231,7 +231,7 @@ class RecentDocumentsAgent(Runnable[dict[str, Any], T], MultilineDisplayMixin):
             this agent.
         """
         return {
-            "inner_agent": self._inner_agent,
+            "agent": self._agent,
             "max_documents": self._max_documents,
             "include_metadata": self._include_metadata,
             "document_format": self._document_format,

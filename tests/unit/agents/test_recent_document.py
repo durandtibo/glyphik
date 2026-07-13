@@ -26,67 +26,67 @@ def _echo_agent() -> RunnableLambda:
 
 def test_recent_documents_agent_stores_inner_agent() -> None:
     inner_agent = _echo_agent()
-    agent = RecentDocumentsAgent(inner_agent=inner_agent)
-    assert agent._inner_agent is inner_agent
+    agent = RecentDocumentsAgent(agent=inner_agent)
+    assert agent._agent is inner_agent
 
 
 def test_recent_documents_agent_default_max_documents() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     assert agent._max_documents == 1
 
 
 def test_recent_documents_agent_stores_max_documents() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=3)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=3)
     assert agent._max_documents == 3
 
 
 def test_recent_documents_agent_default_include_metadata() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     assert agent._include_metadata is False
 
 
 def test_recent_documents_agent_stores_include_metadata() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), include_metadata=True)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), include_metadata=True)
     assert agent._include_metadata is True
 
 
 def test_recent_documents_agent_default_document_format() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     assert agent._document_format == "xml"
 
 
 def test_recent_documents_agent_stores_document_format() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), document_format="markdown")
+    agent = RecentDocumentsAgent(agent=_echo_agent(), document_format="markdown")
     assert agent._document_format == "markdown"
 
 
 def test_recent_documents_agent_max_documents_zero_raises() -> None:
     with pytest.raises(ValueError, match="max_documents must be a positive integer"):
-        RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=0)
+        RecentDocumentsAgent(agent=_echo_agent(), max_documents=0)
 
 
 def test_recent_documents_agent_max_documents_negative_raises() -> None:
     with pytest.raises(ValueError, match="max_documents must be a positive integer"):
-        RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=-1)
+        RecentDocumentsAgent(agent=_echo_agent(), max_documents=-1)
 
 
 def test_recent_documents_agent_invalid_document_format_raises() -> None:
     with pytest.raises(ValueError, match="document_format must be one of"):
-        RecentDocumentsAgent(inner_agent=_echo_agent(), document_format="yaml")
+        RecentDocumentsAgent(agent=_echo_agent(), document_format="yaml")
 
 
 def test_recent_documents_agent_repr_contains_class_name() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     assert "RecentDocumentsAgent" in repr(agent)
 
 
 def test_recent_documents_agent_str_contains_class_name() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     assert "RecentDocumentsAgent" in str(agent)
 
 
 def test_recent_documents_agent_repr_contains_document_format() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     assert "xml" in repr(agent)
 
 
@@ -99,7 +99,7 @@ def test_recent_documents_agent_invoke_keeps_only_last_max_documents() -> None:
         Document(page_content="middle"),
         Document(page_content="newest"),
     ]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=2)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=2)
     result = agent.invoke({"documents": documents})
     assert result == (
         '<document id="1">\nmiddle\n</document>\n\n<document id="2">\nnewest\n</document>'
@@ -108,28 +108,28 @@ def test_recent_documents_agent_invoke_keeps_only_last_max_documents() -> None:
 
 def test_recent_documents_agent_invoke_default_max_documents_keeps_only_last() -> None:
     documents = [Document(page_content="oldest"), Document(page_content="newest")]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     result = agent.invoke({"documents": documents})
     assert result == '<document id="1">\nnewest\n</document>'
 
 
 def test_recent_documents_agent_invoke_max_documents_larger_than_available() -> None:
     documents = [Document(page_content="only one")]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=5)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=5)
     result = agent.invoke({"documents": documents})
     assert result == '<document id="1">\nonly one\n</document>'
 
 
 def test_recent_documents_agent_invoke_without_metadata_excludes_metadata() -> None:
     documents = [Document(page_content="text", metadata={"source": "a.txt"})]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), include_metadata=False)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), include_metadata=False)
     result = agent.invoke({"documents": documents})
     assert result == '<document id="1">\ntext\n</document>'
 
 
 def test_recent_documents_agent_invoke_with_metadata_includes_metadata() -> None:
     documents = [Document(page_content="text", metadata={"source": "a.txt"})]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), include_metadata=True)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), include_metadata=True)
     result = agent.invoke({"documents": documents})
     assert result == '<document id="1">\nsource: a.txt\n\ntext\n</document>'
 
@@ -137,7 +137,7 @@ def test_recent_documents_agent_invoke_with_metadata_includes_metadata() -> None
 def test_recent_documents_agent_invoke_passes_messages_dict_to_inner_agent() -> None:
     documents = [Document(page_content="text")]
     inner_agent = RunnableLambda(lambda inp: inp)
-    agent = RecentDocumentsAgent(inner_agent=inner_agent)
+    agent = RecentDocumentsAgent(agent=inner_agent)
     result = agent.invoke({"documents": documents})
     assert result == {"messages": [HumanMessage(content='<document id="1">\ntext\n</document>')]}
 
@@ -145,19 +145,19 @@ def test_recent_documents_agent_invoke_passes_messages_dict_to_inner_agent() -> 
 def test_recent_documents_agent_invoke_returns_inner_agent_output() -> None:
     documents = [Document(page_content="text")]
     inner_agent = RunnableLambda(lambda inp: {"formatted": inp["messages"][0].content})
-    agent = RecentDocumentsAgent(inner_agent=inner_agent)
+    agent = RecentDocumentsAgent(agent=inner_agent)
     result = agent.invoke({"documents": documents})
     assert result == {"formatted": '<document id="1">\ntext\n</document>'}
 
 
 def test_recent_documents_agent_invoke_empty_documents() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     result = agent.invoke({"documents": []})
     assert result == ""
 
 
 def test_recent_documents_agent_invoke_missing_documents_key_raises() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     with pytest.raises(KeyError, match="input dict must contain a 'documents' key"):
         agent.invoke({})
 
@@ -171,7 +171,7 @@ def test_recent_documents_agent_ainvoke_keeps_only_last_max_documents() -> None:
         Document(page_content="middle"),
         Document(page_content="newest"),
     ]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=2)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=2)
 
     result = asyncio.run(agent.ainvoke({"documents": documents}))
 
@@ -182,7 +182,7 @@ def test_recent_documents_agent_ainvoke_keeps_only_last_max_documents() -> None:
 
 def test_recent_documents_agent_ainvoke_default_max_documents_keeps_only_last() -> None:
     documents = [Document(page_content="oldest"), Document(page_content="newest")]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
 
     result = asyncio.run(agent.ainvoke({"documents": documents}))
 
@@ -192,7 +192,7 @@ def test_recent_documents_agent_ainvoke_default_max_documents_keeps_only_last() 
 def test_recent_documents_agent_ainvoke_passes_messages_dict_to_inner_agent() -> None:
     documents = [Document(page_content="text")]
     inner_agent = RunnableLambda(lambda inp: inp)
-    agent = RecentDocumentsAgent(inner_agent=inner_agent)
+    agent = RecentDocumentsAgent(agent=inner_agent)
 
     result = asyncio.run(agent.ainvoke({"documents": documents}))
 
@@ -202,7 +202,7 @@ def test_recent_documents_agent_ainvoke_passes_messages_dict_to_inner_agent() ->
 def test_recent_documents_agent_ainvoke_returns_inner_agent_output() -> None:
     documents = [Document(page_content="text")]
     inner_agent = RunnableLambda(lambda inp: {"formatted": inp["messages"][0].content})
-    agent = RecentDocumentsAgent(inner_agent=inner_agent)
+    agent = RecentDocumentsAgent(agent=inner_agent)
 
     result = asyncio.run(agent.ainvoke({"documents": documents}))
 
@@ -210,7 +210,7 @@ def test_recent_documents_agent_ainvoke_returns_inner_agent_output() -> None:
 
 
 def test_recent_documents_agent_ainvoke_empty_documents() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
 
     result = asyncio.run(agent.ainvoke({"documents": []}))
 
@@ -218,14 +218,14 @@ def test_recent_documents_agent_ainvoke_empty_documents() -> None:
 
 
 def test_recent_documents_agent_ainvoke_missing_documents_key_raises() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     with pytest.raises(KeyError, match="input dict must contain a 'documents' key"):
         asyncio.run(agent.ainvoke({}))
 
 
 def test_recent_documents_agent_ainvoke_and_invoke_agree() -> None:
     documents = [Document(page_content="old"), Document(page_content="new")]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=1)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=1)
 
     invoke_result = agent.invoke({"documents": documents})
     ainvoke_result = asyncio.run(agent.ainvoke({"documents": documents}))
@@ -241,7 +241,7 @@ def test_recent_documents_agent_batch_returns_full_outputs() -> None:
         {"documents": [Document(page_content="old1"), Document(page_content="new1")]},
         {"documents": [Document(page_content="old2"), Document(page_content="new2")]},
     ]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=1)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=1)
     result = agent.batch(inputs)
     assert result == [
         '<document id="1">\nnew1\n</document>',
@@ -255,7 +255,7 @@ def test_recent_documents_agent_batch_passes_messages_dicts_to_inner_agent() -> 
         {"documents": [Document(page_content="old2"), Document(page_content="new2")]},
     ]
     inner_agent = RunnableLambda(lambda inp: inp)
-    agent = RecentDocumentsAgent(inner_agent=inner_agent, max_documents=1)
+    agent = RecentDocumentsAgent(agent=inner_agent, max_documents=1)
     result = agent.batch(inputs)
     assert result == [
         {"messages": [HumanMessage(content='<document id="1">\nnew1\n</document>')]},
@@ -264,13 +264,13 @@ def test_recent_documents_agent_batch_passes_messages_dicts_to_inner_agent() -> 
 
 
 def test_recent_documents_agent_batch_empty_inputs() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     assert agent.batch([]) == []
 
 
 def test_recent_documents_agent_invoke_and_batch_agree() -> None:
     documents = [Document(page_content="old"), Document(page_content="new")]
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=1)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=1)
     invoke_result = agent.invoke({"documents": documents})
     batch_result = agent.batch([{"documents": documents}])
     assert [invoke_result] == batch_result
@@ -280,14 +280,14 @@ def test_recent_documents_agent_invoke_and_batch_agree() -> None:
 
 
 def test_recent_documents_agent_to_inner_input_wraps_human_message() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=1)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=1)
     documents = [Document(page_content="old"), Document(page_content="new")]
     result = agent._to_inner_input(documents)
     assert result == {"messages": [HumanMessage(content='<document id="1">\nnew\n</document>')]}
 
 
 def test_recent_documents_agent_to_inner_input_empty_documents() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     result = agent._to_inner_input([])
     assert result == {"messages": [HumanMessage(content="")]}
 
@@ -296,14 +296,14 @@ def test_recent_documents_agent_to_inner_input_empty_documents() -> None:
 
 
 def test_recent_documents_agent_format_last_documents_single_document() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=1)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=1)
     documents = [Document(page_content="old"), Document(page_content="new")]
     result = agent._format_last_documents(documents)
     assert result == '<document id="1">\nnew\n</document>'
 
 
 def test_recent_documents_agent_format_last_documents_multiple_documents() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=2)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=2)
     documents = [
         Document(page_content="a"),
         Document(page_content="b"),
@@ -314,12 +314,12 @@ def test_recent_documents_agent_format_last_documents_multiple_documents() -> No
 
 
 def test_recent_documents_agent_format_last_documents_empty_documents() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent())
+    agent = RecentDocumentsAgent(agent=_echo_agent())
     assert agent._format_last_documents([]) == ""
 
 
 def test_recent_documents_agent_format_last_documents_uses_document_format() -> None:
-    agent = RecentDocumentsAgent(inner_agent=_echo_agent(), max_documents=1)
+    agent = RecentDocumentsAgent(agent=_echo_agent(), max_documents=1)
     documents = [Document(page_content="old"), Document(page_content="new")]
     result = agent._format_last_documents(documents)
     assert result == '<document id="1">\nnew\n</document>'
@@ -330,7 +330,7 @@ def test_recent_documents_agent_format_last_documents_log_documents_metadata(
     log_documents_metadata: bool,
 ) -> None:
     agent = RecentDocumentsAgent(
-        inner_agent=_echo_agent(), max_documents=1, log_documents_metadata=log_documents_metadata
+        agent=_echo_agent(), max_documents=1, log_documents_metadata=log_documents_metadata
     )
     documents = [Document(page_content="old"), Document(page_content="new")]
     result = agent._format_last_documents(documents)
