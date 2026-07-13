@@ -1109,7 +1109,7 @@ wheels = [
 
 [[package]]
 name = "glyphik"
-version = "0.0.1a16"
+version = "0.0.1a17"
 source = { editable = "." }
 dependencies = [
     { name = "coola" },
