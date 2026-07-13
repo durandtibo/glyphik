@@ -32,7 +32,7 @@ class BasePipelineFactory[T](ABC):
         >>> class SumPipeline(BasePipeline[int]):
         ...     def __init__(self, values: list[int]) -> None:
         ...         self._values = values
-        ...     def execute(self) -> int:
+        ...     def run(self) -> int:
         ...         return sum(self._values)
         ...
         >>> class MyPipelineFactory(BasePipelineFactory[list[int]]):

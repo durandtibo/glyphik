@@ -81,7 +81,7 @@ class DocumentStoreIndexingIngestor(BaseIngestor[VectorStore], MultilineDisplayM
             vector_store=self._vector_store,
             batch_size=self._batch_size,
         )
-        pipeline.execute()
+        pipeline.run()
 
         logger.info(
             "Ingestion complete. Indexed %s documents in %s",

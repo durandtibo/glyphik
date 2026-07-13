@@ -183,77 +183,77 @@ def test_company_document_agent_pipeline_str_contains_class_name(
     assert "CompanyDocumentAgentPipeline" in str(pipeline)
 
 
-# --- execute (sequential) ---
+# --- run (sequential) ---
 
 
-def test_company_document_agent_pipeline_execute_sequential_returns_list(
+def test_company_document_agent_pipeline_run_sequential_returns_list(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
         companies=[AAPL, MSFT], document_store=document_store, agent=_fake_agent(), batch_size=0
     )
-    result = pipeline.execute()
+    result = pipeline.run()
     assert isinstance(result, list)
 
 
-def test_company_document_agent_pipeline_execute_sequential_returns_outputs(
+def test_company_document_agent_pipeline_run_sequential_returns_outputs(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
         companies=[AAPL, MSFT], document_store=document_store, agent=_fake_agent(), batch_size=0
     )
-    result = pipeline.execute()
+    result = pipeline.run()
     assert result == [
         {"company": AAPL, "n_documents": 2},
         {"company": MSFT, "n_documents": 1},
     ]
 
 
-def test_company_document_agent_pipeline_execute_sequential_empty_companies(
+def test_company_document_agent_pipeline_run_sequential_empty_companies(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
         companies=[], document_store=document_store, agent=_fake_agent(), batch_size=0
     )
-    assert pipeline.execute() == []
+    assert pipeline.run() == []
 
 
-# --- execute (batch) ---
+# --- run (batch) ---
 
 
-def test_company_document_agent_pipeline_execute_batch_returns_list(
+def test_company_document_agent_pipeline_run_batch_returns_list(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
         companies=[AAPL, MSFT], document_store=document_store, agent=_fake_agent(), batch_size=2
     )
-    result = pipeline.execute()
+    result = pipeline.run()
     assert isinstance(result, list)
 
 
-def test_company_document_agent_pipeline_execute_batch_returns_outputs(
+def test_company_document_agent_pipeline_run_batch_returns_outputs(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
         companies=[AAPL, MSFT], document_store=document_store, agent=_fake_agent(), batch_size=2
     )
-    result = pipeline.execute()
+    result = pipeline.run()
     assert result == [
         {"company": AAPL, "n_documents": 2},
         {"company": MSFT, "n_documents": 1},
     ]
 
 
-def test_company_document_agent_pipeline_execute_batch_empty_companies(
+def test_company_document_agent_pipeline_run_batch_empty_companies(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
         companies=[], document_store=document_store, agent=_fake_agent(), batch_size=2
     )
-    assert pipeline.execute() == []
+    assert pipeline.run() == []
 
 
-def test_company_document_agent_pipeline_execute_sequential_and_batch_agree(
+def test_company_document_agent_pipeline_run_sequential_and_batch_agree(
     document_store: InMemoryDocumentStore,
 ) -> None:
     sequential = CompanyDocumentAgentPipeline(
@@ -262,13 +262,13 @@ def test_company_document_agent_pipeline_execute_sequential_and_batch_agree(
     batched = CompanyDocumentAgentPipeline(
         companies=[AAPL, MSFT], document_store=document_store, agent=_fake_agent(), batch_size=1
     )
-    assert sequential.execute() == batched.execute()
+    assert sequential.run() == batched.run()
 
 
-# --- execute (continue_on_error, sequential) ---
+# --- run (continue_on_error, sequential) ---
 
 
-def test_company_document_agent_pipeline_execute_sequential_raises_by_default(
+def test_company_document_agent_pipeline_run_sequential_raises_by_default(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
@@ -278,10 +278,10 @@ def test_company_document_agent_pipeline_execute_sequential_raises_by_default(
         batch_size=0,
     )
     with pytest.raises(ValueError, match=r"agent failed for"):
-        pipeline.execute()
+        pipeline.run()
 
 
-def test_company_document_agent_pipeline_execute_sequential_continue_on_error_skips_failure(
+def test_company_document_agent_pipeline_run_sequential_continue_on_error_skips_failure(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
@@ -291,11 +291,11 @@ def test_company_document_agent_pipeline_execute_sequential_continue_on_error_sk
         batch_size=0,
         continue_on_error=True,
     )
-    result = pipeline.execute()
+    result = pipeline.run()
     assert result == [{"company": MSFT, "n_documents": 1}]
 
 
-def test_company_document_agent_pipeline_execute_sequential_continue_on_error_last_fails(
+def test_company_document_agent_pipeline_run_sequential_continue_on_error_last_fails(
     document_store: InMemoryDocumentStore,
 ) -> None:
     # A failure at the end of the sequence should not drop earlier,
@@ -307,11 +307,11 @@ def test_company_document_agent_pipeline_execute_sequential_continue_on_error_la
         batch_size=0,
         continue_on_error=True,
     )
-    result = pipeline.execute()
+    result = pipeline.run()
     assert result == [{"company": AAPL, "n_documents": 2}]
 
 
-def test_company_document_agent_pipeline_execute_sequential_continue_on_error_no_failures(
+def test_company_document_agent_pipeline_run_sequential_continue_on_error_no_failures(
     document_store: InMemoryDocumentStore,
 ) -> None:
     # When continue_on_error=True but nothing actually fails, behavior
@@ -323,17 +323,17 @@ def test_company_document_agent_pipeline_execute_sequential_continue_on_error_no
         batch_size=0,
         continue_on_error=True,
     )
-    result = pipeline.execute()
+    result = pipeline.run()
     assert result == [
         {"company": AAPL, "n_documents": 2},
         {"company": MSFT, "n_documents": 1},
     ]
 
 
-# --- execute (continue_on_error, batch) ---
+# --- run (continue_on_error, batch) ---
 
 
-def test_company_document_agent_pipeline_execute_batch_raises_by_default(
+def test_company_document_agent_pipeline_run_batch_raises_by_default(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
@@ -343,10 +343,10 @@ def test_company_document_agent_pipeline_execute_batch_raises_by_default(
         batch_size=2,
     )
     with pytest.raises(ValueError, match=r"agent failed for"):
-        pipeline.execute()
+        pipeline.run()
 
 
-def test_company_document_agent_pipeline_execute_batch_continue_on_error_skips_failure(
+def test_company_document_agent_pipeline_run_batch_continue_on_error_skips_failure(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
@@ -356,11 +356,11 @@ def test_company_document_agent_pipeline_execute_batch_continue_on_error_skips_f
         batch_size=2,
         continue_on_error=True,
     )
-    result = pipeline.execute()
+    result = pipeline.run()
     assert result == [{"company": MSFT, "n_documents": 1}]
 
 
-def test_company_document_agent_pipeline_execute_batch_continue_on_error_no_failures(
+def test_company_document_agent_pipeline_run_batch_continue_on_error_no_failures(
     document_store: InMemoryDocumentStore,
 ) -> None:
     pipeline = CompanyDocumentAgentPipeline(
@@ -370,7 +370,7 @@ def test_company_document_agent_pipeline_execute_batch_continue_on_error_no_fail
         batch_size=2,
         continue_on_error=True,
     )
-    result = pipeline.execute()
+    result = pipeline.run()
     assert result == [
         {"company": AAPL, "n_documents": 2},
         {"company": MSFT, "n_documents": 1},

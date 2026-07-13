@@ -102,7 +102,7 @@ def process_data(config: ExperimentConfig) -> None:
     pipeline = factory.make_pipeline()
     print_pretty(pipeline, title="Pipeline")
 
-    outputs = pipeline.execute()
+    outputs = pipeline.run()
     logger.info("Found %d outputs", len(outputs))
 
     for output in outputs:

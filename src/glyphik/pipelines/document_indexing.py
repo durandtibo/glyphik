@@ -55,7 +55,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
         ...     vector_store=vector_store,
         ...     batch_size=64,
         ... )
-        >>> vector_store = pipelines.execute()  # doctest: +SKIP
+        >>> vector_store = pipelines.run()  # doctest: +SKIP
 
         ```
     """
@@ -72,7 +72,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
         self._vector_store = vector_store
         self._batch_size = batch_size
 
-    def execute(self) -> VectorStore:
+    def run(self) -> VectorStore:
         """Run the pipelines in batches and return the populated vector
         store.
 
