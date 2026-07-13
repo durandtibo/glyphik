@@ -55,7 +55,12 @@ def test_coerce_to_date_invalid_format_raises_value_error() -> None:
 
 
 def test_coerce_to_date_invalid_date_raises_value_error() -> None:
-    with pytest.raises(ValueError, match=r"day is out of range for month"):
+    # The exact wording differs between CPython's C-accelerated ``_datetime``
+    # module and the pure-Python fallback (e.g. PyPy, free-threaded builds),
+    # so match on both known variants instead of one exact string.
+    with pytest.raises(
+        ValueError, match=r"day is out of range for month|day \d+ must be in range"
+    ):
         coerce_to_date("2023-02-30")
 
 
