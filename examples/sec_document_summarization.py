@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any, TYPE_CHECKING
 
 import click
 from coola.display import str_pydantic_model
@@ -17,7 +17,6 @@ from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from zenpyre.agents import AgentConfig
 from zenpyre.chat_models import ChatModelConfig
-from zenpyre.data_processors import SequenceProcessor
 from zenpyre.document_stores import DuckDBDocumentStore
 from zenpyre.documents.analysis import (
     compute_content_stats_exact,
@@ -25,27 +24,22 @@ from zenpyre.documents.analysis import (
     print_content_stats_report,
     print_metadata_stats_report,
 )
-from zenpyre.ingestors import InMemoryIngestor, ProcessorIngestor
+from zenpyre.ingestors.factory import BaseIngestorFactory
 from zenpyre.runnables import CachingRunnable
-from zenpyre.utils.config import ExtraFieldsConfig
+from zenpyre.utils.resolve import resolve_object
 from zenpyre.utils.rich import configure_rich_logging, print_markdown, print_pretty
 
 from glyphik.agents import RecentDocumentsAgent
-from glyphik.data.sec import CompanyIdentifier, SecForm
-from glyphik.data_processors import (
-    EdgarCompanyToIdentifierProcessor,
-    SecFilingRecordToDocumentProcessor,
-)
-from glyphik.ingestors import (
-    SecCompanyIngestor,
-    SecFilingDocumentStoreIngestor,
-    SecFilingIngestor,
+from glyphik.data.sec import (
+    CompanyIdentifier,
+    get_company_identifiers_from_tickers,
 )
 from glyphik.pipeline import CompanyDocumentAgentPipeline
 from glyphik.prompts.summarization import GENERIC_SYSTEM_PROMPT
+from glyphik.utils.config import SecDataConfig
 
 if TYPE_CHECKING:
-    from zenpyre.ingestors import BaseIngestor
+    from zenpyre.utils.config import BaseConfig
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -59,46 +53,6 @@ DEFAULT_MAX_DOCUMENTS = 1
 DEFAULT_MODEL = "ollama:gemma4:e2b-mlx"
 
 DEFAULT_TICKERS = ["AAPL", "IBM", "MSFT", "NVDA", "GOOGL"]
-
-
-@dataclass(frozen=True)
-class DataConfig(ExtraFieldsConfig):
-    r"""Hold the configuration for a data ingestion pipeline.
-
-    Attributes:
-        ticker: The ticker symbol of the company to ingest data for.
-            Automatically stripped of leading/trailing whitespace and
-            upper-cased for consistent keys/paths downstream.
-        start_date: The earliest date (inclusive) to ingest.
-        end_date: The latest date (inclusive) to ingest.
-        forms: The SEC forms to ingest. Accepts any iterable (e.g. a
-            list) at construction time; always normalized to a
-            ``tuple`` so the config stays hashable and immutable.
-
-    Raises:
-        ValueError: If ``start_date`` is after ``end_date``.
-    """
-
-    ticker: str
-    start_date: date = DEFAULT_START_DATE
-    end_date: date = DEFAULT_END_DATE
-    forms: tuple[str, ...] = (SecForm.TEN_K, SecForm.TEN_Q)
-
-    def __post_init__(self) -> None:
-        """Normalize the ticker and validate the date range.
-
-        Strips whitespace and upper-cases ``ticker``, converts
-        ``forms`` to a tuple, and checks that ``start_date`` does not
-        come after ``end_date``.
-
-        Raises:
-            ValueError: If ``start_date`` is after ``end_date``.
-        """
-        object.__setattr__(self, "ticker", self.ticker.strip().upper())
-        object.__setattr__(self, "forms", tuple(self.forms))
-        if self.start_date > self.end_date:
-            msg = f"start_date ({self.start_date}) must be <= end_date ({self.end_date})"
-            raise ValueError(msg)
 
 
 @dataclass(frozen=True)
@@ -132,7 +86,7 @@ class ExperimentConfig:
     """
 
     base_dir: Path
-    data: DataConfig
+    data: BaseConfig
     agent: DocumentsAgentConfig
 
 
@@ -154,43 +108,19 @@ def get_document_store(base_dir: Path, **kwargs: Any) -> DuckDBDocumentStore:
     return store
 
 
-def build_ingestor(config: ExperimentConfig) -> BaseIngestor:
-    """Build the S&P 1500 filing ingestor rooted at ``config.base_dir``.
-
-    Args:
-        config: The pipeline configuration specifying the ticker,
-            base directory, and filing date range.
-
-    Returns:
-        An ingestor that downloads 10-K and 10-Q filings for
-        ``config.ticker`` and stores them in the document store.
-    """
-    return SecFilingDocumentStoreIngestor(
-        filing_ingestor=SecFilingIngestor(
-            company_ingestor=ProcessorIngestor(
-                source=SecCompanyIngestor(ingestor=InMemoryIngestor([config.data.ticker])),
-                processor=SequenceProcessor(EdgarCompanyToIdentifierProcessor()),
-            ),
-            output_dir=config.base_dir / "sec",
-            start_date=config.data.start_date,
-            end_date=config.data.end_date,
-            forms=config.data.forms,
-        ),
-        document_store=get_document_store(config.base_dir),
-        processor=SequenceProcessor(SecFilingRecordToDocumentProcessor()),
-    )
-
-
-def download_data(config: ExperimentConfig) -> None:
+def ingest_data(config: ExperimentConfig) -> None:
     """Download and index SEC filings for the ticker in ``config``.
 
     Args:
         config: The pipeline configuration specifying the ticker,
             base directory, and filing date range.
     """
-    ingestor = build_ingestor(config)
+    factory = resolve_object(config.data.to_kwargs(), cls=BaseIngestorFactory)
+    logger.info("%s", factory)
+    ingestor = factory.make_ingestor()
     logger.info("%s", ingestor)
     ingestor.ingest()
+    logger.info("<<< 🚀 data ingestion complete 🚀 >>>\n\n")
 
 
 def process_data(config: ExperimentConfig) -> None:
@@ -263,7 +193,7 @@ def process_data(config: ExperimentConfig) -> None:
     show_default=True,
     help="Maximum number of most recent filings to summarize.",
 )
-def main(ticker: str, start_date: object, end_date: object, max_documents: int) -> None:
+def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> None:
     """Run the document indexing pipeline and inspect the vector store.
 
     Args:
@@ -275,13 +205,17 @@ def main(ticker: str, start_date: object, end_date: object, max_documents: int) 
         max_documents: The maximum number of most recent filings to
             pass to the summarization agent.
     """
+    base_dir = sanitize_path(Path(__file__).parent.parent / "tmp/examples/summarization")
+
     try:
         config = ExperimentConfig(
-            base_dir=sanitize_path(Path(__file__).parent.parent / "tmp/examples/company"),
-            data=DataConfig(
-                ticker=ticker,
+            base_dir=base_dir,
+            data=SecDataConfig.from_kwargs(
+                _target_="glyphik.ingestors.factory.SecFilingIngestorFactory",
+                companies=tuple(get_company_identifiers_from_tickers([ticker])),
                 start_date=start_date.date(),
                 end_date=end_date.date(),
+                base_dir=base_dir
             ),
             agent=DocumentsAgentConfig.from_kwargs(
                 chat_model=ChatModelConfig.from_kwargs(model=DEFAULT_MODEL, temperature=0),
@@ -294,7 +228,7 @@ def main(ticker: str, start_date: object, end_date: object, max_documents: int) 
 
     print_pretty(config)
 
-    download_data(config)
+    ingest_data(config)
     try:
         process_data(config)
     except RuntimeError as e:
