@@ -7,7 +7,10 @@ import pytest
 from coola.hashing import HasherRegistry, hash_object
 
 from glyphik.data.sec import CompanyIdentifier
-from glyphik.data.sec.company_identifier import CompanyIdentifierHasher
+from glyphik.data.sec.company_identifier import (
+    CompanyIdentifierHasher,
+    get_company_identifiers_from_tickers,
+)
 
 MODULE = "glyphik.data.sec.company_identifier"
 
@@ -168,6 +171,108 @@ def test_company_identifier_content_hash_differs_from_builtin_hash() -> None:
     # and isn't guaranteed to be stable across processes).
     identifier = CompanyIdentifier(cik=320193, ticker="AAPL")
     assert identifier.content_hash() != hash(identifier)
+
+
+##################################################
+#     Tests for get_company_identifiers_from_tickers  #
+##################################################
+
+
+# --- Default (fail-fast) behavior ---
+
+
+def test_get_company_identifiers_from_tickers_returns_resolved_identifiers() -> None:
+    identifiers = [
+        CompanyIdentifier(cik=320193, ticker="AAPL"),
+        CompanyIdentifier(cik=789019, ticker="MSFT"),
+    ]
+    with patch(f"{MODULE}.CompanyIdentifier.from_ticker", side_effect=identifiers) as mock_from:
+        result = get_company_identifiers_from_tickers(["AAPL", "MSFT"])
+        assert result == identifiers
+        assert mock_from.call_count == 2
+
+
+def test_get_company_identifiers_from_tickers_preserves_order() -> None:
+    identifiers = [
+        CompanyIdentifier(cik=1, ticker="A"),
+        CompanyIdentifier(cik=2, ticker="B"),
+        CompanyIdentifier(cik=3, ticker="C"),
+    ]
+    with patch(f"{MODULE}.CompanyIdentifier.from_ticker", side_effect=identifiers):
+        result = get_company_identifiers_from_tickers(["A", "B", "C"])
+        assert [ci.ticker for ci in result] == ["A", "B", "C"]
+
+
+def test_get_company_identifiers_from_tickers_empty_list_returns_empty_list() -> None:
+    with patch(f"{MODULE}.CompanyIdentifier.from_ticker") as mock_from:
+        result = get_company_identifiers_from_tickers([])
+        assert result == []
+        mock_from.assert_not_called()
+
+
+def test_get_company_identifiers_from_tickers_raises_on_unresolved_ticker() -> None:
+    with (
+        patch(
+            f"{MODULE}.CompanyIdentifier.from_ticker",
+            side_effect=ValueError("Cannot find CIK for ticker 'BAD'"),
+        ),
+        pytest.raises(ValueError, match=r"Cannot find CIK for ticker"),
+    ):
+        get_company_identifiers_from_tickers(["BAD"])
+
+
+def test_get_company_identifiers_from_tickers_default_does_not_skip_unresolved() -> None:
+    good = CompanyIdentifier(cik=320193, ticker="AAPL")
+    with (
+        patch(
+            f"{MODULE}.CompanyIdentifier.from_ticker",
+            side_effect=[good, ValueError("Cannot find CIK for ticker 'BAD'")],
+        ),
+        pytest.raises(ValueError, match=r"Cannot find CIK for ticker"),
+    ):
+        get_company_identifiers_from_tickers(["AAPL", "BAD"])
+
+
+# --- skip_unresolved=True behavior ---
+
+
+def test_get_company_identifiers_from_tickers_skip_unresolved_omits_bad_tickers() -> None:
+    good = CompanyIdentifier(cik=320193, ticker="AAPL")
+    with patch(
+        f"{MODULE}.CompanyIdentifier.from_ticker",
+        side_effect=[good, ValueError("Cannot find CIK for ticker 'BAD'")],
+    ):
+        result = get_company_identifiers_from_tickers(["AAPL", "BAD"], skip_unresolved=True)
+        assert result == [good]
+
+
+def test_get_company_identifiers_from_tickers_skip_unresolved_all_bad_returns_empty() -> None:
+    with patch(
+        f"{MODULE}.CompanyIdentifier.from_ticker",
+        side_effect=ValueError("Cannot find CIK for ticker"),
+    ):
+        result = get_company_identifiers_from_tickers(["BAD1", "BAD2"], skip_unresolved=True)
+        assert result == []
+
+
+def test_get_company_identifiers_from_tickers_skip_unresolved_preserves_relative_order() -> None:
+    good1 = CompanyIdentifier(cik=1, ticker="A")
+    good2 = CompanyIdentifier(cik=2, ticker="C")
+    with patch(
+        f"{MODULE}.CompanyIdentifier.from_ticker",
+        side_effect=[good1, ValueError("bad"), good2],
+    ):
+        result = get_company_identifiers_from_tickers(["A", "B", "C"], skip_unresolved=True)
+        assert result == [good1, good2]
+
+
+def test_get_company_identifiers_from_tickers_skip_unresolved_calls_from_ticker_for_all() -> None:
+    with patch(
+        f"{MODULE}.CompanyIdentifier.from_ticker",
+        side_effect=[ValueError("bad"), CompanyIdentifier(cik=2, ticker="B")],
+    ) as mock_from:
+        get_company_identifiers_from_tickers(["A", "B"], skip_unresolved=True)
+        assert mock_from.call_count == 2
 
 
 #############################################

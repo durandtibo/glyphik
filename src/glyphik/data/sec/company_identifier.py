@@ -3,9 +3,10 @@ company by its ticker symbol and SEC Central Index Key (CIK)."""
 
 from __future__ import annotations
 
-__all__ = ["CompanyIdentifier", "CompanyIdentifierHasher"]
+__all__ = ["CompanyIdentifier", "CompanyIdentifierHasher", "get_company_identifiers_from_tickers"]
 
 import json
+import logging
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
 
@@ -15,7 +16,11 @@ from glyphik.data.sec.cik import fetch_ticker_from_cik
 from glyphik.data.sec.ticker import fetch_cik_from_ticker
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     import edgar
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -64,6 +69,7 @@ class CompanyIdentifier:
         Raises:
             ValueError: If no CIK can be found for ``ticker``.
         """
+        ticker = ticker.strip()
         cik = fetch_cik_from_ticker(ticker)
         if cik is None:
             msg = f"Cannot find CIK for ticker {ticker!r}"
@@ -137,6 +143,42 @@ class CompanyIdentifier:
             ```
         """
         return hash_string(json.dumps(asdict(self), sort_keys=True), length=length)
+
+
+def get_company_identifiers_from_tickers(
+    tickers: Sequence[str],
+    *,
+    skip_unresolved: bool = False,
+) -> list[CompanyIdentifier]:
+    """Resolve a list of ticker symbols into their corresponding
+    :class:`CompanyIdentifier` instances.
+
+    Args:
+        tickers: The stock ticker symbols to resolve.
+        skip_unresolved: If ``True``, tickers that cannot be resolved
+            are silently skipped instead of raising. Defaults to
+            ``False``.
+
+    Returns:
+        The resolved company identifiers. If ``skip_unresolved`` is
+        ``False``, the order matches ``tickers``; otherwise,
+        unresolved tickers are omitted and relative order is
+        preserved for the rest.
+
+    Raises:
+        ValueError: If ``skip_unresolved`` is ``False`` and any
+            ticker cannot be resolved to a CIK.
+    """
+    if not skip_unresolved:
+        return [CompanyIdentifier.from_ticker(ticker) for ticker in tickers]
+
+    identifiers = []
+    for ticker in tickers:
+        try:
+            identifiers.append(CompanyIdentifier.from_ticker(ticker))
+        except ValueError:
+            logger.warning("Skipping unresolved ticker: %r", ticker)
+    return identifiers
 
 
 class CompanyIdentifierHasher(BaseHasher[CompanyIdentifier]):
