@@ -27,9 +27,9 @@ def _make_factory(tmp_path: Path, **overrides: object) -> SecDocumentSummarizati
     return SecDocumentSummarizationPipelineFactory(**kwargs)
 
 
-###############################################################
+###########################################################
 #   Tests for SecDocumentSummarizationPipelineFactory     #
-###############################################################
+###########################################################
 
 
 # --- Inheritance ---
