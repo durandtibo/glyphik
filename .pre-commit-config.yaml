@@ -4,6 +4,10 @@ default_language_version:
 default_stages: [ pre-commit ]
 
 repos:
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
+    hooks:
+      - id: nbstripout
   - repo: local
     hooks:
       - id: docformatter
