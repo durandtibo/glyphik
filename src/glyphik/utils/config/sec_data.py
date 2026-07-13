@@ -61,3 +61,12 @@ class SecDataConfig(ExtraFieldsConfig):
         if self.start_date > self.end_date:
             msg = f"start_date ({self.start_date}) must be <= end_date ({self.end_date})"
             raise ValueError(msg)
+
+    def __hash__(self) -> int:
+        # @dataclass(frozen=True) auto-generates a fresh __hash__ for
+        # every dataclass-decorated class unless __hash__ is already
+        # present in that class's own body — merely inheriting one
+        # does not suppress the override. Delegating here (rather than
+        # repeating its logic) keeps ExtraFieldsConfig.__hash__ the
+        # single authoritative implementation.
+        return ExtraFieldsConfig.__hash__(self)
