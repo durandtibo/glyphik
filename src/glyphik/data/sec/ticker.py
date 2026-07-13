@@ -46,7 +46,7 @@ def fetch_cik_from_ticker(ticker: str) -> int | None:
 
         ```
     """
-    return _fetch_cik_from_ticker(ticker.upper())
+    return _fetch_cik_from_ticker(ticker.strip().upper())
 
 
 @lru_cache(maxsize=256)

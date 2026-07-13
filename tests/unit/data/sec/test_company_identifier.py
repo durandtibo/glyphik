@@ -43,6 +43,16 @@ def test_company_identifier_equality() -> None:
     assert identifier_a == identifier_b
 
 
+def test_company_identifier_strips_ticker() -> None:
+    identifier = CompanyIdentifier(cik=320193, ticker=" AAPL")
+    assert identifier.ticker == "AAPL"
+
+
+def test_company_identifier_upper_ticker() -> None:
+    identifier = CompanyIdentifier(cik=320193, ticker="aapl")
+    assert identifier.ticker == "AAPL"
+
+
 def test_company_identifier_from_cik() -> None:
     with patch(f"{MODULE}.fetch_ticker_from_cik", return_value="AAPL") as mock_fetch:
         identifier = CompanyIdentifier.from_cik(320193)
