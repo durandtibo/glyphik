@@ -62,7 +62,7 @@ def process_data(config: Config) -> None:
     n_outputs = 0
     for output in pipeline.run():
         n_outputs += 1
-        print_markdown(output["messages"][-1].content)
+        print_markdown(output["messages"][-1].content, title=f"Output #{n_outputs}")
 
     logger.info("Found %d outputs", n_outputs)
 
