@@ -9,11 +9,13 @@ from typing import TYPE_CHECKING, Any
 
 from coola.display import MultilineDisplayMixin
 from zenpyre.agents.factory.base import BaseAgentFactory
+from zenpyre.utils.resolve import resolve_object
 
 from glyphik.agents.recent_documents import RecentDocumentsAgent
 
 if TYPE_CHECKING:
     from langchain_core.runnables import Runnable
+    from zenpyre.utils.config import BaseConfig
 
 
 class RecentDocumentsAgentFactory(BaseAgentFactory, MultilineDisplayMixin):
@@ -21,13 +23,13 @@ class RecentDocumentsAgentFactory(BaseAgentFactory, MultilineDisplayMixin):
     :class:`~glyphik.agents.RecentDocumentsAgent`.
 
     Each call to :meth:`make_agent` builds a fresh inner agent via
-    ``inner_agent_factory`` and wraps it in a
+    ``agent_factory`` and wraps it in a
     :class:`~glyphik.agents.RecentDocumentsAgent` so that only the
     ``max_documents`` most recent documents are formatted and
     forwarded to the inner agent.
 
     Args:
-        inner_agent_factory: The factory used to build the wrapped
+        agent_factory: The factory used to build the wrapped
             agent that receives the formatted documents.
         max_documents: The maximum number of most recent documents to
             keep. Must be a positive integer.
@@ -46,7 +48,7 @@ class RecentDocumentsAgentFactory(BaseAgentFactory, MultilineDisplayMixin):
         >>> from glyphik.agents.factory import RecentDocumentsAgentFactory
         >>> agent = AgentChatModel(model=FakeListChatModel(responses=["hello"]))
         >>> factory = RecentDocumentsAgentFactory(
-        ...     inner_agent_factory=AgentFactory(agent),
+        ...     agent_factory=AgentFactory(agent),
         ...     max_documents=3,
         ... )
         >>> agent = factory.make_agent()
@@ -56,13 +58,13 @@ class RecentDocumentsAgentFactory(BaseAgentFactory, MultilineDisplayMixin):
 
     def __init__(
         self,
-        inner_agent_factory: BaseAgentFactory,
+        agent_factory: BaseAgentFactory | dict[str, Any] | BaseConfig,
         max_documents: int = 1,
         include_metadata: bool = False,
         document_format: str = "xml",
         log_documents_metadata: bool = False,
     ) -> None:
-        self._inner_agent_factory = inner_agent_factory
+        self._agent_factory = resolve_object(agent_factory, cls=BaseAgentFactory)
         self._max_documents = max_documents
         self._include_metadata = include_metadata
         self._document_format = document_format
@@ -70,7 +72,7 @@ class RecentDocumentsAgentFactory(BaseAgentFactory, MultilineDisplayMixin):
 
     def make_agent(self) -> Runnable[dict[str, Any], Any]:
         return RecentDocumentsAgent(
-            inner_agent=self._inner_agent_factory.make_agent(),
+            agent=self._agent_factory.make_agent(),
             max_documents=self._max_documents,
             include_metadata=self._include_metadata,
             document_format=self._document_format,
@@ -79,7 +81,7 @@ class RecentDocumentsAgentFactory(BaseAgentFactory, MultilineDisplayMixin):
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
         return {
-            "inner_agent_factory": self._inner_agent_factory,
+            "agent_factory": self._agent_factory,
             "max_documents": self._max_documents,
             "include_metadata": self._include_metadata,
             "document_format": self._document_format,
