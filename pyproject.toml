@@ -12,7 +12,7 @@ only-include = ["src"]
 
 [project]
 name = "glyphik"
-version = "0.0.1a16"
+version = "0.0.1a17"
 description = "Utilities for LangChain"
 readme = "README.md"
 authors = [
@@ -57,8 +57,7 @@ dependencies = [
 
 [project.optional-dependencies]
 anthropic = [ "langchain-anthropic >= 1.4,<2.0" ]
-# Require python 3.11 because onnxruntime is one of the dependency and needs >= 3.11
-chroma = [ "langchain-chroma >=1.0,<2.0 ; python_version >= '3.11'" ]
+chroma = [ "langchain-chroma >=1.0,<2.0" ]
 deepagents = [ "deepagents >=0.6,<1.0" ]
 dotenv = [ "python-dotenv >= 1.2,<2.0" ]
 duckdb = [ "duckdb >=1.5,<2.0" ]
@@ -97,6 +96,12 @@ docs = [
     "mkdocs-material >=9.7,<10.0",
     "mkdocstrings[python]>=1.0.4,<2.0",
     "mkdocs-include-markdown-plugin >=7.3,<8.0",
+]
+
+jupyter = [
+    "ipykernel >=6.30,<7.0",
+    "jupyterlab >=4.5,<5.0",
+    "nbstripout >=0.9,<1.0",
 ]
 
 [project.urls]
