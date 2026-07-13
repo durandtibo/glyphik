@@ -1219,7 +1219,7 @@ requires-dist = [
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=5.0,<6.0" },
     { name = "textual", extras = ["syntax"], marker = "extra == 'textual'", specifier = ">=8.2,<9.0" },
-    { name = "zenpyre", specifier = ">=0.0.1a51,<1.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a52,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "deepagents", "dotenv", "duckdb", "edgar", "faker", "google-genai", "huggingface", "ollama", "openai", "polars", "sentence-transformers", "text-splitters", "textual"]
 
@@ -5441,7 +5441,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a51"
+version = "0.0.1a52"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -5453,9 +5453,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bb/4d/aaa3dc3974afae94145c85e7114cc54d07ef92c759aea33609d75ba92ebc/zenpyre-0.0.1a51.tar.gz", hash = "sha256:2b97913cccc8336a2cf4d2d389bb414d9921c66448b52bc1bf66274ab37f225d", size = 125786, upload-time = "2026-07-13T07:45:54.607Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3c/9b/6132326211c8db5713e55fd0448d0312865fac76ca6d656c306eabf3b6e4/zenpyre-0.0.1a52.tar.gz", hash = "sha256:5cb460a5f07fec0d1fbd2f8effc9c8e88c94512cac81d8ab6074c3e67d214907", size = 125827, upload-time = "2026-07-13T08:04:34.639Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/83/6958b6125780036457ba1f0805158bb04a781cceb2d1eb418601149e1428/zenpyre-0.0.1a51-py3-none-any.whl", hash = "sha256:fb918070c96c64cd6c2fa4b5730185363989b718184339833683d775abd11a91", size = 229636, upload-time = "2026-07-13T07:45:52.895Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/e8/2912cbb0cf8a08991b53bc7caa546ed5b415d20f476543b568224c3262ef/zenpyre-0.0.1a52-py3-none-any.whl", hash = "sha256:ec9be2f895e30d96873c0e559008a3174158b50681e0355a06f127f00c9f411a", size = 229726, upload-time = "2026-07-13T08:04:32.478Z" },
 ]
 
 [[package]]
