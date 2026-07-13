@@ -3,83 +3,53 @@ r"""Provide code to explore a document search pipelines."""
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import click
 from coola.utils.path import sanitize_path
 from coola.utils.string import slugify
 from dotenv import load_dotenv
-from zenpyre.agents.factory import BaseAgentFactory
+from langchain_core.runnables import RunnableConfig
 from zenpyre.chat_models import ChatModelConfig
 from zenpyre.ingestors.factory import BaseIngestorFactory
-from zenpyre.utils.config import Config, ExtraFieldsConfig
+from zenpyre.utils.config import Config
 from zenpyre.utils.resolve import resolve_object
 from zenpyre.utils.rich import configure_rich_logging, print_markdown, print_pretty
 
 from glyphik.data.sec import SecForm, get_company_identifiers_from_tickers
-from glyphik.pipelines.factory import SecDocumentSummarizationPipelineFactory
+from glyphik.pipelines.factory import (
+    BasePipelineFactory,
+)
 from glyphik.prompts.summarization import GENERIC_SYSTEM_PROMPT
 from glyphik.utils.config import SecDataConfig
-
-if TYPE_CHECKING:
-    from zenpyre.utils.config import BaseConfig
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 DEFAULT_START_DATE = date(2025, 1, 1)
 DEFAULT_END_DATE = date(2026, 6, 1)
 DEFAULT_MAX_DOCUMENTS = 1
-
-# NOTE: verify this against the models actually available in your Ollama
-# install (e.g. `ollama list`). "gemma4" / "-mlx" does not match any known
-# released Ollama tag as of this writing.
 DEFAULT_MODEL = "ollama:gemma4:e2b-mlx"
 
 DEFAULT_TICKERS = ["AAPL", "IBM", "MSFT", "NVDA", "GOOGL"]
 
 
-@dataclass(frozen=True)
-class ExperimentConfig(ExtraFieldsConfig):
-    r"""Hold the full configuration for a pipelines run.
-
-    Bundles the storage location with the data-ingestion and
-    agent-summarization sub-configurations.
-
-    Attributes:
-        base_dir: The root directory used to store pipelines
-            artifacts, such as the document store and downloaded
-            filings.
-        data: The configuration for which filings to ingest.
-        agent: The configuration for the summarization agent.
-    """
-
-    base_dir: Path
-    data: BaseConfig
-    ingestor: BaseConfig
-    agent: BaseConfig
-
-    def __hash__(self) -> int:
-        return ExtraFieldsConfig.__hash__(self)
-
-
-def ingest_data(config: ExperimentConfig) -> None:
+def ingest_data(config: Config) -> None:
     """Download and index SEC filings for the ticker in ``config``.
 
     Args:
         config: The pipelines configuration specifying the ticker,
             base directory, and filing date range.
     """
-    factory = resolve_object(config.ingestor.to_kwargs(), cls=BaseIngestorFactory)
+    factory = resolve_object(config.get_value("ingestor").to_kwargs(), cls=BaseIngestorFactory)
     ingestor = factory.make_ingestor()
     print_pretty(ingestor, title="Ingestor")
     ingestor.ingest()
     logger.info("<<< 🚀 data ingestion complete 🚀 >>>\n\n")
 
 
-def process_data(config: ExperimentConfig) -> None:
+def process_data(config: Config) -> None:
     """Query the document store and print the filings found for the
     ticker in ``config``, ordered by filing date.
 
@@ -93,12 +63,7 @@ def process_data(config: ExperimentConfig) -> None:
             ``config.ticker``, e.g. because no filings were found in
             the document store.
     """
-    agent_factory = resolve_object(config.agent.to_kwargs(), cls=BaseAgentFactory)
-    factory = SecDocumentSummarizationPipelineFactory(
-        companies=config.data.get_value("companies"),
-        agent_factory=agent_factory,
-        base_dir=config.get_value("base_dir"),
-    )
+    factory = resolve_object(config.get_value("pipeline").to_kwargs(), cls=BasePipelineFactory)
     pipeline = factory.make_pipeline()
     print_pretty(pipeline, title="Pipeline")
 
@@ -154,15 +119,6 @@ def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> Non
         forms=(SecForm.TEN_K, SecForm.TEN_Q),
     )
 
-    ingestor_config = Config.from_kwargs(
-        _target_="glyphik.ingestors.factory.SecFilingIngestorFactory",
-        companies=data_config.get_value("companies"),
-        start_date=data_config.get_value("start_date"),
-        end_date=data_config.get_value("end_date"),
-        forms=data_config.get_value("forms"),
-        base_dir=base_dir,
-    )
-
     chat_model_config = ChatModelConfig.from_kwargs(
         _target_="zenpyre.chat_models.factory.InitChatModelFactory",
         model=DEFAULT_MODEL,
@@ -180,7 +136,7 @@ def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> Non
     )
     cache_dir = (
         base_dir
-        / "agent_outputs"
+        / "cache/agent_outputs"
         / slugify(chat_model_config.model)
         / inner_agent_config.cache_key()
     )
@@ -189,11 +145,30 @@ def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> Non
         agent_factory=inner_agent_config,
         cache_dir=cache_dir,
     )
-    config = ExperimentConfig.from_kwargs(
+
+    ingestor_config = Config.from_kwargs(
+        _target_="glyphik.ingestors.factory.SecFilingIngestorFactory",
+        companies=data_config.get_value("companies"),
+        start_date=data_config.get_value("start_date"),
+        end_date=data_config.get_value("end_date"),
+        forms=data_config.get_value("forms"),
         base_dir=base_dir,
-        data=data_config,
-        agent=agent_config,
+    )
+
+    pipeline_config = Config.from_kwargs(
+        _target_="glyphik.pipelines.factory.SecDocumentSummarizationPipelineFactory",
+        agent_factory=agent_config,
+        companies=data_config.get_value("companies"),
+        base_dir=base_dir,
+        config=RunnableConfig(),
+        batch_size=0,
+        continue_on_error=False,
+    )
+
+    config = Config.from_kwargs(
+        base_dir=base_dir,
         ingestor=ingestor_config,
+        pipeline=pipeline_config,
     )
 
     print_pretty(config, title="Experiment Config")
