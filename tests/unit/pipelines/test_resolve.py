@@ -11,7 +11,7 @@ MINIMAL_PIPELINE_TARGET = "tests.unit.pipelines.test_resolve.MinimalPipeline"
 class MinimalPipeline(BasePipeline):
     """Minimal concrete BasePipeline for testing."""
 
-    def execute(self) -> None:
+    def run(self) -> None:
         pass
 
 

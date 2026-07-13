@@ -68,50 +68,50 @@ def test_document_indexing_pipeline_is_base_pipeline() -> None:
     assert isinstance(_make_pipeline(), BasePipeline)
 
 
-# --- execute ---
+# --- run ---
 
 
 @numpy_available
 @langchain_text_splitters_available
-def test_document_indexing_pipeline_execute_returns_vector_store() -> None:
-    assert isinstance(_make_pipeline().execute(), VectorStore)
+def test_document_indexing_pipeline_run_returns_vector_store() -> None:
+    assert isinstance(_make_pipeline().run(), VectorStore)
 
 
 @numpy_available
 @langchain_text_splitters_available
-def test_document_indexing_pipeline_execute_returns_same_vector_store_instance() -> None:
+def test_document_indexing_pipeline_run_returns_same_vector_store_instance() -> None:
     vector_store = _make_vector_store()
     pipeline = _make_pipeline(vector_store=vector_store)
-    assert pipeline.execute() is vector_store
+    assert pipeline.run() is vector_store
 
 
 @numpy_available
 @langchain_text_splitters_available
-def test_document_indexing_pipeline_execute_calls_lazy_load() -> None:
+def test_document_indexing_pipeline_run_calls_lazy_load() -> None:
     document_loader = MagicMock(spec=BaseLoader)
     document_loader.lazy_load.return_value = iter(_make_docs())
-    _make_pipeline(document_loader=document_loader).execute()
+    _make_pipeline(document_loader=document_loader).run()
     document_loader.lazy_load.assert_called_once()
 
 
 @langchain_text_splitters_available
-def test_document_indexing_pipeline_execute_calls_add_documents() -> None:
+def test_document_indexing_pipeline_run_calls_add_documents() -> None:
     vector_store = MagicMock(spec=VectorStore)
-    _make_pipeline(vector_store=vector_store).execute()
+    _make_pipeline(vector_store=vector_store).run()
     vector_store.add_documents.assert_called()
 
 
 @langchain_text_splitters_available
-def test_document_indexing_pipeline_execute_with_empty_document_loader() -> None:
+def test_document_indexing_pipeline_run_with_empty_document_loader() -> None:
     vector_store = MagicMock(spec=VectorStore)
     pipeline = _make_pipeline(document_loader=_make_document_loader(0), vector_store=vector_store)
-    result = pipeline.execute()
+    result = pipeline.run()
     assert result is vector_store
     vector_store.add_documents.assert_not_called()
 
 
 @langchain_text_splitters_available
-def test_document_indexing_pipeline_execute_processes_all_documents() -> None:
+def test_document_indexing_pipeline_run_processes_all_documents() -> None:
     n_docs = 7
     batch_size = 3
     vector_store = MagicMock(spec=VectorStore)
@@ -123,13 +123,13 @@ def test_document_indexing_pipeline_execute_processes_all_documents() -> None:
         vector_store=vector_store,
         batch_size=batch_size,
     )
-    pipeline.execute()
+    pipeline.run()
     # 7 docs with batch_size=3: batches of 3, 3, 1 → 3 add_documents calls
     assert vector_store.add_documents.call_count == 3
 
 
 @langchain_text_splitters_available
-def test_document_indexing_pipeline_execute_docs_exactly_divisible_by_batch() -> None:
+def test_document_indexing_pipeline_run_docs_exactly_divisible_by_batch() -> None:
     n_docs = 6
     batch_size = 3
     vector_store = MagicMock(spec=VectorStore)
@@ -141,7 +141,7 @@ def test_document_indexing_pipeline_execute_docs_exactly_divisible_by_batch() ->
         vector_store=vector_store,
         batch_size=batch_size,
     )
-    pipeline.execute()
+    pipeline.run()
     # 6 docs with batch_size=3: two full batches → 2 add_documents calls
     assert vector_store.add_documents.call_count == 2
 

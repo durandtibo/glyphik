@@ -91,7 +91,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         ...     batch_size=8,
         ...     continue_on_error=True,
         ... )
-        >>> outputs = pipelines.execute()
+        >>> outputs = pipelines.run()
 
         ```
     """
@@ -117,7 +117,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         self._continue_on_error = continue_on_error
         self._log_documents_metadata = log_documents_metadata
 
-    def execute(self) -> list[T]:
+    def run(self) -> list[T]:
         """Run the pipelines over all companies and return the agent
         outputs.
 
