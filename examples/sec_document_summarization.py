@@ -15,13 +15,12 @@ from langchain_core.runnables import RunnableConfig
 from zenpyre.chat_models import ChatModelConfig
 from zenpyre.ingestors.factory import BaseIngestorFactory
 from zenpyre.utils.config import Config
+from zenpyre.utils.path import find_root_package_parent
 from zenpyre.utils.resolve import resolve_object
 from zenpyre.utils.rich import configure_rich_logging, print_markdown, print_pretty
 
 from glyphik.data.sec import SecForm, get_company_identifiers_from_tickers
-from glyphik.pipelines.factory import (
-    BasePipelineFactory,
-)
+from glyphik.pipelines.factory import BasePipelineFactory
 from glyphik.prompts.summarization import GENERIC_SYSTEM_PROMPT
 from glyphik.utils.config import SecDataConfig
 
@@ -57,11 +56,6 @@ def process_data(config: Config) -> None:
         config: The pipelines configuration specifying the ticker,
             base directory, and the maximum number of documents to
             summarize.
-
-    Raises:
-        RuntimeError: If the pipelines produces no output for
-            ``config.ticker``, e.g. because no filings were found in
-            the document store.
     """
     factory = resolve_object(config.get_value("pipeline").to_kwargs(), cls=BasePipelineFactory)
     pipeline = factory.make_pipeline()
@@ -71,7 +65,6 @@ def process_data(config: Config) -> None:
     logger.info("Found %d outputs", len(outputs))
 
     for output in outputs:
-        # print_pretty(output)
         print_markdown(output["messages"][-1].content)
 
 
@@ -110,7 +103,7 @@ def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> Non
         max_documents: The maximum number of most recent filings to
             pass to the summarization agent.
     """
-    base_dir = sanitize_path(Path(__file__).parent.parent / "tmp/examples/summarization")
+    base_dir = find_root_package_parent(__file__) / "tmp/examples/summarization"
 
     data_config = SecDataConfig.from_kwargs(
         companies=tuple(get_company_identifiers_from_tickers([ticker])),
@@ -166,7 +159,6 @@ def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> Non
     )
 
     config = Config.from_kwargs(
-        base_dir=base_dir,
         ingestor=ingestor_config,
         pipeline=pipeline_config,
     )
@@ -174,11 +166,8 @@ def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> Non
     print_pretty(config, title="Experiment Config")
     print_pretty(config.cache_key(), title="Experiment ID")
 
-    try:
-        ingest_data(config)
-        process_data(config)
-    except RuntimeError as e:
-        raise click.ClickException(str(e)) from e
+    ingest_data(config)
+    process_data(config)
 
 
 if __name__ == "__main__":
