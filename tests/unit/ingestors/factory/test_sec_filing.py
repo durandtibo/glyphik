@@ -159,3 +159,85 @@ def test_sec_filing_ingestor_factory_repr_starts_with_class_name(tmp_path: Path)
 def test_sec_filing_ingestor_factory_str_starts_with_class_name(tmp_path: Path) -> None:
     factory = _make_factory(tmp_path)
     assert str(factory).startswith("SecFilingIngestorFactory(")
+
+
+# --- from_sp1500 ---
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_loads_companies(tmp_path: Path) -> None:
+    companies = ["AAPL", "MSFT", "GOOG"]
+    with patch(f"{MODULE}.get_company_identifiers", return_value=companies) as mock_load:
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=tmp_path,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K"],
+        )
+        mock_load.assert_called_once_with(tmp_path / "SP1500" / "company_identifier.json")
+        assert factory._companies == companies
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_truncates_with_max_companies(
+    tmp_path: Path,
+) -> None:
+    companies = ["AAPL", "MSFT", "GOOG", "AMZN"]
+    with patch(f"{MODULE}.get_company_identifiers", return_value=companies):
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=tmp_path,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K"],
+            max_companies=2,
+        )
+        assert factory._companies == ["AAPL", "MSFT"]
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_no_max_companies_keeps_all(
+    tmp_path: Path,
+) -> None:
+    companies = ["AAPL", "MSFT", "GOOG"]
+    with patch(f"{MODULE}.get_company_identifiers", return_value=companies):
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=tmp_path,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K"],
+        )
+        assert factory._companies == companies
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_returns_sec_filing_ingestor_factory(
+    tmp_path: Path,
+) -> None:
+    with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=tmp_path,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K"],
+        )
+        assert isinstance(factory, SecFilingIngestorFactory)
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_sets_dates_and_forms(tmp_path: Path) -> None:
+    with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=tmp_path,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K", "10-Q"],
+        )
+        assert factory._start_date == date(2023, 1, 1)
+        assert factory._end_date == date(2023, 12, 31)
+        assert factory._forms == ["10-K", "10-Q"]
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_sanitizes_base_dir(tmp_path: Path) -> None:
+    with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=str(tmp_path),
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K"],
+        )
+        assert factory._base_dir == tmp_path
