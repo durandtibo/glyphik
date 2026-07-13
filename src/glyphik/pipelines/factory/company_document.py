@@ -3,7 +3,7 @@ summarization pipeline."""
 
 from __future__ import annotations
 
-__all__ = ["SecDocumentSummarizationPipelineFactory"]
+__all__ = ["CompanyDocumentPipelineFactory"]
 
 from typing import TYPE_CHECKING, Any
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from glyphik.pipelines.base import BasePipeline
 
 
-class SecDocumentSummarizationPipelineFactory(BasePipelineFactory[Any], MultilineDisplayMixin):
+class CompanyDocumentPipelineFactory(BasePipelineFactory[Any], MultilineDisplayMixin):
     """A concrete BasePipeline factory that builds a
     :class:`~glyphik.pipelines.CompanyDocumentAgentPipeline` for
     summarizing SEC filing documents for a set of companies.
@@ -75,9 +75,9 @@ class SecDocumentSummarizationPipelineFactory(BasePipelineFactory[Any], Multilin
         >>> from pathlib import Path
         >>> from glyphik.data.sec import CompanyIdentifier
         >>> from glyphik.pipelines.factory import (
-        ...     SecDocumentSummarizationPipelineFactory,
+        ...     CompanyDocumentPipelineFactory,
         ... )
-        >>> factory = SecDocumentSummarizationPipelineFactory(  # doctest: +SKIP
+        >>> factory = CompanyDocumentPipelineFactory(  # doctest: +SKIP
         ...     companies=[CompanyIdentifier(cik=320193, ticker="AAPL")],
         ...     agent_factory=...,
         ...     base_dir=Path("/tmp/my_app"),
@@ -182,16 +182,16 @@ class SecDocumentSummarizationPipelineFactory(BasePipelineFactory[Any], Multilin
                 Forwarded to the constructor. Defaults to ``False``.
 
         Returns:
-            A configured :class:`SecDocumentSummarizationPipelineFactory`
+            A configured :class:`CompanyDocumentPipelineFactory`
             for S&P 1500 companies.
 
         Example:
             ```pycon
             >>> from pathlib import Path
             >>> from glyphik.pipelines.factory import (
-            ...     SecDocumentSummarizationPipelineFactory,
+            ...     CompanyDocumentPipelineFactory,
             ... )
-            >>> factory = SecDocumentSummarizationPipelineFactory.from_sp1500(  # doctest: +SKIP
+            >>> factory = CompanyDocumentPipelineFactory.from_sp1500(  # doctest: +SKIP
             ...     agent_factory=...,
             ...     base_dir=Path("/tmp/my_app"),
             ...     max_companies=50,

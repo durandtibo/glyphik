@@ -10,13 +10,13 @@ from zenpyre.testing.fixtures import duckdb_available
 
 from glyphik.pipelines.factory import (
     BasePipelineFactory,
-    SecDocumentSummarizationPipelineFactory,
+    CompanyDocumentPipelineFactory,
 )
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-MODULE = "glyphik.pipelines.factory.sec_document_summarization"
+MODULE = "glyphik.pipelines.factory.company_document"
 
 
 def _make_agent_factory() -> MagicMock:
@@ -25,19 +25,19 @@ def _make_agent_factory() -> MagicMock:
     return MagicMock(spec=BaseAgentFactory)
 
 
-def _make_factory(tmp_path: Path, **overrides: object) -> SecDocumentSummarizationPipelineFactory:
-    """Return a SecDocumentSummarizationPipelineFactory for testing."""
+def _make_factory(tmp_path: Path, **overrides: object) -> CompanyDocumentPipelineFactory:
+    """Return a CompanyDocumentPipelineFactory for testing."""
     kwargs = {
         "companies": ["AAPL", "MSFT"],
         "agent_factory": _make_agent_factory(),
         "base_dir": tmp_path,
     }
     kwargs.update(overrides)
-    return SecDocumentSummarizationPipelineFactory(**kwargs)
+    return CompanyDocumentPipelineFactory(**kwargs)
 
 
 ###########################################################
-#   Tests for SecDocumentSummarizationPipelineFactory     #
+#   Tests for CompanyDocumentPipelineFactory     #
 ###########################################################
 
 
@@ -296,7 +296,7 @@ def test_sec_document_summarization_pipeline_factory_repr_starts_with_class_name
     tmp_path: Path,
 ) -> None:
     factory = _make_factory(tmp_path)
-    assert repr(factory).startswith("SecDocumentSummarizationPipelineFactory(")
+    assert repr(factory).startswith("CompanyDocumentPipelineFactory(")
 
 
 @duckdb_available
@@ -304,7 +304,7 @@ def test_sec_document_summarization_pipeline_factory_str_starts_with_class_name(
     tmp_path: Path,
 ) -> None:
     factory = _make_factory(tmp_path)
-    assert str(factory).startswith("SecDocumentSummarizationPipelineFactory(")
+    assert str(factory).startswith("CompanyDocumentPipelineFactory(")
 
 
 # --- from_sp1500 ---
@@ -316,9 +316,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_resolves_path(
 ) -> None:
     agent_factory = _make_agent_factory()
     with patch(f"{MODULE}.get_company_identifiers", return_value=[]) as mock_get_identifiers:
-        SecDocumentSummarizationPipelineFactory.from_sp1500(
-            agent_factory=agent_factory, base_dir=tmp_path
-        )
+        CompanyDocumentPipelineFactory.from_sp1500(agent_factory=agent_factory, base_dir=tmp_path)
         mock_get_identifiers.assert_called_once_with(
             tmp_path / "SP1500" / "company_identifier.json"
         )
@@ -330,7 +328,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_sanitizes_base_
 ) -> None:
     agent_factory = _make_agent_factory()
     with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
-        factory = SecDocumentSummarizationPipelineFactory.from_sp1500(
+        factory = CompanyDocumentPipelineFactory.from_sp1500(
             agent_factory=agent_factory, base_dir=str(tmp_path)
         )
     assert factory._base_dir == tmp_path
@@ -342,7 +340,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_stores_agent_fa
 ) -> None:
     agent_factory = _make_agent_factory()
     with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
-        factory = SecDocumentSummarizationPipelineFactory.from_sp1500(
+        factory = CompanyDocumentPipelineFactory.from_sp1500(
             agent_factory=agent_factory, base_dir=tmp_path
         )
     assert factory._agent_factory is agent_factory
@@ -354,7 +352,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_all_companies_b
 ) -> None:
     companies = ["AAPL", "MSFT", "NVDA"]
     with patch(f"{MODULE}.get_company_identifiers", return_value=companies):
-        factory = SecDocumentSummarizationPipelineFactory.from_sp1500(
+        factory = CompanyDocumentPipelineFactory.from_sp1500(
             agent_factory=_make_agent_factory(), base_dir=tmp_path
         )
     assert factory._companies == companies
@@ -366,7 +364,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_truncates_max_c
 ) -> None:
     companies = ["AAPL", "MSFT", "NVDA"]
     with patch(f"{MODULE}.get_company_identifiers", return_value=companies):
-        factory = SecDocumentSummarizationPipelineFactory.from_sp1500(
+        factory = CompanyDocumentPipelineFactory.from_sp1500(
             agent_factory=_make_agent_factory(), base_dir=tmp_path, max_companies=2
         )
     assert factory._companies == ["AAPL", "MSFT"]
@@ -378,7 +376,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_max_companies_l
 ) -> None:
     companies = ["AAPL", "MSFT"]
     with patch(f"{MODULE}.get_company_identifiers", return_value=companies):
-        factory = SecDocumentSummarizationPipelineFactory.from_sp1500(
+        factory = CompanyDocumentPipelineFactory.from_sp1500(
             agent_factory=_make_agent_factory(), base_dir=tmp_path, max_companies=10
         )
     assert factory._companies == ["AAPL", "MSFT"]
@@ -389,10 +387,10 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_returns_instanc
     tmp_path: Path,
 ) -> None:
     with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
-        factory = SecDocumentSummarizationPipelineFactory.from_sp1500(
+        factory = CompanyDocumentPipelineFactory.from_sp1500(
             agent_factory=_make_agent_factory(), base_dir=tmp_path
         )
-    assert isinstance(factory, SecDocumentSummarizationPipelineFactory)
+    assert isinstance(factory, CompanyDocumentPipelineFactory)
 
 
 @duckdb_available
@@ -400,7 +398,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_default_extra_p
     tmp_path: Path,
 ) -> None:
     with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
-        factory = SecDocumentSummarizationPipelineFactory.from_sp1500(
+        factory = CompanyDocumentPipelineFactory.from_sp1500(
             agent_factory=_make_agent_factory(), base_dir=tmp_path
         )
     assert factory._batch_size == 0
@@ -415,7 +413,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_forwards_extra_
 ) -> None:
     config = {"tags": ["summarization"]}
     with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
-        factory = SecDocumentSummarizationPipelineFactory.from_sp1500(
+        factory = CompanyDocumentPipelineFactory.from_sp1500(
             agent_factory=_make_agent_factory(),
             base_dir=tmp_path,
             batch_size=8,
