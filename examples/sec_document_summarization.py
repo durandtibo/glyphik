@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from pathlib import Path
 from typing import Any
 
 import click
-from coola.utils.path import sanitize_path
 from coola.utils.string import slugify
 from dotenv import load_dotenv
 from langchain_core.runnables import RunnableConfig
