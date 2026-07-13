@@ -1117,6 +1117,7 @@ dependencies = [
     { name = "langchain" },
     { name = "langchain-core" },
     { name = "langgraph" },
+    { name = "objectory" },
     { name = "pydantic" },
     { name = "rich" },
     { name = "zenpyre" },
@@ -1148,7 +1149,7 @@ google-genai = [
     { name = "langchain-google-genai" },
 ]
 huggingface = [
-    { name = "langchain-huggingface" },
+    { name = "langchain-huggingface", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or sys_platform == 'linux'" },
 ]
 ollama = [
     { name = "langchain-ollama" },
@@ -1206,11 +1207,12 @@ requires-dist = [
     { name = "langchain-chroma", marker = "python_full_version >= '3.11' and extra == 'chroma'", specifier = ">=1.0,<2.0" },
     { name = "langchain-core", specifier = ">=1.4,<2.0" },
     { name = "langchain-google-genai", marker = "extra == 'google-genai'", specifier = ">=4.2,<5.0" },
-    { name = "langchain-huggingface", marker = "extra == 'huggingface'", specifier = ">=1.2,<2.0" },
+    { name = "langchain-huggingface", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin' and extra == 'huggingface') or (sys_platform == 'linux' and extra == 'huggingface')", specifier = ">=1.2,<2.0" },
     { name = "langchain-ollama", marker = "extra == 'ollama'", specifier = ">=1.1,<2.0" },
     { name = "langchain-openai", marker = "extra == 'openai'", specifier = ">=1.2,<2.0" },
     { name = "langchain-text-splitters", marker = "extra == 'text-splitters'", specifier = ">=1.0,<2.0" },
     { name = "langgraph", specifier = ">=1.2,<2.0" },
+    { name = "objectory", specifier = ">=0.3,<1.0" },
     { name = "polars", marker = "extra == 'polars'", specifier = ">=1.0,<2.0" },
     { name = "pydantic", specifier = ">=2.10,<3.0" },
     { name = "python-dotenv", marker = "extra == 'dotenv'", specifier = ">=1.2,<2.0" },
