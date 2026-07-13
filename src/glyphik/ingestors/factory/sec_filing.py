@@ -5,7 +5,6 @@ from __future__ import annotations
 
 __all__ = ["SecFilingIngestorFactory"]
 
-from datetime import date
 from typing import TYPE_CHECKING, Any
 
 from coola.display import MultilineDisplayMixin
@@ -19,9 +18,11 @@ from glyphik.data.sp1500 import get_company_identifiers
 from glyphik.data_processors import SecFilingRecordToDocumentProcessor
 from glyphik.document_stores.factory import SecFilingDocumentStoreFactory
 from glyphik.ingestors import SecFilingDocumentStoreIngestor, SecFilingIngestor
+from glyphik.utils.dates import coerce_to_date
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from datetime import date
     from pathlib import Path
 
     from zenpyre.ingestors.base import BaseIngestor
@@ -84,10 +85,8 @@ class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], Multiline
     ) -> None:
         self._companies = list(companies)
         self._base_dir = sanitize_path(base_dir)
-        self._start_date = (
-            start_date if isinstance(start_date, date) else date.fromisoformat(start_date)
-        )
-        self._end_date = end_date if isinstance(end_date, date) else date.fromisoformat(end_date)
+        self._start_date = coerce_to_date(start_date)
+        self._end_date = coerce_to_date(end_date)
         self._forms = forms
 
     def make_ingestor(self) -> BaseIngestor[BaseDocumentStore]:

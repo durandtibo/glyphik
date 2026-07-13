@@ -5,11 +5,15 @@ from __future__ import annotations
 __all__ = ["SecDataConfig"]
 
 from dataclasses import dataclass
-from datetime import date
+from typing import TYPE_CHECKING
 
 from zenpyre.utils.config import ExtraFieldsConfig
 
 from glyphik.data.sec import CompanyIdentifier, SecForm
+from glyphik.utils.dates import coerce_to_date
+
+if TYPE_CHECKING:
+    from datetime import date
 
 
 @dataclass(frozen=True)
@@ -36,8 +40,8 @@ class SecDataConfig(ExtraFieldsConfig):
     """
 
     companies: tuple[CompanyIdentifier, ...] | None
-    start_date: date | str
-    end_date: date | str
+    start_date: date
+    end_date: date
     forms: tuple[str, ...] = (SecForm.TEN_K, SecForm.TEN_Q)
 
     def __post_init__(self) -> None:
@@ -51,17 +55,9 @@ class SecDataConfig(ExtraFieldsConfig):
         Raises:
             ValueError: If ``start_date`` is after ``end_date``.
         """
-        start_date = (
-            self.start_date
-            if isinstance(self.start_date, date)
-            else date.fromisoformat(self.start_date)
-        )
-        end_date = (
-            self.end_date if isinstance(self.end_date, date) else date.fromisoformat(self.end_date)
-        )
-        object.__setattr__(self, "start_date", start_date)
-        object.__setattr__(self, "end_date", end_date)
+        object.__setattr__(self, "start_date", coerce_to_date(self.start_date))
+        object.__setattr__(self, "end_date", coerce_to_date(self.end_date))
         object.__setattr__(self, "forms", tuple(self.forms))
-        if start_date > end_date:
-            msg = f"start_date ({start_date}) must be <= end_date ({end_date})"
+        if self.start_date > self.end_date:
+            msg = f"start_date ({self.start_date}) must be <= end_date ({self.end_date})"
             raise ValueError(msg)
