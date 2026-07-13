@@ -52,7 +52,7 @@ dependencies = [
     "objectory >=0.3,<1.0",
     "pydantic >=2.10,<3.0",
     "rich >=15.0,<16.0",
-    "zenpyre >=0.0.1a51,<1.0",
+    "zenpyre >=0.0.1a52,<1.0",
 ]
 
 [project.optional-dependencies]

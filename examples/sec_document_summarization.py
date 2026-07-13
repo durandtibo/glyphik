@@ -9,32 +9,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import click
-from coola.display import str_pydantic_model
 from coola.utils.path import sanitize_path
 from coola.utils.string import slugify
 from dotenv import load_dotenv
-from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
-from zenpyre.agents import AgentConfig
+from zenpyre.agents.factory import BaseAgentFactory
 from zenpyre.chat_models import ChatModelConfig
-from zenpyre.document_stores import DuckDBDocumentStore
-from zenpyre.documents.analysis import (
-    compute_content_stats_exact,
-    compute_metadata_stats,
-    print_content_stats_report,
-    print_metadata_stats_report,
-)
 from zenpyre.ingestors.factory import BaseIngestorFactory
-from zenpyre.runnables import CachingRunnable
+from zenpyre.utils.config import Config, ExtraFieldsConfig
 from zenpyre.utils.resolve import resolve_object
 from zenpyre.utils.rich import configure_rich_logging, print_markdown, print_pretty
 
-from glyphik.agents import RecentDocumentsAgent
-from glyphik.data.sec import (
-    CompanyIdentifier,
-    get_company_identifiers_from_tickers,
-)
-from glyphik.pipelines import CompanyDocumentAgentPipeline
+from glyphik.data.sec import SecForm, get_company_identifiers_from_tickers
+from glyphik.pipelines.factory import SecDocumentSummarizationPipelineFactory
 from glyphik.prompts.summarization import GENERIC_SYSTEM_PROMPT
 from glyphik.utils.config import SecDataConfig
 
@@ -56,22 +42,7 @@ DEFAULT_TICKERS = ["AAPL", "IBM", "MSFT", "NVDA", "GOOGL"]
 
 
 @dataclass(frozen=True)
-class DocumentsAgentConfig(AgentConfig):
-    r"""Hold the configuration for the document-summarization agent.
-
-    Extends ``AgentConfig`` with a limit on how many of the most
-    recent documents the agent should process.
-
-    Attributes:
-        max_documents: The maximum number of most recent documents to
-            pass to the agent for summarization.
-    """
-
-    max_documents: int = DEFAULT_MAX_DOCUMENTS
-
-
-@dataclass(frozen=True)
-class ExperimentConfig:
+class ExperimentConfig(ExtraFieldsConfig):
     r"""Hold the full configuration for a pipelines run.
 
     Bundles the storage location with the data-ingestion and
@@ -87,25 +58,11 @@ class ExperimentConfig:
 
     base_dir: Path
     data: BaseConfig
-    agent: DocumentsAgentConfig
+    ingestor: BaseConfig
+    agent: BaseConfig
 
-
-def get_document_store(base_dir: Path, **kwargs: Any) -> DuckDBDocumentStore:
-    """Return a persisted DuckDB document store.
-
-    Args:
-        base_dir: The root directory used to store pipelines
-            artifacts. The document store is created at
-            ``base_dir / "document_store" / "documents.duckdb"``.
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        A DuckDB-backed document store rooted at ``base_dir``.
-    """
-    store = DuckDBDocumentStore(base_dir / "document_store" / "documents.duckdb", **kwargs)
-    print_content_stats_report(compute_content_stats_exact(store.lazy_all()))
-    print_metadata_stats_report(compute_metadata_stats(store.lazy_all()))
-    return store
+    def __hash__(self) -> int:
+        return ExtraFieldsConfig.__hash__(self)
 
 
 def ingest_data(config: ExperimentConfig) -> None:
@@ -115,10 +72,9 @@ def ingest_data(config: ExperimentConfig) -> None:
         config: The pipelines configuration specifying the ticker,
             base directory, and filing date range.
     """
-    factory = resolve_object(config.data.to_kwargs(), cls=BaseIngestorFactory)
-    logger.info("%s", factory)
+    factory = resolve_object(config.ingestor.to_kwargs(), cls=BaseIngestorFactory)
     ingestor = factory.make_ingestor()
-    logger.info("%s", ingestor)
+    print_pretty(ingestor, title="Ingestor")
     ingestor.ingest()
     logger.info("<<< 🚀 data ingestion complete 🚀 >>>\n\n")
 
@@ -137,33 +93,17 @@ def process_data(config: ExperimentConfig) -> None:
             ``config.ticker``, e.g. because no filings were found in
             the document store.
     """
-    model = init_chat_model(**config.agent.chat_model.to_kwargs())
-    logger.info("%s", str_pydantic_model(model, exclude_none=True))
-    inner_agent = create_agent(model=model, system_prompt=config.agent.system_prompt)
-    cache_dir = (
-        config.base_dir
-        / "agent_outputs"
-        / slugify(config.agent.chat_model.model)
-        / config.agent.cache_key()
+    agent_factory = resolve_object(config.agent.to_kwargs(), cls=BaseAgentFactory)
+    factory = SecDocumentSummarizationPipelineFactory(
+        companies=config.data.get_value("companies"),
+        agent_factory=agent_factory,
+        base_dir=config.get_value("base_dir"),
     )
-    agent = RecentDocumentsAgent(
-        inner_agent=CachingRunnable(inner_agent, cache_dir=cache_dir),
-        max_documents=config.agent.max_documents,
-        log_documents_metadata=True,
-    )
-
-    pipeline = CompanyDocumentAgentPipeline(
-        companies=[CompanyIdentifier.from_ticker(config.data.ticker)],
-        document_store=get_document_store(config.base_dir, read_only=True),
-        agent=agent,
-    )
-    logger.info("%s", pipeline)
+    pipeline = factory.make_pipeline()
+    print_pretty(pipeline, title="Pipeline")
 
     outputs = pipeline.execute()
     logger.info("Found %d outputs", len(outputs))
-    if not outputs:
-        msg = f"No outputs were produced for ticker {config.data.ticker!r}; is the document store empty?"
-        raise RuntimeError(msg)
 
     for output in outputs:
         # print_pretty(output)
@@ -207,29 +147,60 @@ def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> Non
     """
     base_dir = sanitize_path(Path(__file__).parent.parent / "tmp/examples/summarization")
 
-    try:
-        config = ExperimentConfig(
-            base_dir=base_dir,
-            data=SecDataConfig.from_kwargs(
-                _target_="glyphik.ingestors.factory.SecFilingIngestorFactory",
-                companies=tuple(get_company_identifiers_from_tickers([ticker])),
-                start_date=start_date.date(),
-                end_date=end_date.date(),
-                base_dir=base_dir,
-            ),
-            agent=DocumentsAgentConfig.from_kwargs(
-                chat_model=ChatModelConfig.from_kwargs(model=DEFAULT_MODEL, temperature=0),
-                system_prompt=GENERIC_SYSTEM_PROMPT,
-                max_documents=max_documents,
-            ),
-        )
-    except ValueError as e:
-        raise click.BadParameter(str(e)) from e
+    data_config = SecDataConfig.from_kwargs(
+        companies=tuple(get_company_identifiers_from_tickers([ticker])),
+        start_date=start_date.date(),
+        end_date=end_date.date(),
+        forms=(SecForm.TEN_K, SecForm.TEN_Q),
+    )
 
-    print_pretty(config)
+    ingestor_config = Config.from_kwargs(
+        _target_="glyphik.ingestors.factory.SecFilingIngestorFactory",
+        companies=data_config.get_value("companies"),
+        start_date=data_config.get_value("start_date"),
+        end_date=data_config.get_value("end_date"),
+        forms=data_config.get_value("forms"),
+        base_dir=base_dir,
+    )
 
-    ingest_data(config)
+    chat_model_config = ChatModelConfig.from_kwargs(
+        _target_="zenpyre.chat_models.factory.InitChatModelFactory",
+        model=DEFAULT_MODEL,
+        temperature=0,
+    )
+
+    inner_agent_config = Config.from_kwargs(
+        _target_="glyphik.agents.factory.RecentDocumentsAgentFactory",
+        agent_factory=Config.from_kwargs(
+            _target_="zenpyre.agents.factory.CreateAgentFactory",
+            chat_model_factory=chat_model_config,
+            system_prompt=GENERIC_SYSTEM_PROMPT,
+        ),
+        max_documents=max_documents,
+    )
+    cache_dir = (
+        base_dir
+        / "agent_outputs"
+        / slugify(chat_model_config.model)
+        / inner_agent_config.cache_key()
+    )
+    agent_config = Config.from_kwargs(
+        _target_="zenpyre.agents.factory.CachingAgentFactory",
+        agent_factory=inner_agent_config,
+        cache_dir=cache_dir,
+    )
+    config = ExperimentConfig.from_kwargs(
+        base_dir=base_dir,
+        data=data_config,
+        agent=agent_config,
+        ingestor=ingestor_config,
+    )
+
+    print_pretty(config, title="Experiment Config")
+    print_pretty(config.cache_key(), title="Experiment ID")
+
     try:
+        ingest_data(config)
         process_data(config)
     except RuntimeError as e:
         raise click.ClickException(str(e)) from e
