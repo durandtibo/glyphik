@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from coola.equality import objects_are_equal
 from zenpyre.agents.factory import BaseAgentFactory
+from zenpyre.testing.fixtures import duckdb_available
 
 from glyphik.pipelines.factory import (
     BasePipelineFactory,
@@ -43,6 +44,7 @@ def _make_factory(tmp_path: Path, **overrides: object) -> SecDocumentSummarizati
 # --- Inheritance ---
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_is_base_pipeline_factory(
     tmp_path: Path,
 ) -> None:
@@ -52,6 +54,7 @@ def test_sec_document_summarization_pipeline_factory_is_base_pipeline_factory(
 # --- __init__ argument normalization ---
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_stores_companies_as_list(
     tmp_path: Path,
 ) -> None:
@@ -59,6 +62,7 @@ def test_sec_document_summarization_pipeline_factory_stores_companies_as_list(
     assert factory._companies == ["AAPL", "MSFT"]
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_sanitizes_base_dir_from_str(
     tmp_path: Path,
 ) -> None:
@@ -66,6 +70,7 @@ def test_sec_document_summarization_pipeline_factory_sanitizes_base_dir_from_str
     assert factory._base_dir == tmp_path
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_stores_agent_factory(
     tmp_path: Path,
 ) -> None:
@@ -74,6 +79,7 @@ def test_sec_document_summarization_pipeline_factory_stores_agent_factory(
     assert factory._agent_factory is agent_factory
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_builds_document_store_factory_eagerly(
     tmp_path: Path,
 ) -> None:
@@ -82,6 +88,7 @@ def test_sec_document_summarization_pipeline_factory_builds_document_store_facto
         mock_store_factory_cls.assert_called_once_with(base_dir=tmp_path, read_only=True)
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_reuses_document_store_factory_across_calls(
     tmp_path: Path,
 ) -> None:
@@ -96,6 +103,7 @@ def test_sec_document_summarization_pipeline_factory_reuses_document_store_facto
         assert mock_store_factory_cls.return_value.make_document_store.call_count == 2
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_resolves_agent_factory_from_dict(
     tmp_path: Path,
 ) -> None:
@@ -109,6 +117,7 @@ def test_sec_document_summarization_pipeline_factory_resolves_agent_factory_from
     assert factory._agent_factory is inner_agent_factory
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_invalid_agent_factory_raises(
     tmp_path: Path,
 ) -> None:
@@ -116,27 +125,32 @@ def test_sec_document_summarization_pipeline_factory_invalid_agent_factory_raise
         _make_factory(tmp_path, agent_factory="not an agent factory")
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_default_batch_size(tmp_path: Path) -> None:
     factory = _make_factory(tmp_path)
     assert factory._batch_size == 0
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_stores_batch_size(tmp_path: Path) -> None:
     factory = _make_factory(tmp_path, batch_size=8)
     assert factory._batch_size == 8
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_default_config(tmp_path: Path) -> None:
     factory = _make_factory(tmp_path)
     assert factory._config is None
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_stores_config(tmp_path: Path) -> None:
     config = {"tags": ["summarization"]}
     factory = _make_factory(tmp_path, config=config)
     assert factory._config is config
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_default_continue_on_error(
     tmp_path: Path,
 ) -> None:
@@ -144,6 +158,7 @@ def test_sec_document_summarization_pipeline_factory_default_continue_on_error(
     assert factory._continue_on_error is False
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_stores_continue_on_error(
     tmp_path: Path,
 ) -> None:
@@ -151,6 +166,7 @@ def test_sec_document_summarization_pipeline_factory_stores_continue_on_error(
     assert factory._continue_on_error is True
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_default_log_documents_metadata(
     tmp_path: Path,
 ) -> None:
@@ -158,6 +174,7 @@ def test_sec_document_summarization_pipeline_factory_default_log_documents_metad
     assert factory._log_documents_metadata is False
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_stores_log_documents_metadata(
     tmp_path: Path,
 ) -> None:
@@ -168,6 +185,7 @@ def test_sec_document_summarization_pipeline_factory_stores_log_documents_metada
 # --- make_pipeline wiring ---
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_make_pipeline_builds_agent(
     tmp_path: Path,
 ) -> None:
@@ -181,6 +199,7 @@ def test_sec_document_summarization_pipeline_factory_make_pipeline_builds_agent(
         agent_factory.make_agent.assert_called_once_with()
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_make_pipeline_opens_read_only_store(
     tmp_path: Path,
 ) -> None:
@@ -194,6 +213,7 @@ def test_sec_document_summarization_pipeline_factory_make_pipeline_opens_read_on
         mock_store_factory_cls.return_value.make_document_store.assert_called_once_with()
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_make_pipeline_wires_pipeline(
     tmp_path: Path,
 ) -> None:
@@ -224,6 +244,7 @@ def test_sec_document_summarization_pipeline_factory_make_pipeline_wires_pipelin
         )
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_make_pipeline_returns_pipeline(
     tmp_path: Path,
 ) -> None:
@@ -239,6 +260,7 @@ def test_sec_document_summarization_pipeline_factory_make_pipeline_returns_pipel
 # --- _get_repr_kwargs ---
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_get_repr_kwargs(tmp_path: Path) -> None:
     agent_factory = _make_agent_factory()
     config = {"tags": ["summarization"]}
@@ -269,6 +291,7 @@ def test_sec_document_summarization_pipeline_factory_get_repr_kwargs(tmp_path: P
 # --- __repr__ and __str__ ---
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_repr_starts_with_class_name(
     tmp_path: Path,
 ) -> None:
@@ -276,6 +299,7 @@ def test_sec_document_summarization_pipeline_factory_repr_starts_with_class_name
     assert repr(factory).startswith("SecDocumentSummarizationPipelineFactory(")
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_str_starts_with_class_name(
     tmp_path: Path,
 ) -> None:
@@ -286,6 +310,7 @@ def test_sec_document_summarization_pipeline_factory_str_starts_with_class_name(
 # --- from_sp1500 ---
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_from_sp1500_resolves_path(
     tmp_path: Path,
 ) -> None:
@@ -299,6 +324,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_resolves_path(
         )
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_from_sp1500_sanitizes_base_dir_from_str(
     tmp_path: Path,
 ) -> None:
@@ -310,6 +336,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_sanitizes_base_
     assert factory._base_dir == tmp_path
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_from_sp1500_stores_agent_factory(
     tmp_path: Path,
 ) -> None:
@@ -321,6 +348,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_stores_agent_fa
     assert factory._agent_factory is agent_factory
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_from_sp1500_all_companies_by_default(
     tmp_path: Path,
 ) -> None:
@@ -332,6 +360,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_all_companies_b
     assert factory._companies == companies
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_from_sp1500_truncates_max_companies(
     tmp_path: Path,
 ) -> None:
@@ -343,6 +372,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_truncates_max_c
     assert factory._companies == ["AAPL", "MSFT"]
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_from_sp1500_max_companies_larger_than_available(
     tmp_path: Path,
 ) -> None:
@@ -354,6 +384,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_max_companies_l
     assert factory._companies == ["AAPL", "MSFT"]
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_from_sp1500_returns_instance_of_class(
     tmp_path: Path,
 ) -> None:
@@ -364,6 +395,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_returns_instanc
     assert isinstance(factory, SecDocumentSummarizationPipelineFactory)
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_from_sp1500_default_extra_params(
     tmp_path: Path,
 ) -> None:
@@ -377,6 +409,7 @@ def test_sec_document_summarization_pipeline_factory_from_sp1500_default_extra_p
     assert factory._log_documents_metadata is False
 
 
+@duckdb_available
 def test_sec_document_summarization_pipeline_factory_from_sp1500_forwards_extra_params(
     tmp_path: Path,
 ) -> None:
