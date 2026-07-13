@@ -97,9 +97,13 @@ class SecDocumentSummarizationPipelineFactory(BasePipelineFactory[Any], Multilin
         continue_on_error: bool = False,
         log_documents_metadata: bool = False,
     ) -> None:
-        self._companies = list(companies)
-        self._agent_factory = resolve_object(agent_factory, cls=BaseAgentFactory)
         self._base_dir = sanitize_path(base_dir)
+        self._companies = list(companies)
+        self._document_store_factory = SecFilingDocumentStoreFactory(
+            base_dir=self._base_dir, read_only=True
+        )
+        self._agent_factory = resolve_object(agent_factory, cls=BaseAgentFactory)
+
         self._batch_size = batch_size
         self._config = config
         self._continue_on_error = continue_on_error
@@ -108,9 +112,7 @@ class SecDocumentSummarizationPipelineFactory(BasePipelineFactory[Any], Multilin
     def make_pipeline(self) -> BasePipeline[Any]:
         agent = self._agent_factory.make_agent()
 
-        document_store = SecFilingDocumentStoreFactory(
-            base_dir=self._base_dir, read_only=True
-        ).make_document_store()
+        document_store = self._document_store_factory.make_document_store()
 
         return CompanyDocumentAgentPipeline(
             companies=self._companies,
@@ -125,6 +127,7 @@ class SecDocumentSummarizationPipelineFactory(BasePipelineFactory[Any], Multilin
     def _get_repr_kwargs(self) -> dict[str, Any]:
         return {
             "companies": self._companies,
+            "document_store_factory": self._document_store_factory,
             "agent_factory": self._agent_factory,
             "base_dir": self._base_dir,
             "batch_size": self._batch_size,
