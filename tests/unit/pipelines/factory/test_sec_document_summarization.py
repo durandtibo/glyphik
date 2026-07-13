@@ -74,6 +74,28 @@ def test_sec_document_summarization_pipeline_factory_stores_agent_factory(
     assert factory._agent_factory is agent_factory
 
 
+def test_sec_document_summarization_pipeline_factory_builds_document_store_factory_eagerly(
+    tmp_path: Path,
+) -> None:
+    with patch(f"{MODULE}.SecFilingDocumentStoreFactory") as mock_store_factory_cls:
+        _make_factory(tmp_path, base_dir=tmp_path)
+        mock_store_factory_cls.assert_called_once_with(base_dir=tmp_path, read_only=True)
+
+
+def test_sec_document_summarization_pipeline_factory_reuses_document_store_factory_across_calls(
+    tmp_path: Path,
+) -> None:
+    with (
+        patch(f"{MODULE}.SecFilingDocumentStoreFactory") as mock_store_factory_cls,
+        patch(f"{MODULE}.CompanyDocumentAgentPipeline"),
+    ):
+        factory = _make_factory(tmp_path)
+        factory.make_pipeline()
+        factory.make_pipeline()
+        mock_store_factory_cls.assert_called_once_with(base_dir=tmp_path, read_only=True)
+        assert mock_store_factory_cls.return_value.make_document_store.call_count == 2
+
+
 def test_sec_document_summarization_pipeline_factory_resolves_agent_factory_from_dict(
     tmp_path: Path,
 ) -> None:
@@ -150,11 +172,11 @@ def test_sec_document_summarization_pipeline_factory_make_pipeline_builds_agent(
     tmp_path: Path,
 ) -> None:
     agent_factory = _make_agent_factory()
-    factory = _make_factory(tmp_path, agent_factory=agent_factory)
     with (
         patch(f"{MODULE}.SecFilingDocumentStoreFactory"),
         patch(f"{MODULE}.CompanyDocumentAgentPipeline"),
     ):
+        factory = _make_factory(tmp_path, agent_factory=agent_factory)
         factory.make_pipeline()
         agent_factory.make_agent.assert_called_once_with()
 
@@ -162,13 +184,13 @@ def test_sec_document_summarization_pipeline_factory_make_pipeline_builds_agent(
 def test_sec_document_summarization_pipeline_factory_make_pipeline_opens_read_only_store(
     tmp_path: Path,
 ) -> None:
-    factory = _make_factory(tmp_path)
     with (
         patch(f"{MODULE}.SecFilingDocumentStoreFactory") as mock_store_factory_cls,
         patch(f"{MODULE}.CompanyDocumentAgentPipeline"),
     ):
-        factory.make_pipeline()
+        factory = _make_factory(tmp_path)
         mock_store_factory_cls.assert_called_once_with(base_dir=tmp_path, read_only=True)
+        factory.make_pipeline()
         mock_store_factory_cls.return_value.make_document_store.assert_called_once_with()
 
 
@@ -177,19 +199,19 @@ def test_sec_document_summarization_pipeline_factory_make_pipeline_wires_pipelin
 ) -> None:
     agent_factory = _make_agent_factory()
     config = {"tags": ["summarization"]}
-    factory = _make_factory(
-        tmp_path,
-        companies=["AAPL", "MSFT"],
-        agent_factory=agent_factory,
-        batch_size=8,
-        config=config,
-        continue_on_error=True,
-        log_documents_metadata=True,
-    )
     with (
         patch(f"{MODULE}.SecFilingDocumentStoreFactory") as mock_store_factory_cls,
         patch(f"{MODULE}.CompanyDocumentAgentPipeline") as mock_pipeline_cls,
     ):
+        factory = _make_factory(
+            tmp_path,
+            companies=["AAPL", "MSFT"],
+            agent_factory=agent_factory,
+            batch_size=8,
+            config=config,
+            continue_on_error=True,
+            log_documents_metadata=True,
+        )
         factory.make_pipeline()
         mock_pipeline_cls.assert_called_once_with(
             companies=["AAPL", "MSFT"],
@@ -205,11 +227,11 @@ def test_sec_document_summarization_pipeline_factory_make_pipeline_wires_pipelin
 def test_sec_document_summarization_pipeline_factory_make_pipeline_returns_pipeline(
     tmp_path: Path,
 ) -> None:
-    factory = _make_factory(tmp_path)
     with (
         patch(f"{MODULE}.SecFilingDocumentStoreFactory"),
         patch(f"{MODULE}.CompanyDocumentAgentPipeline") as mock_pipeline_cls,
     ):
+        factory = _make_factory(tmp_path)
         result = factory.make_pipeline()
         assert result is mock_pipeline_cls.return_value
 
@@ -233,6 +255,7 @@ def test_sec_document_summarization_pipeline_factory_get_repr_kwargs(tmp_path: P
         factory._get_repr_kwargs(),
         {
             "companies": ["AAPL", "MSFT"],
+            "document_store_factory": factory._document_store_factory,
             "agent_factory": agent_factory,
             "base_dir": tmp_path,
             "batch_size": 8,
