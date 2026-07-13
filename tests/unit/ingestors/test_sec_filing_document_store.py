@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from langchain_core.documents import Document
 from zenpyre.document_stores import BaseDocumentStore
@@ -134,8 +134,7 @@ def test_sec_filing_document_store_ingestor_ingest_only_processes_missing_record
     processor = MagicMock()
     processor.process.return_value = []
 
-    with patch(f"{MODULE}.batchify", return_value=[[record_b]]):
-        _make_ingestor([record_a, record_b], document_store, processor=processor).ingest()
+    _make_ingestor([record_a, record_b], document_store, processor=processor).ingest()
 
     processor.process.assert_called_once_with([record_b])
 
@@ -150,8 +149,7 @@ def test_sec_filing_document_store_ingestor_ingest_adds_documents_to_store() -> 
     processor = MagicMock()
     processor.process.return_value = [doc]
 
-    with patch(f"{MODULE}.batchify", return_value=[[record]]):
-        _make_ingestor([record], document_store, processor=processor).ingest()
+    _make_ingestor([record], document_store, processor=processor).ingest()
 
     document_store.add_documents.assert_called_once_with([doc])
 
