@@ -36,7 +36,7 @@ DEFAULT_END_DATE = date(2026, 6, 1)
 
 @dataclass
 class Config:
-    """Hold the configuration for the document search pipeline example.
+    """Hold the configuration for the document search pipelines example.
 
     Args:
         tickers: The ticker symbols of the companies to analyze.
@@ -294,7 +294,7 @@ def get_filings(config: Config) -> list[Filing]:
     range.
 
     Args:
-        config: The pipeline configuration specifying tickers, output
+        config: The pipelines configuration specifying tickers, output
             directory, and date range.
 
     Returns:

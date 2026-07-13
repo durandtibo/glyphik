@@ -1,4 +1,4 @@
-r"""Provide a batch pipeline for indexing large document collections
+r"""Provide a batch pipelines for indexing large document collections
 into a vector store."""
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from langchain_core.vectorstores import VectorStore
 from zenpyre.documents import assign_ids, copy_ids_to_metadata
 from zenpyre.utils.rich import make_spinner
 
-from glyphik.pipeline.base import BasePipeline
+from glyphik.pipelines.base import BasePipeline
 
 if TYPE_CHECKING:
     from langchain_core.document_loaders import BaseLoader
@@ -26,11 +26,11 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin):
-    """A pipeline that indexes large document collections into a vector
+    """A pipelines that indexes large document collections into a vector
     store by processing documents in batches.
 
-    Unlike :class:`~glyphik.pipeline.DocumentIndexingPipeline`, this
-    pipeline uses :meth:`~langchain_core.document_loaders.BaseLoader.lazy_load`
+    Unlike :class:`~glyphik.pipelines.DocumentIndexingPipeline`, this
+    pipelines uses :meth:`~langchain_core.document_loaders.BaseLoader.lazy_load`
     to iterate over documents lazily, avoiding loading the entire
     collection into memory at once. Documents are split and indexed in
     batches of ``batch_size``, making it suitable for large datasets
@@ -48,14 +48,14 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
 
     Example:
         ```pycon
-        >>> from glyphik.pipeline import DocumentIndexingPipeline
-        >>> pipeline = DocumentIndexingPipeline(
+        >>> from glyphik.pipelines import DocumentIndexingPipeline
+        >>> pipelines = DocumentIndexingPipeline(
         ...     document_loader=loader,
         ...     text_splitter=text_splitter,
         ...     vector_store=vector_store,
         ...     batch_size=64,
         ... )
-        >>> vector_store = pipeline.execute()  # doctest: +SKIP
+        >>> vector_store = pipelines.execute()  # doctest: +SKIP
 
         ```
     """
@@ -73,7 +73,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
         self._batch_size = batch_size
 
     def execute(self) -> VectorStore:
-        """Run the pipeline in batches and return the populated vector
+        """Run the pipelines in batches and return the populated vector
         store.
 
         Lazily loads documents via the loader, processes them in batches
@@ -84,7 +84,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
             The populated :class:`~langchain_core.vectorstores.VectorStore`
             instance.
         """
-        logger.info("Starting document indexing pipeline...")
+        logger.info("Starting document indexing pipelines...")
         t_start = time.perf_counter()
         total_docs = 0
         total_chunks = 0

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class SecDataConfig(ExtraFieldsConfig):
-    r"""Hold the configuration for a data ingestion pipeline.
+    r"""Hold the configuration for a data ingestion pipelines.
 
     Attributes:
         companies: The companies to ingest SEC filings for. ``None``

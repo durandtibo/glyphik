@@ -1,4 +1,4 @@
-r"""Contain code to explore a document search pipeline."""
+r"""Contain code to explore a document search pipelines."""
 
 from __future__ import annotations
 

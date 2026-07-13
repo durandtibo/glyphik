@@ -1,4 +1,4 @@
-r"""Provide a batch pipeline for running an agent over per-company
+r"""Provide a batch pipelines for running an agent over per-company
 document sets retrieved from a document store."""
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from zenpyre.documents import sort_by_metadata
 from zenpyre.utils.rich import make_progressbar, print_documents_metadata
 from zenpyre.utils.token_usage import log_token_usage
 
-from glyphik.pipeline.base import BasePipeline
+from glyphik.pipelines.base import BasePipeline
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -34,7 +34,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
     """Run an agent over the documents associated with each company.
 
-    For every company, this pipeline retrieves the matching documents
+    For every company, this pipelines retrieves the matching documents
     from ``document_store``, sorts them chronologically by filing
     date, and passes them (together with the company) to ``agent``.
     Companies can be processed one at a time or in fixed-size batches
@@ -79,9 +79,9 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
 
     Example:
         ```pycon
-        >>> from glyphik.pipeline import CompanyDocumentAgentPipeline
+        >>> from glyphik.pipelines import CompanyDocumentAgentPipeline
         >>> from glyphik.data.sec import CompanyIdentifier
-        >>> pipeline = CompanyDocumentAgentPipeline(
+        >>> pipelines = CompanyDocumentAgentPipeline(
         ...     companies=[
         ...         CompanyIdentifier.from_ticker("AAPL"),
         ...         CompanyIdentifier.from_ticker("MSFT"),
@@ -91,7 +91,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         ...     batch_size=8,
         ...     continue_on_error=True,
         ... )
-        >>> outputs = pipeline.execute()
+        >>> outputs = pipelines.execute()
 
         ```
     """
@@ -118,7 +118,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         self._log_documents_metadata = log_documents_metadata
 
     def execute(self) -> list[T]:
-        """Run the pipeline over all companies and return the agent
+        """Run the pipelines over all companies and return the agent
         outputs.
 
         For each company, the matching documents are retrieved from the
@@ -139,7 +139,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             ``True`` and some companies failed, the list omits their
             outputs and is correspondingly shorter.
         """
-        logger.info("Starting company document agent pipeline...")
+        logger.info("Starting company document agent pipelines...")
         t_start = time.perf_counter()
 
         outputs = self._execute_sequential() if self._batch_size == 0 else self._execute_batch()
@@ -221,7 +221,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         Returns:
             A dict mapping constructor argument names to their current
             values, used by :class:`MultilineDisplayMixin` to render
-            this pipeline.
+            this pipelines.
         """
         return {
             "companies": self._companies,

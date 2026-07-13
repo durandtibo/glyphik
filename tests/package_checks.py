@@ -14,7 +14,7 @@ def check_imports() -> None:
     correctly."""
     logger.info("Checking imports...")
     objects_to_import = [
-        "glyphik.pipeline.BasePipeline",
+        "glyphik.pipelines.BasePipeline",
     ]
     for a in objects_to_import:
         module_path, name = a.rsplit(".", maxsplit=1)
