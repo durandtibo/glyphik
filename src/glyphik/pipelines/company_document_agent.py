@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from coola.display import MultilineDisplayMixin
 from coola.utils.batching import batchify
 from coola.utils.format import str_time_human
+from langchain_core.runnables.config import merge_configs
 from zenpyre.documents import sort_by_metadata
 from zenpyre.utils.rich import make_progressbar, print_documents_metadata
 from zenpyre.utils.token_usage import log_token_usage
@@ -117,7 +118,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         self._continue_on_error = continue_on_error
         self._log_documents_metadata = log_documents_metadata
 
-    def run(self) -> list[T]:
+    def run(self, config: RunnableConfig | None = None) -> list[T]:
         """Run the pipelines over all companies and return the agent
         outputs.
 
@@ -133,6 +134,13 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         skipped rather than aborting the run; see
         :attr:`continue_on_error` on the class docstring for details.
 
+        Args:
+            config: A runnable config merged on top of the config
+                passed to the constructor (via
+                :func:`~langchain_core.runnables.config.merge_configs`)
+                and used for every ``agent.invoke``/``agent.batch``
+                call made during this run.
+
         Returns:
             The list of agent outputs, one per company, in the same
             order as ``self._companies``. If ``continue_on_error`` is
@@ -142,17 +150,26 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         logger.info("Starting company document agent pipelines...")
         t_start = time.perf_counter()
 
-        outputs = self._execute_sequential() if self._batch_size == 0 else self._execute_batch()
+        merged_config = merge_configs(self._config, config)
+
+        outputs = (
+            self._execute_sequential(merged_config)
+            if self._batch_size == 0
+            else self._execute_batch(merged_config)
+        )
 
         logger.info("Pipeline complete in %s", str_time_human(time.perf_counter() - t_start))
         return outputs
 
-    def _execute_sequential(self) -> list[T]:
+    def _execute_sequential(self, config: RunnableConfig | None) -> list[T]:
         """Process companies one at a time via ``agent.invoke``.
 
         If ``self._continue_on_error`` is ``True``, a company whose
         ``agent.invoke`` call raises an :class:`Exception` is logged as
         a warning and skipped instead of aborting the run.
+
+        Args:
+            config: The runnable config to pass to ``agent.invoke``.
 
         Returns:
             The list of agent outputs, one per company that succeeded,
@@ -164,7 +181,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             for company in self._companies:
                 inp = self._build_agent_input(company)
                 try:
-                    response = self._agent.invoke(inp, config=self._config)
+                    response = self._agent.invoke(inp, config=config)
                 except Exception:
                     if not self._continue_on_error:
                         raise
@@ -178,7 +195,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
                 progress.advance(task)
         return outputs
 
-    def _execute_batch(self) -> list[T]:
+    def _execute_batch(self, config: RunnableConfig | None) -> list[T]:
         """Process companies in groups of ``self._batch_size`` via
         ``agent.batch``.
 
@@ -188,6 +205,9 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         in place of a normal output, logged as a warning, and excluded
         from the returned list. Otherwise, any exception raised while
         processing a batch propagates immediately.
+
+        Args:
+            config: The runnable config to pass to ``agent.batch``.
 
         Returns:
             The list of agent outputs, one per company that succeeded,
@@ -199,7 +219,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
             for companies in batchify(self._companies, size=self._batch_size):
                 inputs = [self._build_agent_input(company) for company in companies]
                 responses = self._agent.batch(
-                    inputs, config=self._config, return_exceptions=self._continue_on_error
+                    inputs, config=config, return_exceptions=self._continue_on_error
                 )
                 successes = []
                 for company, response in zip(companies, responses, strict=True):

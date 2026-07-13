@@ -41,7 +41,7 @@ class ConfigurablePipelineFactory(BasePipelineFactory[T], MultilineDisplayMixin)
         >>> class SumPipeline(BasePipeline[int]):
         ...     def __init__(self, values: list[int]) -> None:
         ...         self._values = values
-        ...     def run(self) -> int:
+        ...     def run(self, config=None) -> int:
         ...         return sum(self._values)
         ...
         >>> factory = ConfigurablePipelineFactory(SumPipeline([1, 2, 3]))

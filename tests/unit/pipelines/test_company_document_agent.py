@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 from langchain_core.documents import Document
-from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import Runnable, RunnableLambda
 from zenpyre.document_stores import InMemoryDocumentStore
 
 from glyphik.data.sec import CompanyIdentifier
@@ -375,6 +377,71 @@ def test_company_document_agent_pipeline_run_batch_continue_on_error_no_failures
         {"company": AAPL, "n_documents": 2},
         {"company": MSFT, "n_documents": 1},
     ]
+
+
+# --- run (config) ---
+
+
+def test_company_document_agent_pipeline_run_sequential_uses_constructor_config_by_default(
+    document_store: InMemoryDocumentStore,
+) -> None:
+    agent = MagicMock(spec=Runnable)
+    pipeline = CompanyDocumentAgentPipeline(
+        companies=[AAPL],
+        document_store=document_store,
+        agent=agent,
+        batch_size=0,
+        config={"tags": ["ctor"]},
+    )
+    pipeline.run()
+    _, call_kwargs = agent.invoke.call_args
+    assert call_kwargs["config"]["tags"] == ["ctor"]
+
+
+def test_company_document_agent_pipeline_run_sequential_merges_run_config_over_constructor_config(
+    document_store: InMemoryDocumentStore,
+) -> None:
+    agent = MagicMock(spec=Runnable)
+    pipeline = CompanyDocumentAgentPipeline(
+        companies=[AAPL],
+        document_store=document_store,
+        agent=agent,
+        batch_size=0,
+        config={"tags": ["ctor"], "metadata": {"a": 1}},
+    )
+    pipeline.run(config={"tags": ["run"]})
+    _, call_kwargs = agent.invoke.call_args
+    assert call_kwargs["config"]["tags"] == ["ctor", "run"]
+    assert call_kwargs["config"]["metadata"] == {"a": 1}
+
+
+def test_company_document_agent_pipeline_run_batch_merges_run_config_over_constructor_config(
+    document_store: InMemoryDocumentStore,
+) -> None:
+    agent = MagicMock(spec=Runnable)
+    agent.batch.return_value = [{"company": AAPL, "n_documents": 2}]
+    pipeline = CompanyDocumentAgentPipeline(
+        companies=[AAPL],
+        document_store=document_store,
+        agent=agent,
+        batch_size=2,
+        config={"tags": ["ctor"]},
+    )
+    pipeline.run(config={"tags": ["run"]})
+    _, call_kwargs = agent.batch.call_args
+    assert call_kwargs["config"]["tags"] == ["ctor", "run"]
+
+
+def test_company_document_agent_pipeline_run_no_config_passes_empty_config(
+    document_store: InMemoryDocumentStore,
+) -> None:
+    agent = MagicMock(spec=Runnable)
+    pipeline = CompanyDocumentAgentPipeline(
+        companies=[AAPL], document_store=document_store, agent=agent, batch_size=0
+    )
+    pipeline.run()
+    _, call_kwargs = agent.invoke.call_args
+    assert call_kwargs["config"] == {}
 
 
 # --- _build_agent_input (log_documents_metadata) ---
