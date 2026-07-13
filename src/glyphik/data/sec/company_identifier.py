@@ -35,6 +35,9 @@ class CompanyIdentifier:
     cik: int
     ticker: str
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "ticker", self.ticker.strip().upper())
+
     @classmethod
     def from_cik(cls, cik: int) -> CompanyIdentifier:
         """Build a :class:`CompanyIdentifier` by looking up the ticker
