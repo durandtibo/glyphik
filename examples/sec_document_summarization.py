@@ -1,4 +1,4 @@
-r"""Provide code to explore a document search pipeline."""
+r"""Provide code to explore a document search pipelines."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import click
 from coola.display import str_pydantic_model
@@ -34,7 +34,7 @@ from glyphik.data.sec import (
     CompanyIdentifier,
     get_company_identifiers_from_tickers,
 )
-from glyphik.pipeline import CompanyDocumentAgentPipeline
+from glyphik.pipelines import CompanyDocumentAgentPipeline
 from glyphik.prompts.summarization import GENERIC_SYSTEM_PROMPT
 from glyphik.utils.config import SecDataConfig
 
@@ -72,13 +72,13 @@ class DocumentsAgentConfig(AgentConfig):
 
 @dataclass(frozen=True)
 class ExperimentConfig:
-    r"""Hold the full configuration for a pipeline run.
+    r"""Hold the full configuration for a pipelines run.
 
     Bundles the storage location with the data-ingestion and
     agent-summarization sub-configurations.
 
     Attributes:
-        base_dir: The root directory used to store pipeline
+        base_dir: The root directory used to store pipelines
             artifacts, such as the document store and downloaded
             filings.
         data: The configuration for which filings to ingest.
@@ -94,7 +94,7 @@ def get_document_store(base_dir: Path, **kwargs: Any) -> DuckDBDocumentStore:
     """Return a persisted DuckDB document store.
 
     Args:
-        base_dir: The root directory used to store pipeline
+        base_dir: The root directory used to store pipelines
             artifacts. The document store is created at
             ``base_dir / "document_store" / "documents.duckdb"``.
         **kwargs: Additional keyword arguments.
@@ -112,7 +112,7 @@ def ingest_data(config: ExperimentConfig) -> None:
     """Download and index SEC filings for the ticker in ``config``.
 
     Args:
-        config: The pipeline configuration specifying the ticker,
+        config: The pipelines configuration specifying the ticker,
             base directory, and filing date range.
     """
     factory = resolve_object(config.data.to_kwargs(), cls=BaseIngestorFactory)
@@ -128,12 +128,12 @@ def process_data(config: ExperimentConfig) -> None:
     ticker in ``config``, ordered by filing date.
 
     Args:
-        config: The pipeline configuration specifying the ticker,
+        config: The pipelines configuration specifying the ticker,
             base directory, and the maximum number of documents to
             summarize.
 
     Raises:
-        RuntimeError: If the pipeline produces no output for
+        RuntimeError: If the pipelines produces no output for
             ``config.ticker``, e.g. because no filings were found in
             the document store.
     """
@@ -194,7 +194,7 @@ def process_data(config: ExperimentConfig) -> None:
     help="Maximum number of most recent filings to summarize.",
 )
 def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> None:
-    """Run the document indexing pipeline and inspect the vector store.
+    """Run the document indexing pipelines and inspect the vector store.
 
     Args:
         ticker: The ticker symbol of the company to analyze.
@@ -215,7 +215,7 @@ def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> Non
                 companies=tuple(get_company_identifiers_from_tickers([ticker])),
                 start_date=start_date.date(),
                 end_date=end_date.date(),
-                base_dir=base_dir
+                base_dir=base_dir,
             ),
             agent=DocumentsAgentConfig.from_kwargs(
                 chat_model=ChatModelConfig.from_kwargs(model=DEFAULT_MODEL, temperature=0),

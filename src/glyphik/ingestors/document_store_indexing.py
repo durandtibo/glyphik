@@ -15,7 +15,7 @@ from langchain_core.vectorstores import VectorStore
 from zenpyre.document_loaders import DocumentStoreLoader
 from zenpyre.ingestors.base import BaseIngestor
 
-from glyphik.pipeline import DocumentIndexingPipeline
+from glyphik.pipelines import DocumentIndexingPipeline
 
 if TYPE_CHECKING:
     from langchain_text_splitters import TextSplitter
@@ -32,7 +32,7 @@ class DocumentStoreIndexingIngestor(BaseIngestor[VectorStore], MultilineDisplayM
     Retrieves a populated :class:`~zenpyre.document_stores.BaseDocumentStore`
     via ``document_store_ingestor``, wraps it in a
     :class:`~zenpyre.document_loaders.DocumentStoreLoader`, and runs it
-    through a :class:`~glyphik.pipeline.DocumentIndexingPipeline` to
+    through a :class:`~glyphik.pipelines.DocumentIndexingPipeline` to
     split and index the documents into ``vector_store`` in batches.
 
     Args:
@@ -65,7 +65,7 @@ class DocumentStoreIndexingIngestor(BaseIngestor[VectorStore], MultilineDisplayM
         Fetches the populated document store from
         ``document_store_ingestor``, then splits and indexes its
         documents into ``vector_store`` in batches of ``batch_size``
-        via :class:`~glyphik.pipeline.DocumentIndexingPipeline`.
+        via :class:`~glyphik.pipelines.DocumentIndexingPipeline`.
 
         Returns:
             The populated :class:`~langchain_core.vectorstores.VectorStore`.

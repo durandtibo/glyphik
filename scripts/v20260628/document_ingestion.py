@@ -1,4 +1,4 @@
-"""Explore a document search pipeline."""
+"""Explore a document search pipelines."""
 
 from __future__ import annotations
 

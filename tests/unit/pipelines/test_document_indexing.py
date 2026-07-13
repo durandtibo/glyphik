@@ -13,7 +13,7 @@ from zenpyre.document_loaders import DocumentListLoader
 from zenpyre.testing.fixtures import langchain_text_splitters_available
 from zenpyre.utils.imports import is_langchain_text_splitters_available
 
-from glyphik.pipeline import BasePipeline, DocumentIndexingPipeline
+from glyphik.pipelines import BasePipeline, DocumentIndexingPipeline
 
 if is_langchain_text_splitters_available():
     from langchain_text_splitters import CharacterTextSplitter, TextSplitter

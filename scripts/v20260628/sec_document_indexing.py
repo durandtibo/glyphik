@@ -1,4 +1,4 @@
-r"""Provide code to explore a document search pipeline."""
+r"""Provide code to explore a document search pipelines."""
 
 from __future__ import annotations
 
@@ -140,7 +140,7 @@ def search(
 
 
 def main() -> None:
-    """Run the document indexing pipeline and inspect the vector
+    """Run the document indexing pipelines and inspect the vector
     store."""
     base_dir = Path(__file__).parent.parent.parent / "tmp/v20260628"
 

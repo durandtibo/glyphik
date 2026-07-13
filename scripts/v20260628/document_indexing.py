@@ -1,4 +1,4 @@
-r"""Provide code to explore a document search pipeline."""
+r"""Provide code to explore a document search pipelines."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from zenpyre.document_loaders import DocumentListLoader
 from zenpyre.embeddings.chroma import inspect_embeddings
 from zenpyre.utils.rich import configure_rich_logging
 
-from glyphik.pipeline import (
+from glyphik.pipelines import (
     BasePipeline,
     DocumentIndexingPipeline,
 )
@@ -68,7 +68,7 @@ def create_large_fake_documents(n: int = 1000) -> Iterator[Document]:
 
     Yields documents lazily to avoid loading all ``n`` documents into
     memory at once, making it suitable for use with
-    :class:`~glyphik.pipeline.BatchDocumentIndexingPipeline`.
+    :class:`~glyphik.pipelines.BatchDocumentIndexingPipeline`.
 
     Args:
         n: Number of documents to generate. Defaults to ``1000``.
@@ -131,7 +131,7 @@ def get_vector_store(base_dir: Path) -> Chroma:
 
 
 def get_pipeline(vector_store: Chroma) -> BasePipeline:
-    """Define the document indexing pipeline."""
+    """Define the document indexing pipelines."""
     return DocumentIndexingPipeline(
         document_loader=DocumentListLoader(list(create_large_fake_documents())),
         text_splitter=RecursiveCharacterTextSplitter(
@@ -142,7 +142,7 @@ def get_pipeline(vector_store: Chroma) -> BasePipeline:
 
 
 def main() -> None:
-    """Run the document indexing pipeline and inspect the vector
+    """Run the document indexing pipelines and inspect the vector
     store."""
     base_dir = Path(__file__).parent.parent.parent / "tmp/v20260628"
 

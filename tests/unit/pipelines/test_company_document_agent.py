@@ -6,7 +6,7 @@ from langchain_core.runnables import RunnableLambda
 from zenpyre.document_stores import InMemoryDocumentStore
 
 from glyphik.data.sec import CompanyIdentifier
-from glyphik.pipeline import CompanyDocumentAgentPipeline
+from glyphik.pipelines import CompanyDocumentAgentPipeline
 
 AAPL = CompanyIdentifier(cik=320193, ticker="AAPL")
 MSFT = CompanyIdentifier(cik=789019, ticker="MSFT")

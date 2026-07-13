@@ -33,7 +33,7 @@ jobs:
         run: |
           python -c "from glyphik import deepagent"
 
-      - name: check glyphik.pipeline
+      - name: check glyphik.pipelines
         run: |
           python -c "from glyphik import pipeline"
 
