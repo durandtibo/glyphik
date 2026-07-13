@@ -147,7 +147,7 @@ def main(ticker: str, start_date: Any, end_date: Any, max_documents: int) -> Non
     )
 
     pipeline_config = Config.from_kwargs(
-        _target_="glyphik.pipelines.factory.SecDocumentSummarizationPipelineFactory",
+        _target_="glyphik.pipelines.factory.CompanyDocumentPipelineFactory",
         agent_factory=agent_config,
         companies=data_config.get_value("companies"),
         base_dir=base_dir,
