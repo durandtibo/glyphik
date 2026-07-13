@@ -58,6 +58,20 @@ class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], Multiline
             :class:`~datetime.date` or an ISO-formatted :class:`str`.
         forms: The SEC form types to ingest (e.g. ``"10-K"``,
             ``"10-Q"``).
+        batch_size: The number of filings to process and add to the
+            document store in each batch, forwarded to
+            :class:`~glyphik.ingestors.SecFilingDocumentStoreIngestor`.
+            Defaults to ``32``.
+        raise_on_error: If ``True`` (default), an exception raised
+            while converting a filing record to a document is
+            propagated and processing stops immediately. If
+            ``False``, records that fail are logged and skipped.
+            Forwarded to
+            :class:`~zenpyre.data_processors.SequenceProcessor`.
+        max_workers: The number of worker threads used to convert
+            filing records to documents concurrently. Defaults to
+            ``0``, which processes records sequentially. Forwarded
+            to :class:`~zenpyre.data_processors.SequenceProcessor`.
 
     Example:
         ```pycon
@@ -83,12 +97,18 @@ class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], Multiline
         start_date: date | str,
         end_date: date | str,
         forms: Sequence[str],
+        batch_size: int = 32,
+        raise_on_error: bool = True,
+        max_workers: int = 0,
     ) -> None:
         self._companies = list(companies)
         self._base_dir = sanitize_path(base_dir)
         self._start_date = coerce_to_date(start_date)
         self._end_date = coerce_to_date(end_date)
         self._forms = forms
+        self._batch_size = batch_size
+        self._raise_on_error = raise_on_error
+        self._max_workers = max_workers
 
     def make_ingestor(self) -> BaseIngestor[BaseDocumentStore]:
         document_store = SecFilingDocumentStoreFactory(
@@ -104,7 +124,12 @@ class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], Multiline
                 forms=self._forms,
             ),
             document_store=document_store,
-            processor=SequenceProcessor(SecFilingRecordToDocumentProcessor()),
+            processor=SequenceProcessor(
+                SecFilingRecordToDocumentProcessor(),
+                raise_on_error=self._raise_on_error,
+                max_workers=self._max_workers,
+            ),
+            batch_size=self._batch_size,
         )
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
@@ -114,6 +139,9 @@ class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], Multiline
             "start_date": self._start_date,
             "end_date": self._end_date,
             "forms": self._forms,
+            "batch_size": self._batch_size,
+            "raise_on_error": self._raise_on_error,
+            "max_workers": self._max_workers,
         }
 
     @classmethod
@@ -124,6 +152,9 @@ class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], Multiline
         end_date: date | str,
         forms: Sequence[str],
         max_companies: int | None = None,
+        batch_size: int = 32,
+        raise_on_error: bool = True,
+        max_workers: int = 0,
     ) -> Self:
         """Create a factory that ingests SEC filings for S&P 1500
         companies.
@@ -152,6 +183,16 @@ class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], Multiline
             max_companies: If set, only the first ``max_companies``
                 companies from the resolved SP1500 list are
                 ingested. If ``None``, all companies are ingested.
+            batch_size: The number of filings to process and add to
+                the document store in each batch. Forwarded to the
+                constructor. Defaults to ``32``.
+            raise_on_error: If ``True``, an exception raised while
+                converting a filing record to a document propagates
+                immediately. If ``False``, failing records are
+                logged and skipped. Forwarded to the constructor.
+            max_workers: The number of worker threads used to
+                convert filing records to documents concurrently.
+                Forwarded to the constructor. Defaults to ``0``.
 
         Returns:
             A configured ``SecFilingIngestorFactory`` for S&P 1500
@@ -182,4 +223,7 @@ class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], Multiline
             start_date=start_date,
             end_date=end_date,
             forms=forms,
+            batch_size=batch_size,
+            raise_on_error=raise_on_error,
+            max_workers=max_workers,
         )

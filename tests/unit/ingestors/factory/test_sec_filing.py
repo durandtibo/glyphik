@@ -78,6 +78,36 @@ def test_sec_filing_ingestor_factory_stores_forms(tmp_path: Path) -> None:
     assert factory._forms == ["10-K", "10-Q"]
 
 
+def test_sec_filing_ingestor_factory_default_batch_size(tmp_path: Path) -> None:
+    factory = _make_factory(tmp_path)
+    assert factory._batch_size == 32
+
+
+def test_sec_filing_ingestor_factory_stores_batch_size(tmp_path: Path) -> None:
+    factory = _make_factory(tmp_path, batch_size=16)
+    assert factory._batch_size == 16
+
+
+def test_sec_filing_ingestor_factory_default_raise_on_error(tmp_path: Path) -> None:
+    factory = _make_factory(tmp_path)
+    assert factory._raise_on_error is True
+
+
+def test_sec_filing_ingestor_factory_stores_raise_on_error(tmp_path: Path) -> None:
+    factory = _make_factory(tmp_path, raise_on_error=False)
+    assert factory._raise_on_error is False
+
+
+def test_sec_filing_ingestor_factory_default_max_workers(tmp_path: Path) -> None:
+    factory = _make_factory(tmp_path)
+    assert factory._max_workers == 0
+
+
+def test_sec_filing_ingestor_factory_stores_max_workers(tmp_path: Path) -> None:
+    factory = _make_factory(tmp_path, max_workers=4)
+    assert factory._max_workers == 4
+
+
 # --- make_ingestor wiring ---
 
 
@@ -125,6 +155,39 @@ def test_sec_filing_ingestor_factory_make_ingestor_returns_store_ingestor(
         assert result is mock_store_ingestor_cls.return_value
 
 
+def test_sec_filing_ingestor_factory_make_ingestor_forwards_batch_size(
+    tmp_path: Path,
+) -> None:
+    factory = _make_factory(tmp_path, batch_size=16)
+    with (
+        patch(f"{MODULE}.SecFilingDocumentStoreFactory"),
+        patch(f"{MODULE}.SecFilingIngestor"),
+        patch(f"{MODULE}.SecFilingDocumentStoreIngestor") as mock_store_ingestor_cls,
+    ):
+        factory.make_ingestor()
+        _, call_kwargs = mock_store_ingestor_cls.call_args
+        assert call_kwargs["batch_size"] == 16
+
+
+def test_sec_filing_ingestor_factory_make_ingestor_forwards_raise_on_error_and_max_workers(
+    tmp_path: Path,
+) -> None:
+    factory = _make_factory(tmp_path, raise_on_error=False, max_workers=4)
+    with (
+        patch(f"{MODULE}.SecFilingDocumentStoreFactory"),
+        patch(f"{MODULE}.SecFilingIngestor"),
+        patch(f"{MODULE}.SecFilingDocumentStoreIngestor") as mock_store_ingestor_cls,
+        patch(f"{MODULE}.SequenceProcessor") as mock_processor_cls,
+    ):
+        factory.make_ingestor()
+        mock_processor_cls.assert_called_once()
+        _, call_kwargs = mock_processor_cls.call_args
+        assert call_kwargs["raise_on_error"] is False
+        assert call_kwargs["max_workers"] == 4
+        _, call_kwargs = mock_store_ingestor_cls.call_args
+        assert call_kwargs["processor"] is mock_processor_cls.return_value
+
+
 # --- _get_repr_kwargs ---
 
 
@@ -135,6 +198,9 @@ def test_sec_filing_ingestor_factory_get_repr_kwargs(tmp_path: Path) -> None:
         start_date="2023-01-01",
         end_date="2023-12-31",
         forms=["10-K"],
+        batch_size=16,
+        raise_on_error=False,
+        max_workers=4,
     )
     assert objects_are_equal(
         factory._get_repr_kwargs(),
@@ -144,6 +210,9 @@ def test_sec_filing_ingestor_factory_get_repr_kwargs(tmp_path: Path) -> None:
             "start_date": date(2023, 1, 1),
             "end_date": date(2023, 12, 31),
             "forms": ["10-K"],
+            "batch_size": 16,
+            "raise_on_error": False,
+            "max_workers": 4,
         },
     )
 
@@ -241,3 +310,56 @@ def test_sec_filing_ingestor_factory_from_sp1500_sanitizes_base_dir(tmp_path: Pa
             forms=["10-K"],
         )
         assert factory._base_dir == tmp_path
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_default_batch_size(tmp_path: Path) -> None:
+    with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=tmp_path,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K"],
+        )
+        assert factory._batch_size == 32
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_forwards_batch_size(tmp_path: Path) -> None:
+    with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=tmp_path,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K"],
+            batch_size=16,
+        )
+        assert factory._batch_size == 16
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_default_raise_on_error_and_max_workers(
+    tmp_path: Path,
+) -> None:
+    with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=tmp_path,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K"],
+        )
+        assert factory._raise_on_error is True
+        assert factory._max_workers == 0
+
+
+def test_sec_filing_ingestor_factory_from_sp1500_forwards_raise_on_error_and_max_workers(
+    tmp_path: Path,
+) -> None:
+    with patch(f"{MODULE}.get_company_identifiers", return_value=[]):
+        factory = SecFilingIngestorFactory.from_sp1500(
+            base_dir=tmp_path,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            forms=["10-K"],
+            raise_on_error=False,
+            max_workers=4,
+        )
+        assert factory._raise_on_error is False
+        assert factory._max_workers == 4
