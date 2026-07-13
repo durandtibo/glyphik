@@ -59,11 +59,12 @@ def process_data(config: Config) -> None:
     pipeline = factory.make_pipeline()
     print_pretty(pipeline, title="Pipeline")
 
-    outputs = pipeline.run()
-    logger.info("Found %d outputs", len(outputs))
-
-    for output in outputs:
+    n_outputs = 0
+    for output in pipeline.run():
+        n_outputs += 1
         print_markdown(output["messages"][-1].content)
+
+    logger.info("Found %d outputs", n_outputs)
 
 
 @click.command()

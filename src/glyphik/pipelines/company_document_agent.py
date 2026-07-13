@@ -20,7 +20,7 @@ from zenpyre.utils.token_usage import log_token_usage
 from glyphik.pipelines.base import BasePipeline
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
 
     from langchain_core.runnables import Runnable, RunnableConfig
     from langchain_core.vectorstores import BaseDocumentStore
@@ -92,7 +92,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         ...     batch_size=8,
         ...     continue_on_error=True,
         ... )
-        >>> outputs = pipelines.run()
+        >>> outputs = list(pipelines.run())
 
         ```
     """
@@ -118,9 +118,9 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         self._continue_on_error = continue_on_error
         self._log_documents_metadata = log_documents_metadata
 
-    def run(self, config: RunnableConfig | None = None) -> list[T]:
-        """Run the pipelines over all companies and return the agent
-        outputs.
+    def run(self, config: RunnableConfig | None = None) -> Iterator[T]:
+        """Run the pipelines over all companies and yield the agent
+        outputs one at a time.
 
         For each company, the matching documents are retrieved from the
         document store, sorted by filing date, and fed to the agent.
@@ -134,6 +134,13 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         skipped rather than aborting the run; see
         :attr:`continue_on_error` on the class docstring for details.
 
+        Because this method is a generator, no company is processed
+        until the returned iterator is advanced (e.g. via iteration or
+        ``list(...)``), and only one company's (or one batch's) input
+        and output need to be held in memory at a time -- unlike
+        collecting every output into a list up front, this scales to
+        an arbitrarily long ``companies`` sequence.
+
         Args:
             config: A runnable config merged on top of the config
                 passed to the constructor (via
@@ -141,27 +148,23 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
                 and used for every ``agent.invoke``/``agent.batch``
                 call made during this run.
 
-        Returns:
-            The list of agent outputs, one per company, in the same
-            order as ``self._companies``. If ``continue_on_error`` is
-            ``True`` and some companies failed, the list omits their
-            outputs and is correspondingly shorter.
+        Yields:
+            The agent outputs, one per company, in the same order as
+            ``self._companies``. If ``continue_on_error`` is ``True``
+            and some companies failed, their outputs are simply
+            omitted.
         """
         logger.info("Starting company document agent pipelines...")
         t_start = time.perf_counter()
 
         merged_config = merge_configs(self._config, config)
 
-        outputs = (
-            self._execute_sequential(merged_config)
-            if self._batch_size == 0
-            else self._execute_batch(merged_config)
-        )
+        method = self._execute_sequential if self._batch_size == 0 else self._execute_batch
+        yield from method(merged_config)
 
         logger.info("Pipeline complete in %s", str_time_human(time.perf_counter() - t_start))
-        return outputs
 
-    def _execute_sequential(self, config: RunnableConfig | None) -> list[T]:
+    def _execute_sequential(self, config: RunnableConfig | None) -> Iterator[T]:
         """Process companies one at a time via ``agent.invoke``.
 
         If ``self._continue_on_error`` is ``True``, a company whose
@@ -171,11 +174,10 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         Args:
             config: The runnable config to pass to ``agent.invoke``.
 
-        Returns:
-            The list of agent outputs, one per company that succeeded,
-            in the same order as ``self._companies``.
+        Yields:
+            The agent outputs, one per company that succeeded, in the
+            same order as ``self._companies``.
         """
-        outputs: list[T] = []
         with make_progressbar(transient=True) as progress:
             task = progress.add_task("Processing companies...", total=len(self._companies))
             for company in self._companies:
@@ -191,11 +193,10 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
                     progress.advance(task)
                     continue
                 log_token_usage(response)
-                outputs.append(response)
                 progress.advance(task)
-        return outputs
+                yield response
 
-    def _execute_batch(self, config: RunnableConfig | None) -> list[T]:
+    def _execute_batch(self, config: RunnableConfig | None) -> Iterator[T]:
         """Process companies in groups of ``self._batch_size`` via
         ``agent.batch``.
 
@@ -203,17 +204,17 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         called with ``return_exceptions=True`` so a failing company
         does not abort the rest of the batch: its exception is returned
         in place of a normal output, logged as a warning, and excluded
-        from the returned list. Otherwise, any exception raised while
+        from the yielded outputs. Otherwise, any exception raised while
         processing a batch propagates immediately.
 
         Args:
             config: The runnable config to pass to ``agent.batch``.
 
-        Returns:
-            The list of agent outputs, one per company that succeeded,
-            in the same order as ``self._companies``.
+        Yields:
+            The agent outputs, one per company that succeeded, in the
+            same order as ``self._companies``. At most one batch of
+            ``self._batch_size`` outputs is held in memory at a time.
         """
-        outputs: list[T] = []
         with make_progressbar(transient=True) as progress:
             task = progress.add_task("Processing companies...", total=len(self._companies))
             for companies in batchify(self._companies, size=self._batch_size):
@@ -230,9 +231,8 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
                         continue
                     successes.append(response)
                 log_token_usage(successes)
-                outputs.extend(successes)
                 progress.advance(task, advance=len(companies))
-        return outputs
+                yield from successes
 
     def _get_repr_kwargs(self) -> dict[str, Any]:
         """Return the keyword arguments used for the ``repr``/``str``
