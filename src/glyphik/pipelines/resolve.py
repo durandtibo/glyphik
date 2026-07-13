@@ -50,7 +50,7 @@ def resolve_pipeline[T](
         >>> from glyphik.pipelines.base import BasePipeline
         >>> from glyphik.pipelines.resolve import resolve_pipeline
         >>> class MyPipeline(BasePipeline):
-        ...     def run(self) -> None:
+        ...     def run(self, config=None) -> None:
         ...         pass
         ...
         >>> # From an existing instance:

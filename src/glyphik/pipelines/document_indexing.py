@@ -20,6 +20,7 @@ from glyphik.pipelines.base import BasePipeline
 if TYPE_CHECKING:
     from langchain_core.document_loaders import BaseLoader
     from langchain_core.documents import Document
+    from langchain_core.runnables import RunnableConfig
     from langchain_text_splitters import TextSplitter
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -72,13 +73,19 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
         self._vector_store = vector_store
         self._batch_size = batch_size
 
-    def run(self) -> VectorStore:
+    def run(self, config: RunnableConfig | None = None) -> VectorStore:  # noqa: ARG002
         """Run the pipelines in batches and return the populated vector
         store.
 
         Lazily loads documents via the loader, processes them in batches
         of ``batch_size``, splits each batch into chunks, indexes the
         chunks into the vector store, and returns the vector store.
+
+        Args:
+            config: Unused. Accepted for interface compatibility with
+                :meth:`~glyphik.pipelines.base.BasePipeline.run`; this
+                pipeline does not invoke any
+                :class:`~langchain_core.runnables.Runnable`.
 
         Returns:
             The populated :class:`~langchain_core.vectorstores.VectorStore`
