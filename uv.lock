@@ -588,11 +588,11 @@ wheels = [
 
 [[package]]
 name = "coola"
-version = "1.1.9a3"
+version = "1.1.9"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/95/ec/c6a5d0032fa9d4c001811559b2884eedcd9f5b9ee2496e96ddcb9b27db41/coola-1.1.9a3.tar.gz", hash = "sha256:3ac7f55138bd106c989bd4a1732e501310d22eef233c8b0feebe400d6df3a993", size = 106442, upload-time = "2026-07-10T05:36:40.493Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/bd/638fab1471f9e35e29fbc9ade2a3a66b98c2c436ad8c276d11e4a7ecddf1/coola-1.1.9.tar.gz", hash = "sha256:54f74c8dda426c9076b0492618f4b97b737f98b93ce5cb1c96727ae899c8a96e", size = 109775, upload-time = "2026-07-16T05:11:26.437Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/5e/8343a49dbea2e249fa4307e1fb69948ef2bcc25c06cc37eccf721fedec62/coola-1.1.9a3-py3-none-any.whl", hash = "sha256:38c3881ef41b7657a17afbd3699fbcd2b2756ab851bb59250d739671ed8e7dbf", size = 191379, upload-time = "2026-07-10T05:36:39.125Z" },
+    { url = "https://files.pythonhosted.org/packages/0e/ed/9c1bb3f2fbd1b965787699ec9793b2c4ab754cff34fc4c793ea294469a5c/coola-1.1.9-py3-none-any.whl", hash = "sha256:cdc5392e08c1fe732abedb02874b6a46176d7a53325b321516c48d380eb5b32d", size = 196582, upload-time = "2026-07-16T05:11:25.236Z" },
 ]
 
 [[package]]
@@ -1109,7 +1109,7 @@ wheels = [
 
 [[package]]
 name = "glyphik"
-version = "0.0.1a17"
+version = "0.0.1a18"
 source = { editable = "." }
 dependencies = [
     { name = "coola" },
