@@ -131,7 +131,7 @@ def compare_filing_formats(filings: list[Filing], formats: list[str]) -> list[di
                     attr = getattr(filing, fmt)
                     content = attr() if callable(attr) else attr
                     content = content or ""
-                except Exception:  # noqa: BLE001
+                except Exception:
                     logger.warning(
                         "Failed to retrieve %r for %s", fmt, row["company"], exc_info=True
                     )
@@ -205,14 +205,14 @@ def compare_filing_token_counts(
                     attr = getattr(filing, fmt)
                     content = attr() if callable(attr) else attr
                     content = content or ""
-                except Exception:  # noqa: BLE001
+                except Exception:
                     logger.warning(
                         "Failed to retrieve %r for %s", fmt, row["company"], exc_info=True
                     )
 
                 try:
                     row[f"{fmt}_chars"] = count_input_tokens(model, content) if content else 0
-                except Exception:  # noqa: BLE001
+                except Exception:
                     logger.warning(
                         "Failed to count tokens for %r on %s", fmt, row["company"], exc_info=True
                     )
