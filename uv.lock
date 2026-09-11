@@ -5756,7 +5756,7 @@ wheels = [
 
 [[package]]
 name = "zenpyre"
-version = "0.0.1a66"
+version = "0.0.1a67"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coola" },
@@ -5768,9 +5768,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c0/8c/89d9edd8e44827e048e51d87572ba697489317ec21bbbeb949ab6469df99/zenpyre-0.0.1a66.tar.gz", hash = "sha256:86d954f5686f53a291b69d798659f712a9f8d9c9645942dc1798e7659fb47aca", size = 136794, upload-time = "2026-08-17T00:16:45.387Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/1e/42ee88e1c875dfa22d40db9a09340c1bd728f7d8e7bf9d0e04c77bf9f7ae/zenpyre-0.0.1a67.tar.gz", hash = "sha256:4abef185ce13380d65d56d3168be6d3d92a920d9f49b5c71f2285ee2c8455d48", size = 139050, upload-time = "2026-09-04T21:55:40.215Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/1b/9808e23a0346861f4f2d1aec382ab0c929489f2d6d52017297b92019be5b/zenpyre-0.0.1a66-py3-none-any.whl", hash = "sha256:2509c9f28634548a40e18dabc35118a9352b027322be6912446e1a9f0259951f", size = 256368, upload-time = "2026-08-17T00:16:43.886Z" },
+    { url = "https://files.pythonhosted.org/packages/77/fb/1399b55428e30351f25f9a441fed03eebd33148b23590394f0a8a04aa3f3/zenpyre-0.0.1a67-py3-none-any.whl", hash = "sha256:93178dfd209eb1271e659720a85b45237f616cd9c3711302ec53ec95c69f6775", size = 259219, upload-time = "2026-09-04T21:55:38.982Z" },
 ]
 
 [[package]]
