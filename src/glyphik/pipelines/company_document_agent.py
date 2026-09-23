@@ -102,6 +102,7 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         companies: Sequence[CompanyIdentifier],
         document_store: BaseDocumentStore,
         agent: Runnable[dict[str, Any], T],
+        *,
         batch_size: int = 0,
         config: RunnableConfig | None = None,
         continue_on_error: bool = False,

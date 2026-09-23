@@ -34,6 +34,7 @@ def fetch_filings(
     cik_or_ticker: int | str,
     start_date: date,
     output_dir: Path | str,
+    *,
     end_date: date | None = None,
     forms: Sequence[str] | None = None,
     force_download: bool = False,
