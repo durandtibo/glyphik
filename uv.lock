@@ -1298,6 +1298,7 @@ dev = [
     { name = "docformatter" },
     { name = "feu", extra = ["all"] },
     { name = "invoke" },
+    { name = "invoke-tasklib" },
     { name = "pre-commit" },
     { name = "pygments" },
     { name = "pyright" },
@@ -1352,6 +1353,7 @@ dev = [
     { name = "docformatter", specifier = ">=1.7.8,<2.0" },
     { name = "feu", extras = ["all"], specifier = ">=0.8.3,<1.0" },
     { name = "invoke", specifier = ">=3.0,<4.0" },
+    { name = "invoke-tasklib", specifier = ">=0.0.2,<1.0" },
     { name = "pre-commit", specifier = ">=4.6,<5.0" },
     { name = "pygments", specifier = ">=2.20,<3.0" },
     { name = "pyright", specifier = ">=1.1.414,<2.0" },
@@ -1720,6 +1722,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/33/f6/227c48c5fe47fa178ccf1fda8f047d16c97ba926567b661e9ce2045c600c/invoke-3.0.3.tar.gz", hash = "sha256:437b6a622223824380bfb4e64f612711a6b648c795f565efc8625af66fb57f0c", size = 343419, upload-time = "2026-04-07T15:17:48.307Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5a/de/bbc12563bbf979618d17625a4e753ff7a078523e28d870d3626daa97261a/invoke-3.0.3-py3-none-any.whl", hash = "sha256:f11327165e5cbb89b2ad1d88d3292b5113332c43b8553b494da435d6ec6f5053", size = 160958, upload-time = "2026-04-07T15:17:46.875Z" },
+]
+
+[[package]]
+name = "invoke-tasklib"
+version = "0.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "invoke" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d2/74/3535e027a5b53aa44d46e4fb2868c705cd28eb22921a47109671d075c7ad/invoke_tasklib-0.0.2.tar.gz", hash = "sha256:f565c639ac4cd689641740a4de4d48993b2138806a4e6774fe9fc70612853b9b", size = 14295, upload-time = "2026-09-22T21:03:13.412Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/62/6c/0148ced71b7ed43662297dbfe9cfd06c5ccaf094b20e57dbd17bc2f74102/invoke_tasklib-0.0.2-py3-none-any.whl", hash = "sha256:ca6ab6e4886837696614ba800c2a210e8b2f8cf9c2b38da14030a18607b7d6d3", size = 15446, upload-time = "2026-09-22T21:03:12.104Z" },
 ]
 
 [[package]]

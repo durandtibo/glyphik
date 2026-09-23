@@ -22,23 +22,24 @@ jobs:
       max-parallel: 8
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
-        python-version: [ '3.14', '3.13', '3.12' ]
-        extra: [
-          'all',
-          'anthropic',
-          'chroma',
-          'duckdb',
-          'edgar',
-          'faker',
-          'google-genai',
-          'huggingface',
-          'ollama',
-          'openai',
-          'polars',
-          'sentence-transformers',
-          'text-splitters',
-        ]
+        os: [ubuntu-latest]
+        python-version: ["3.14", "3.13", "3.12"]
+        extra:
+          [
+            "all",
+            "anthropic",
+            "chroma",
+            "duckdb",
+            "edgar",
+            "faker",
+            "google-genai",
+            "huggingface",
+            "ollama",
+            "openai",
+            "polars",
+            "sentence-transformers",
+            "text-splitters",
+          ]
 
     steps:
       - name: Checkout
