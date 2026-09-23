@@ -2,7 +2,7 @@
 # Tests package installation from PyPI and validates basic functionality.
 # Used to test stable releases, pre-releases, and different installation configurations.
 
-name: Test Package
+name: PyPI Package Install Test
 on:
   workflow_call:
     inputs:
@@ -11,12 +11,13 @@ on:
         description: "Command to install the package"
         required: false
         type: string
+      test-matrix:
+        description: "JSON test matrix from get-test-matrix.yaml, loaded once by the caller"
+        required: true
+        type: string
 
 permissions:
   contents: read
-
-env:
-  EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
 
 jobs:
   test:
@@ -26,44 +27,24 @@ jobs:
       max-parallel: 8
       fail-fast: false
       matrix:
-        os:
-          [
-            ubuntu-latest,
-            ubuntu-24.04,
-            ubuntu-22.04,
-            ubuntu-24.04-arm,
-            ubuntu-22.04-arm,
-            macos-latest,
-            macos-26,
-            macos-15,
-            macos-14,
-            macos-15-intel,
-          ]
-        python-version: ["3.14", "3.13", "3.12"]
+        os: ${{ fromJson(inputs.test-matrix).os_matrix }}
+        python-version: ${{ fromJson(inputs.test-matrix).python_versions }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
-
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7
       # Install uv package manager
       - name: Install uv and set the python version
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # ratchet:astral-sh/setup-uv@v10.1.0
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: true
-
       # Install package from PyPI using custom install command
       - name: Install package
+        env:
+          INSTALL_CMD: ${{ inputs.install-cmd }}
         run: |
-          ${{ inputs.install-cmd }}
-
-      # Display dependency tree
-      - name: Show dependency tree
-        shell: bash
-        run: |
-          uv pip tree --show-version-specifiers
-
-      # Run basic package checks (imports, version, etc.)
-      - name: Run some checks
-        run: |
-          python tests/package_checks.py
+          $INSTALL_CMD
+      # Display dependency tree and run basic package checks (imports, version, etc.)
+      - name: Verify installed package
+        uses: ./.github/actions/verify-installed-package
