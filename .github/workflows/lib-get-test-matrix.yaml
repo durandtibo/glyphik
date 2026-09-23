@@ -1,7 +1,7 @@
 name: Get Test Matrix
 
 # This reusable workflow loads the shared Python-version and OS matrices from
-# .github/config/workflow-config.json (overriding
+# dev/config/workflow-config.json (overriding
 # durandtibo/workflow-config-action's built-in defaults, which include
 # Python versions below glyphik's requires-python = ">=3.12") and exposes
 # them as a single output, so the supported version/OS lists only need to be
@@ -46,7 +46,7 @@ jobs:
         uses: durandtibo/workflow-config-action@8c406999ac8ac3cafe656c263759d8ddea3a4edb # ratchet:durandtibo/workflow-config-action@v0.2
         id: cfg
         with:
-          config: .github/config/workflow-config.json
+          config: dev/config/workflow-config.json
 
       - name: Build test matrix
         id: build-matrix
