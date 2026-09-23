@@ -2,7 +2,7 @@
 # Runs all configured pre-commit hooks to validate code quality.
 # Checks formatting, linting, and other code quality rules.
 
-name: pre-commit
+name: Pre-commit
 on:
   workflow_call:
   workflow_dispatch: # to trigger manually
@@ -17,14 +17,14 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7
 
-      # Set up Python (pre-commit action will install hooks automatically)
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      # Set up uv/Python (pre-commit action will install hooks automatically)
+      - name: Install uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # ratchet:astral-sh/setup-uv@v10.1.0
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       # Run all pre-commit hooks on changed files
       - name: Run pre-commit
-        uses: pre-commit/action@v3.0.1
+        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # ratchet:pre-commit/action@v3.0.1

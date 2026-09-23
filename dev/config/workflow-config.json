@@ -1,0 +1,36 @@
+{
+  "python_versions_standard": [
+    "3.12",
+    "3.13",
+    "3.14"
+  ],
+  "python_versions_threaded": [
+    "3.13t",
+    "3.14t"
+  ],
+  "os_ubuntu": [
+    "ubuntu-latest",
+    "ubuntu-slim",
+    "ubuntu-22.04",
+    "ubuntu-22.04-arm",
+    "ubuntu-24.04",
+    "ubuntu-24.04-arm",
+    "ubuntu-26.04",
+    "ubuntu-26.04-arm"
+  ],
+  "os_macos": [
+    "macos-latest",
+    "macos-14",
+    "macos-15",
+    "macos-15-intel",
+    "macos-26",
+    "macos-26-intel"
+  ],
+  "os_windows": [
+    "windows-latest",
+    "windows-11-arm",
+    "windows-2022",
+    "windows-2025",
+    "windows-2025-vs2026"
+  ]
+}
