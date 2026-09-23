@@ -39,6 +39,9 @@ jobs:
     outputs:
       test_matrix: ${{ steps.build-matrix.outputs.test_matrix }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7
+
       - name: Load workflow config
         uses: durandtibo/workflow-config-action@8c406999ac8ac3cafe656c263759d8ddea3a4edb # ratchet:durandtibo/workflow-config-action@v0.2
         id: cfg
