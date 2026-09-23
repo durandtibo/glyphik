@@ -1241,6 +1241,7 @@ dependencies = [
     { name = "persista" },
     { name = "pydantic" },
     { name = "rich" },
+    { name = "zenpyre" },
 ]
 
 [package.optional-dependencies]
@@ -1316,20 +1317,20 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "coola", specifier = ">=1.2.0a1,<2.0" },
-    { name = "deepagents", marker = "extra == 'deepagents'", specifier = ">=0.6,<1.0" },
+    { name = "deepagents", marker = "extra == 'deepagents'", specifier = ">=0.7,<1.0" },
     { name = "docculus", specifier = ">=0.0.1" },
     { name = "duckdb", marker = "extra == 'duckdb'", specifier = ">=1.5,<2.0" },
     { name = "edgartools", marker = "extra == 'edgar'", specifier = ">=5.40,<6.0" },
     { name = "faker", marker = "extra == 'faker'", specifier = ">=40.0,<41.0" },
     { name = "iden", specifier = ">=0.4.1,<1.0" },
-    { name = "langchain", specifier = ">=1.3,<2.0" },
-    { name = "langchain-anthropic", marker = "extra == 'anthropic'", specifier = ">=1.4,<2.0" },
+    { name = "langchain", specifier = ">=1.4,<2.0" },
+    { name = "langchain-anthropic", marker = "extra == 'anthropic'", specifier = ">=1.7,<2.0" },
     { name = "langchain-chroma", marker = "python_full_version >= '3.11' and extra == 'chroma'", specifier = ">=1.0,<2.0" },
-    { name = "langchain-core", specifier = ">=1.4,<2.0" },
+    { name = "langchain-core", specifier = ">=1.6,<2.0" },
     { name = "langchain-google-genai", marker = "extra == 'google-genai'", specifier = ">=4.2,<5.0" },
     { name = "langchain-huggingface", marker = "(platform_machine == 'arm64' and sys_platform == 'darwin' and extra == 'huggingface') or (sys_platform == 'linux' and extra == 'huggingface')", specifier = ">=1.2,<2.0" },
     { name = "langchain-ollama", marker = "extra == 'ollama'", specifier = ">=1.1,<2.0" },
-    { name = "langchain-openai", marker = "extra == 'openai'", specifier = ">=1.2,<2.0" },
+    { name = "langchain-openai", marker = "extra == 'openai'", specifier = ">=1.6,<2.0" },
     { name = "langchain-text-splitters", marker = "extra == 'text-splitters'", specifier = ">=1.0,<2.0" },
     { name = "langgraph", specifier = ">=1.2,<2.0" },
     { name = "persista", specifier = ">=0.0.4a1" },
@@ -1339,6 +1340,7 @@ requires-dist = [
     { name = "rich", specifier = ">=15.0,<16.0" },
     { name = "sentence-transformers", marker = "extra == 'sentence-transformers'", specifier = ">=6.0,<7.0" },
     { name = "textual", extras = ["syntax"], marker = "extra == 'textual'", specifier = ">=8.2,<9.0" },
+    { name = "zenpyre", specifier = ">=0.0.1a67,<1.0" },
 ]
 provides-extras = ["anthropic", "chroma", "deepagents", "dotenv", "duckdb", "edgar", "faker", "google-genai", "huggingface", "ollama", "openai", "polars", "sentence-transformers", "text-splitters", "textual"]
 
@@ -5947,6 +5949,25 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/38/02/eef443559563ef8f2e10469387b8b1e97cb5efee95b288a56da60801f7ee/yarl-1.25.1-cp315-cp315t-win_amd64.whl", hash = "sha256:b13b88747769537f3d32e89e3a735da10c0a9e35d7322928c701b5f93d3afffd", size = 106811, upload-time = "2026-09-15T19:34:54.935Z" },
     { url = "https://files.pythonhosted.org/packages/88/91/41e284ca2cf5211e05dae031d126a3668aea88fa759df56e7e35c6ad25ba/yarl-1.25.1-cp315-cp315t-win_arm64.whl", hash = "sha256:783dd1467083f4d3f7722ad6a313f24c173e7571372738fcb7a6e6d1ba48df25", size = 101804, upload-time = "2026-09-15T19:34:57.231Z" },
     { url = "https://files.pythonhosted.org/packages/54/22/318c7980066769c6bcd9221ed2248294f5698811da099013098c670565ed/yarl-1.25.1-py3-none-any.whl", hash = "sha256:681c758b0490f9e96b78e5fa8e8dc6e648e9185bb6eaebe73183c33ea0c445f3", size = 63617, upload-time = "2026-09-15T19:34:59.616Z" },
+]
+
+[[package]]
+name = "zenpyre"
+version = "0.0.1a67"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "coola" },
+    { name = "iden" },
+    { name = "langchain" },
+    { name = "langchain-core" },
+    { name = "langgraph" },
+    { name = "objectory" },
+    { name = "pydantic" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6e/1e/42ee88e1c875dfa22d40db9a09340c1bd728f7d8e7bf9d0e04c77bf9f7ae/zenpyre-0.0.1a67.tar.gz", hash = "sha256:4abef185ce13380d65d56d3168be6d3d92a920d9f49b5c71f2285ee2c8455d48", size = 139050, upload-time = "2026-09-04T21:55:40.215Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/77/fb/1399b55428e30351f25f9a441fed03eebd33148b23590394f0a8a04aa3f3/zenpyre-0.0.1a67-py3-none-any.whl", hash = "sha256:93178dfd209eb1271e659720a85b45237f616cd9c3711302ec53ec95c69f6775", size = 259219, upload-time = "2026-09-04T21:55:38.982Z" },
 ]
 
 [[package]]
