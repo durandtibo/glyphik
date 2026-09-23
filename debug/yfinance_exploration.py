@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 
 import yfinance as yf
-
 from glyphik.utils.logging import log_pretty
 
 logging.basicConfig(level=logging.INFO)

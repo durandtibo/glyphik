@@ -217,6 +217,7 @@ class CompanyIdentifierHasher(BaseHasher[CompanyIdentifier]):
         data: CompanyIdentifier,
         registry: HasherRegistry,  # noqa: ARG002
         length: int = 64,
+        ignore_unhashable: bool = False,  # noqa: ARG002
     ) -> str:
         return data.content_hash(length=length)
 

@@ -5,7 +5,7 @@
 name: Tests
 on:
   workflow_call:
-  workflow_dispatch:  # to trigger manually
+  workflow_dispatch: # to trigger manually
 
 permissions:
   contents: read
@@ -22,20 +22,21 @@ jobs:
       max-parallel: 8
       fail-fast: false
       matrix:
-        os: [
-          ubuntu-latest,
-          ubuntu-24.04,
-          ubuntu-22.04,
-          ubuntu-24.04-arm,
-          ubuntu-22.04-arm,
-          macos-latest,
-          macos-26,
-          macos-15,
-          macos-14,
-          macos-15-intel,
-        ]
+        os:
+          [
+            ubuntu-latest,
+            ubuntu-24.04,
+            ubuntu-22.04,
+            ubuntu-24.04-arm,
+            ubuntu-22.04-arm,
+            macos-latest,
+            macos-26,
+            macos-15,
+            macos-14,
+            macos-15-intel,
+          ]
         # Test all supported Python versions including free-threaded builds (t suffix)
-        python-version: [ '3.14', '3.13', '3.12' ]
+        python-version: ["3.14", "3.13", "3.12"]
 
     steps:
       - name: Checkout
@@ -62,19 +63,20 @@ jobs:
       max-parallel: 8
       fail-fast: false
       matrix:
-        os: [
-          ubuntu-latest,
-          ubuntu-24.04,
-          ubuntu-22.04,
-          ubuntu-24.04-arm,
-          ubuntu-22.04-arm,
-          macos-latest,
-          macos-26,
-          macos-15,
-          macos-14,
-          macos-15-intel,
-        ]
-        python-version: [ '3.14', '3.13', '3.12' ]
+        os:
+          [
+            ubuntu-latest,
+            ubuntu-24.04,
+            ubuntu-22.04,
+            ubuntu-24.04-arm,
+            ubuntu-22.04-arm,
+            macos-latest,
+            macos-26,
+            macos-15,
+            macos-14,
+            macos-15-intel,
+          ]
+        python-version: ["3.14", "3.13", "3.12"]
 
     steps:
       - name: Checkout
@@ -85,7 +87,7 @@ jobs:
         uses: durandtibo/setup-venv-uv-action@v0.1.0
         with:
           python-version: ${{ matrix.python-version }}
-          install-args: '--no-optional-deps'
+          install-args: "--no-optional-deps"
 
       - name: Run unit tests
         run: |

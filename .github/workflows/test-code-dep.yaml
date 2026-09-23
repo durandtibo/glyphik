@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         # Test across all supported Python versions
-        python-version: [ '3.14', '3.13', '3.12' ]
+        python-version: ["3.14", "3.13", "3.12"]
         # Test with each version of the specified package
         package-version: ${{ fromJson(inputs.package-versions) }}
 
@@ -43,8 +43,8 @@ jobs:
           package-name: ${{ inputs.package-name }}
           package-version: ${{ matrix.package-version }}
           python-version: ${{ matrix.python-version }}
-          install-args: '--no-optional-deps'
-          package-install-args: '--upgrade'
+          install-args: "--no-optional-deps"
+          package-install-args: "--upgrade"
 
       # Run unit tests to verify compatibility
       - name: Run unit tests
