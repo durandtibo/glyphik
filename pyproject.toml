@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.30.1", "hatchling-autoextras-hook>=0.1.3"]
+requires = ["hatchling >= 1.32", "hatchling-autoextras-hook>=0.1.3"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
@@ -82,6 +82,7 @@ dev = [
     "docformatter>=1.7.8,<2.0",
     "feu[all]>=0.8.3,<1.0",
     "invoke>=3.0,<4.0",
+    "invoke-tasklib>=0.0.2,<1.0",
     "pre-commit>=4.6,<5.0",
     "pygments>=2.20,<3.0",
     "pyright>=1.1.414,<2.0",
@@ -110,6 +111,10 @@ Issues = "https://github.com/durandtibo/glyphik/issues"
 [tool.uv.pip]
 torch-backend = "auto"
 
+[tool.codespell]
+skip = "*.lock,./.git,./htmlcov,./docs/site,coverage.xml"
+ignore-regex = "re-declared|\\btha\\.\\.\\."
+
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
 
@@ -124,7 +129,7 @@ exclude_lines = [
     "if TYPE_CHECKING:"
 ]
 
-[tool.pytest]
+[tool.pytest.ini_options]
 minversion = "9.0"
 pythonpath = ["src"]
 testpaths = ["tests/"]
@@ -141,9 +146,6 @@ include = '\.pyi?$'
 
 [tool.pylint.FORMAT]
 max-line-length = 100
-
-[tool.isort]
-profile = "black"
 
 [tool.docformatter]
 recursive = true
@@ -168,6 +170,7 @@ lint.select = [
     "F", # pyflakes
     "FA", # flake8-future-annotations
     "FURB", # refurb
+    "I", # isort
     "ICN", # flake8-import-conventions
     "INP", # flake8-no-pep420
     "ISC", # flake8-implicit-str-concat
@@ -189,7 +192,7 @@ lint.select = [
     "S", # flake8-bandit
     "SIM", # flake8-simplify
     "T20", # flake8-print
-    "TCH", # flake8-type-checking
+    "TC", # flake8-type-checking
     "TD", # flake8-todos
     "TID", # flake8-tidy-imports
     "TRY", # tryceratops
@@ -229,6 +232,7 @@ lint.fixable = [
     "F", # pyflakes
     "FA", # flake8-future-annotations
     "FURB", # refurb
+    "I", # isort
     "ICN", # flake8-import-conventions
     "INP", # flake8-no-pep420
     "ISC", # flake8-implicit-str-concat
@@ -250,7 +254,7 @@ lint.fixable = [
     "S", # flake8-bandit
     "SIM", # flake8-simplify
     "T20", # flake8-print
-    "TCH", # flake8-type-checking
+    "TC", # flake8-type-checking
     "TD", # flake8-todos
     "TID", # flake8-tidy-imports
     "TRY", # tryceratops
@@ -306,7 +310,7 @@ convention = "google"
 max-doc-length = 72
 
 [tool.ruff.lint.isort]
-force-sort-within-sections = true
+force-sort-within-sections = false
 combine-as-imports = true
 known-first-party = ["src"]
 

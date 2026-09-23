@@ -5,7 +5,7 @@
 name: Test - Dependencies
 on:
   workflow_call:
-  workflow_dispatch:  # to trigger manually
+  workflow_dispatch: # to trigger manually
 
 permissions:
   contents: read
@@ -77,7 +77,6 @@ jobs:
     with:
       package-name: zenpyre
       package-versions: ${{ toJson(fromJson(needs.get-versions.outputs.package_versions).zenpyre) }}
-
 
   #################################
   #     Optional dependencies     #

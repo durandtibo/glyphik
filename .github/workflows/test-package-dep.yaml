@@ -27,8 +27,8 @@ jobs:
       max-parallel: 8
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
-        python-version: [ '3.14', '3.13', '3.12' ]
+        os: [ubuntu-latest]
+        python-version: ["3.14", "3.13", "3.12"]
         # Test with each version of the specified package
         package-version: ${{ fromJson(inputs.package-versions) }}
 
