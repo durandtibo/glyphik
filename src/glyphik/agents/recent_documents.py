@@ -8,9 +8,9 @@ __all__ = ["RecentDocumentsAgent"]
 from typing import Any, TypeVar
 
 from coola.display import MultilineDisplayMixin
+from docculus.transform import format_documents
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import Runnable, RunnableConfig
-from zenpyre.documents import format_documents
 from zenpyre.utils.rich import print_documents_metadata
 
 T = TypeVar("T")
@@ -18,7 +18,7 @@ T = TypeVar("T")
 _VALID_OUTPUT_FORMATS = frozenset({"xml", "markdown"})
 """Formats accepted by ``format_documents``.
 
-Update if ``zenpyre.documents`` adds or removes supported formats.
+Update if ``docculus.transform`` adds or removes supported formats.
 """
 
 
