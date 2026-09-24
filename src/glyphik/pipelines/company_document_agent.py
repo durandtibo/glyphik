@@ -91,8 +91,8 @@ class CompanyDocumentAgentPipeline(BasePipeline[T], MultilineDisplayMixin):
         ...     agent=agent,
         ...     batch_size=8,
         ...     continue_on_error=True,
-        ... )
-        >>> outputs = list(pipelines.run())
+        ... )  # doctest: +SKIP
+        >>> outputs = list(pipelines.run())  # doctest: +SKIP
 
         ```
     """

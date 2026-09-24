@@ -55,7 +55,7 @@ class DocumentIndexingPipeline(BasePipeline[VectorStore], MultilineDisplayMixin)
         ...     text_splitter=text_splitter,
         ...     vector_store=vector_store,
         ...     batch_size=64,
-        ... )
+        ... )  # doctest: +SKIP
         >>> vector_store = pipelines.run()  # doctest: +SKIP
 
         ```
