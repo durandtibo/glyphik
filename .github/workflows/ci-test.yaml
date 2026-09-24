@@ -37,9 +37,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Run unit tests
+        env:
+          EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
         run: |
           inv test.unit --cov
       - name: Run integration tests
+        env:
+          EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
         run: |
           inv test.integration --cov
       # Upload coverage from a single representative cell of the matrix (only
@@ -79,8 +83,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
           install-args: "--no-optional-deps"
       - name: Run unit tests
+        env:
+          EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
         run: |
           inv test.unit --cov
       - name: Run integration tests
+        env:
+          EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
         run: |
           inv test.integration --cov

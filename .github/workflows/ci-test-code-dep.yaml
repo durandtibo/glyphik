@@ -49,5 +49,7 @@ jobs:
 
       # Run unit tests to verify compatibility
       - name: Run unit tests
+        env:
+          EDGAR_IDENTITY: ${{ vars.EDGAR_IDENTITY }}
         run: |
           inv test.unit
