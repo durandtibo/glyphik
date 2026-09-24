@@ -38,10 +38,10 @@ def documents() -> list[Document]:
 
 
 @pytest.fixture
-def document_store(documents: list[Document]) -> InMemoryDocumentStore:
-    store = InMemoryDocumentStore().__enter__()
-    store.set_many(documents)
-    return store
+def document_store(documents: list[Document]) -> Iterator[InMemoryDocumentStore]:
+    with InMemoryDocumentStore() as store:
+        store.set_many(documents)
+        yield store
 
 
 def _fake_agent() -> RunnableLambda:
