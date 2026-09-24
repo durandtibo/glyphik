@@ -18,8 +18,8 @@ from zenpyre.ingestors.base import BaseIngestor
 from glyphik.pipelines import DocumentIndexingPipeline
 
 if TYPE_CHECKING:
+    from docculus.store import BaseDocumentStore
     from langchain_text_splitters import TextSplitter
-    from zenpyre.document_stores import BaseDocumentStore
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class DocumentStoreIndexingIngestor(BaseIngestor[VectorStore], MultilineDisplayM
     """Ingestor that indexes documents from a document store into a
     vector store.
 
-    Retrieves a populated :class:`~zenpyre.document_stores.BaseDocumentStore`
+    Retrieves a populated :class:`~docculus.store.BaseDocumentStore`
     via ``document_store_ingestor``, wraps it in a
     :class:`~zenpyre.document_loaders.DocumentStoreLoader`, and runs it
     through a :class:`~glyphik.pipelines.DocumentIndexingPipeline` to
@@ -37,7 +37,7 @@ class DocumentStoreIndexingIngestor(BaseIngestor[VectorStore], MultilineDisplayM
 
     Args:
         document_store_ingestor: An ingestor that provides the
-            populated :class:`~zenpyre.document_stores.BaseDocumentStore`
+            populated :class:`~docculus.store.BaseDocumentStore`
             of documents to index.
         text_splitter: A :class:`~langchain_text_splitters.TextSplitter`
             used to split documents into chunks before indexing.

@@ -8,12 +8,12 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from docculus.store import DuckDBDocumentStore
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from zenpyre.data_processors import SequenceProcessor
-from zenpyre.document_stores import DuckDBDocumentStore
 from zenpyre.ingestors import FirstNIngestor, ProcessorIngestor
 from zenpyre.utils.rich import configure_rich_logging, print_document
 

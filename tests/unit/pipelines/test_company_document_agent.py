@@ -4,9 +4,9 @@ from collections.abc import Iterator
 from unittest.mock import MagicMock
 
 import pytest
+from docculus.store import InMemoryDocumentStore
 from langchain_core.documents import Document
 from langchain_core.runnables import Runnable, RunnableLambda
-from zenpyre.document_stores import InMemoryDocumentStore
 
 from glyphik.data.sec import CompanyIdentifier
 from glyphik.pipelines import CompanyDocumentAgentPipeline
@@ -39,8 +39,8 @@ def documents() -> list[Document]:
 
 @pytest.fixture
 def document_store(documents: list[Document]) -> InMemoryDocumentStore:
-    store = InMemoryDocumentStore()
-    store.add_documents(documents)
+    store = InMemoryDocumentStore().__enter__()
+    store.set_many(documents)
     return store
 
 

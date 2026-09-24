@@ -36,7 +36,7 @@ class CompanyDocumentPipelineFactory(BasePipelineFactory[Any], MultilineDisplayM
 
     Each call to :meth:`make_pipeline` builds a fresh agent via
     ``agent_factory``, opens a read-only
-    :class:`~zenpyre.document_stores.base.BaseDocumentStore` backed
+    :class:`~docculus.store.BaseDocumentStore` backed
     by the SEC filing DuckDB file located under ``base_dir`` (via
     :class:`~glyphik.document_stores.factory.SecFilingDocumentStoreFactory`),
     and wires both together with ``companies`` into a

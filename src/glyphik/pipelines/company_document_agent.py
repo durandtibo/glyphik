@@ -22,8 +22,8 @@ from glyphik.pipelines.base import BasePipeline
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
+    from docculus.store import BaseDocumentStore
     from langchain_core.runnables import Runnable, RunnableConfig
-    from langchain_core.vectorstores import BaseDocumentStore
 
     from glyphik.data.sec import CompanyIdentifier
 

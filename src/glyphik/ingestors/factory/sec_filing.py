@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any
 
 from coola.display import MultilineDisplayMixin
 from coola.utils.path import sanitize_path
+from docculus.store import BaseDocumentStore
 from zenpyre.data_processors import SequenceProcessor
-from zenpyre.document_stores import BaseDocumentStore
 from zenpyre.ingestors import InMemoryIngestor
 from zenpyre.ingestors.factory.base import BaseIngestorFactory
 
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 class SecFilingIngestorFactory(BaseIngestorFactory[BaseDocumentStore], MultilineDisplayMixin):
     """A concrete BaseIngestor factory that builds an ingestor for
     downloading SEC filings for a set of companies and storing them
-    in a DuckDB-backed :class:`~zenpyre.document_stores.BaseDocumentStore`.
+    in a DuckDB-backed :class:`~docculus.store.BaseDocumentStore`.
 
     Each call to :meth:`make_ingestor` constructs a fresh
     :class:`~glyphik.ingestors.SecFilingDocumentStoreIngestor` that

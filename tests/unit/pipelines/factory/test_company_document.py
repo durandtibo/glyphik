@@ -108,12 +108,16 @@ def test_sec_document_summarization_pipeline_factory_resolves_agent_factory_from
     tmp_path: Path,
 ) -> None:
     inner_agent_factory = _make_agent_factory()
-    with patch("zenpyre.utils.resolve.factory", return_value=inner_agent_factory) as mock_factory:
+    with patch(
+        "zenpyre.utils.resolve.resolve_object_base", return_value=inner_agent_factory
+    ) as mock_factory:
         factory = _make_factory(
             tmp_path,
             agent_factory={"_target_": "some.AgentFactory", "arg": 1},
         )
-    mock_factory.assert_called_once_with(_target_="some.AgentFactory", arg=1)
+    mock_factory.assert_called_once_with(
+        {"_target_": "some.AgentFactory", "arg": 1}, BaseAgentFactory
+    )
     assert factory._agent_factory is inner_agent_factory
 
 

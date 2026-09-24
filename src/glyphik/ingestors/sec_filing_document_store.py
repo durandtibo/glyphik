@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 from coola.display import MultilineDisplayMixin
 from coola.utils.batching import batchify
 from coola.utils.format import str_time_human
-from zenpyre.document_stores import BaseDocumentStore
+from docculus.store import BaseDocumentStore
 from zenpyre.ingestors.base import BaseIngestor
 
 if TYPE_CHECKING:
@@ -30,7 +30,7 @@ class SecFilingDocumentStoreIngestor(BaseIngestor[BaseDocumentStore], MultilineD
 
     Retrieves filing records via ``filing_ingestor``, skips records
     already present in ``store`` (using
-    :meth:`~zenpyre.document_stores.BaseDocumentStore.check_ids` for
+    :meth:`~docculus.store.BaseDocumentStore.contains_many` for
     deduplication), converts the remaining records to
     :class:`~langchain_core.documents.Document` instances via
     ``processor``, and adds them to ``store`` in batches.
@@ -68,7 +68,7 @@ class SecFilingDocumentStoreIngestor(BaseIngestor[BaseDocumentStore], MultilineD
         and adds them to ``store`` in batches of ``batch_size``.
 
         Returns:
-            The populated :class:`~zenpyre.document_stores.BaseDocumentStore`.
+            The populated :class:`~docculus.store.BaseDocumentStore`.
         """
         logger.info("Starting to ingest filing documents to store...")
         t_start = time.perf_counter()
@@ -76,17 +76,19 @@ class SecFilingDocumentStoreIngestor(BaseIngestor[BaseDocumentStore], MultilineD
         filings = self._filing_ingestor.ingest()
 
         logger.info("Finding the missing documents in the store...")
-        present, missing_ids = self._document_store.check_ids([f.id for f in filings])
+        ids = [f.id for f in filings]
+        present = self._document_store.contains_many(ids)
+        new_filings = [f for f, is_present in zip(filings, present, strict=True) if not is_present]
         logger.info(
-            "%s filings already in store, %s to add", f"{len(present):,}", f"{len(missing_ids):,}"
+            "%s filings already in store, %s to add",
+            f"{len(filings) - len(new_filings):,}",
+            f"{len(new_filings):,}",
         )
 
-        if missing_ids:
-            missing_id_set = set(missing_ids)
-            new_filings = [f for f in filings if f.id in missing_id_set]
+        if new_filings:
             for batch in batchify(new_filings, size=self._batch_size):
                 docs = self._processor.process(list(batch))
-                self._document_store.add_documents(docs)
+                self._document_store.set_many(docs)
 
         logger.info(
             "%s filing documents have been ingested to the store in %s",
