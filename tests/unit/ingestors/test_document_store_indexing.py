@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from contextlib import ExitStack
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
+import pytest
 from coola.testing.fixtures import numpy_available
 from docculus.store import BaseDocumentStore, InMemoryDocumentStore
 from langchain_core.documents import Document
@@ -14,6 +17,9 @@ from zenpyre.utils.imports import is_langchain_text_splitters_available
 
 from glyphik.ingestors import DocumentStoreIndexingIngestor
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
 if is_langchain_text_splitters_available():
     from langchain_text_splitters import CharacterTextSplitter, TextSplitter
 else:
@@ -24,18 +30,24 @@ else:
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture
+def stack() -> Iterator[ExitStack]:
+    with ExitStack() as stack:
+        yield stack
+
+
 def _make_docs(n: int = 6) -> list[Document]:
     return [Document(id=str(i), page_content=f"Cats fact number {i}.") for i in range(n)]
 
 
-def _make_document_store(n: int = 6) -> InMemoryDocumentStore:
-    store = InMemoryDocumentStore().__enter__()
+def _make_document_store(stack: ExitStack, n: int = 6) -> InMemoryDocumentStore:
+    store = stack.enter_context(InMemoryDocumentStore())
     store.set_many(_make_docs(n))
     return store
 
 
-def _make_document_store_ingestor(n: int = 6) -> InMemoryIngestor:
-    return InMemoryIngestor(_make_document_store(n), copy=False)
+def _make_document_store_ingestor(stack: ExitStack, n: int = 6) -> InMemoryIngestor:
+    return InMemoryIngestor(_make_document_store(stack, n), copy=False)
 
 
 def _make_text_splitter() -> CharacterTextSplitter:
@@ -47,13 +59,14 @@ def _make_vector_store() -> InMemoryVectorStore:
 
 
 def _make_ingestor(
+    stack: ExitStack,
     document_store_ingestor: BaseIngestor[BaseDocumentStore] | None = None,
     text_splitter: TextSplitter | None = None,
     vector_store: VectorStore | None = None,
     batch_size: int = 2,
 ) -> DocumentStoreIndexingIngestor:
     return DocumentStoreIndexingIngestor(
-        document_store_ingestor=document_store_ingestor or _make_document_store_ingestor(),
+        document_store_ingestor=document_store_ingestor or _make_document_store_ingestor(stack),
         text_splitter=text_splitter or _make_text_splitter(),
         vector_store=vector_store or _make_vector_store(),
         batch_size=batch_size,
@@ -69,8 +82,8 @@ def _make_ingestor(
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_is_base_ingestor() -> None:
-    assert isinstance(_make_ingestor(), BaseIngestor)
+def test_document_store_indexing_ingestor_is_base_ingestor(stack: ExitStack) -> None:
+    assert isinstance(_make_ingestor(stack), BaseIngestor)
 
 
 # --- ingest ---
@@ -78,39 +91,47 @@ def test_document_store_indexing_ingestor_is_base_ingestor() -> None:
 
 @numpy_available
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_ingest_returns_vector_store() -> None:
-    assert isinstance(_make_ingestor().ingest(), VectorStore)
+def test_document_store_indexing_ingestor_ingest_returns_vector_store(stack: ExitStack) -> None:
+    assert isinstance(_make_ingestor(stack).ingest(), VectorStore)
 
 
 @numpy_available
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_ingest_returns_same_vector_store_instance() -> None:
+def test_document_store_indexing_ingestor_ingest_returns_same_vector_store_instance(
+    stack: ExitStack,
+) -> None:
     vector_store = _make_vector_store()
-    ingestor = _make_ingestor(vector_store=vector_store)
+    ingestor = _make_ingestor(stack, vector_store=vector_store)
     assert ingestor.ingest() is vector_store
 
 
 @numpy_available
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_ingest_calls_document_store_ingestor() -> None:
+def test_document_store_indexing_ingestor_ingest_calls_document_store_ingestor(
+    stack: ExitStack,
+) -> None:
     document_store_ingestor = MagicMock(spec=BaseIngestor)
-    document_store_ingestor.ingest.return_value = _make_document_store()
-    _make_ingestor(document_store_ingestor=document_store_ingestor).ingest()
+    document_store_ingestor.ingest.return_value = _make_document_store(stack)
+    _make_ingestor(stack, document_store_ingestor=document_store_ingestor).ingest()
     document_store_ingestor.ingest.assert_called_once()
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_ingest_calls_add_documents() -> None:
+def test_document_store_indexing_ingestor_ingest_calls_add_documents(stack: ExitStack) -> None:
     vector_store = MagicMock(spec=VectorStore)
-    _make_ingestor(vector_store=vector_store).ingest()
+    _make_ingestor(stack, vector_store=vector_store).ingest()
     vector_store.add_documents.assert_called()
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_ingest_with_empty_document_store() -> None:
+def test_document_store_indexing_ingestor_ingest_with_empty_document_store(
+    stack: ExitStack,
+) -> None:
     vector_store = MagicMock(spec=VectorStore)
     ingestor = _make_ingestor(
-        document_store_ingestor=_make_document_store_ingestor(0), vector_store=vector_store
+        stack,
+        document_store_ingestor=_make_document_store_ingestor(stack, 0),
+        vector_store=vector_store,
     )
     result = ingestor.ingest()
     assert result is vector_store
@@ -118,14 +139,17 @@ def test_document_store_indexing_ingestor_ingest_with_empty_document_store() -> 
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_ingest_processes_all_documents() -> None:
+def test_document_store_indexing_ingestor_ingest_processes_all_documents(
+    stack: ExitStack,
+) -> None:
     n_docs = 7
     batch_size = 3
     vector_store = MagicMock(spec=VectorStore)
     text_splitter = MagicMock(spec=TextSplitter)
     text_splitter.split_documents.side_effect = lambda docs: docs
     ingestor = _make_ingestor(
-        document_store_ingestor=_make_document_store_ingestor(n_docs),
+        stack,
+        document_store_ingestor=_make_document_store_ingestor(stack, n_docs),
         text_splitter=text_splitter,
         vector_store=vector_store,
         batch_size=batch_size,
@@ -136,14 +160,17 @@ def test_document_store_indexing_ingestor_ingest_processes_all_documents() -> No
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_ingest_docs_exactly_divisible_by_batch() -> None:
+def test_document_store_indexing_ingestor_ingest_docs_exactly_divisible_by_batch(
+    stack: ExitStack,
+) -> None:
     n_docs = 6
     batch_size = 3
     vector_store = MagicMock(spec=VectorStore)
     text_splitter = MagicMock(spec=TextSplitter)
     text_splitter.split_documents.side_effect = lambda docs: docs
     ingestor = _make_ingestor(
-        document_store_ingestor=_make_document_store_ingestor(n_docs),
+        stack,
+        document_store_ingestor=_make_document_store_ingestor(stack, n_docs),
         text_splitter=text_splitter,
         vector_store=vector_store,
         batch_size=batch_size,
@@ -157,8 +184,8 @@ def test_document_store_indexing_ingestor_ingest_docs_exactly_divisible_by_batch
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_get_repr_kwargs_keys() -> None:
-    assert set(_make_ingestor()._get_repr_kwargs().keys()) == {
+def test_document_store_indexing_ingestor_get_repr_kwargs_keys(stack: ExitStack) -> None:
+    assert set(_make_ingestor(stack)._get_repr_kwargs().keys()) == {
         "document_store_ingestor",
         "text_splitter",
         "vector_store",
@@ -167,13 +194,13 @@ def test_document_store_indexing_ingestor_get_repr_kwargs_keys() -> None:
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_get_repr_kwargs_batch_size() -> None:
-    assert _make_ingestor(batch_size=64)._get_repr_kwargs()["batch_size"] == 64
+def test_document_store_indexing_ingestor_get_repr_kwargs_batch_size(stack: ExitStack) -> None:
+    assert _make_ingestor(stack, batch_size=64)._get_repr_kwargs()["batch_size"] == 64
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_get_repr_kwargs_values() -> None:
-    document_store_ingestor = _make_document_store_ingestor()
+def test_document_store_indexing_ingestor_get_repr_kwargs_values(stack: ExitStack) -> None:
+    document_store_ingestor = _make_document_store_ingestor(stack)
     text_splitter = _make_text_splitter()
     vector_store = _make_vector_store()
     ingestor = DocumentStoreIndexingIngestor(
@@ -193,10 +220,10 @@ def test_document_store_indexing_ingestor_get_repr_kwargs_values() -> None:
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_repr_starts_with_class_name() -> None:
-    assert repr(_make_ingestor()).startswith("DocumentStoreIndexingIngestor(")
+def test_document_store_indexing_ingestor_repr_starts_with_class_name(stack: ExitStack) -> None:
+    assert repr(_make_ingestor(stack)).startswith("DocumentStoreIndexingIngestor(")
 
 
 @langchain_text_splitters_available
-def test_document_store_indexing_ingestor_str_starts_with_class_name() -> None:
-    assert str(_make_ingestor()).startswith("DocumentStoreIndexingIngestor(")
+def test_document_store_indexing_ingestor_str_starts_with_class_name(stack: ExitStack) -> None:
+    assert str(_make_ingestor(stack)).startswith("DocumentStoreIndexingIngestor(")
