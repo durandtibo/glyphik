@@ -12,8 +12,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from coola.display import MultilineDisplayMixin
 from coola.utils.batching import batchify
 from coola.utils.format import str_time_human
+from docculus.transform import sort_by_metadata
 from langchain_core.runnables.config import merge_configs
-from zenpyre.documents import sort_by_metadata
 from zenpyre.utils.rich import make_progressbar, print_documents_metadata
 from zenpyre.utils.token_usage import log_token_usage
 
@@ -22,8 +22,8 @@ from glyphik.pipelines.base import BasePipeline
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
 
+    from docculus.store import BaseDocumentStore
     from langchain_core.runnables import Runnable, RunnableConfig
-    from langchain_core.vectorstores import BaseDocumentStore
 
     from glyphik.data.sec import CompanyIdentifier
 

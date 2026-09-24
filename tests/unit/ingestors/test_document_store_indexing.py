@@ -3,10 +3,10 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 from coola.testing.fixtures import numpy_available
+from docculus.store import BaseDocumentStore, InMemoryDocumentStore
 from langchain_core.documents import Document
 from langchain_core.embeddings.fake import FakeEmbeddings
 from langchain_core.vectorstores import InMemoryVectorStore, VectorStore
-from zenpyre.document_stores import BaseDocumentStore, InMemoryDocumentStore
 from zenpyre.ingestors import InMemoryIngestor
 from zenpyre.ingestors.base import BaseIngestor
 from zenpyre.testing.fixtures import langchain_text_splitters_available
@@ -30,12 +30,13 @@ def _make_docs(n: int = 6) -> list[Document]:
 
 def _make_document_store(n: int = 6) -> InMemoryDocumentStore:
     store = InMemoryDocumentStore()
-    store.add_documents(_make_docs(n))
+    store.open()
+    store.set_many(_make_docs(n))
     return store
 
 
 def _make_document_store_ingestor(n: int = 6) -> InMemoryIngestor:
-    return InMemoryIngestor(_make_document_store(n))
+    return InMemoryIngestor(_make_document_store(n), copy=False)
 
 
 def _make_text_splitter() -> CharacterTextSplitter:

@@ -3,9 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from coola.equality import objects_are_equal
-from zenpyre.document_stores import DuckDBDocumentStore
-from zenpyre.document_stores.base import BaseDocumentStore
-from zenpyre.document_stores.factory import DuckDBDocumentStoreFactory
+from docculus.store import BaseDocumentStore, DuckDBDocumentStore
+from docculus.store.factory import DuckDBDocumentStoreFactory
 from zenpyre.testing.fixtures import duckdb_available
 
 from glyphik.document_stores.factory import SecFilingDocumentStoreFactory
@@ -37,7 +36,7 @@ def test_sec_filing_document_store_factory_builds_expected_path_from_path(
 ) -> None:
     factory = SecFilingDocumentStoreFactory(tmp_path)
     expected_path = tmp_path / "document_store" / "sec_filing.duckdb"
-    assert objects_are_equal(factory._get_repr_kwargs(), {"path": expected_path})
+    assert objects_are_equal(factory._get_repr_kwargs(), {"database": expected_path})
 
 
 @duckdb_available
@@ -46,7 +45,7 @@ def test_sec_filing_document_store_factory_builds_expected_path_from_str(
 ) -> None:
     factory = SecFilingDocumentStoreFactory(str(tmp_path))
     expected_path = tmp_path / "document_store" / "sec_filing.duckdb"
-    assert objects_are_equal(factory._get_repr_kwargs(), {"path": expected_path})
+    assert objects_are_equal(factory._get_repr_kwargs(), {"database": expected_path})
 
 
 # --- make_document_store ---
@@ -83,7 +82,9 @@ def test_sec_filing_document_store_factory_make_document_store_returns_new_insta
 def test_sec_filing_document_store_factory_forwards_kwargs_to_repr(tmp_path: Path) -> None:
     factory = SecFilingDocumentStoreFactory(tmp_path, read_only=True)
     expected_path = tmp_path / "document_store" / "sec_filing.duckdb"
-    assert objects_are_equal(factory._get_repr_kwargs(), {"path": expected_path, "read_only": True})
+    assert objects_are_equal(
+        factory._get_repr_kwargs(), {"database": expected_path, "read_only": True}
+    )
 
 
 # --- __repr__ and __str__ ---
@@ -102,6 +103,6 @@ def test_sec_filing_document_store_factory_str_starts_with_class_name(tmp_path: 
 
 
 @duckdb_available
-def test_sec_filing_document_store_factory_repr_contains_path(tmp_path: Path) -> None:
+def test_sec_filing_document_store_factory_repr_contains_database(tmp_path: Path) -> None:
     factory = SecFilingDocumentStoreFactory(tmp_path)
-    assert "path" in repr(factory)
+    assert "database" in repr(factory)

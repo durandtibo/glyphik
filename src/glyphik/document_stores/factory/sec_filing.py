@@ -8,7 +8,7 @@ __all__ = ["SecFilingDocumentStoreFactory"]
 from typing import TYPE_CHECKING, Any
 
 from coola.utils.path import sanitize_path
-from zenpyre.document_stores.factory import DuckDBDocumentStoreFactory
+from docculus.store.factory import DuckDBDocumentStoreFactory
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -16,11 +16,11 @@ if TYPE_CHECKING:
 
 class SecFilingDocumentStoreFactory(DuckDBDocumentStoreFactory):
     """A concrete BaseDocumentStore factory that builds a
-        :class:`~zenpyre.document_stores.DuckDBDocumentStore` for SEC
+        :class:`~docculus.store.DuckDBDocumentStore` for SEC
         filings, backed by a DuckDB file under a given base directory.
 
         Use this when you want a factory that lazily constructs a fresh
-        :class:`~zenpyre.document_stores.DuckDBDocumentStore` rooted at
+        :class:`~docculus.store.DuckDBDocumentStore` rooted at
         ``base_dir / "document_store" / "sec_filings.duckdb"`` each time
         :meth:`make_document_store` is called, rather than wrapping an
         already-instantiated store.
@@ -33,7 +33,7 @@ class SecFilingDocumentStoreFactory(DuckDBDocumentStoreFactory):
                 is sanitized via
                 :func:`~coola.utils.path.sanitize_path`.
             **kwargs: Additional keyword arguments forwarded to
-                :class:`~zenpyre.document_stores.DuckDBDocumentStore`.
+                :class:`~docculus.store.DuckDBDocumentStore`.
 
     Example:
     ```pycon

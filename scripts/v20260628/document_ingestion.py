@@ -7,9 +7,9 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from docculus.store import DuckDBDocumentStore
 from dotenv import load_dotenv
 from zenpyre.data_processors import SequenceProcessor
-from zenpyre.document_stores import DuckDBDocumentStore
 from zenpyre.ingestors import FirstNIngestor, ProcessorIngestor
 from zenpyre.utils.rich import configure_rich_logging, print_pretty
 

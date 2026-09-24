@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+from docculus.store import BaseDocumentStore
 from langchain_core.documents import Document
-from zenpyre.document_stores import BaseDocumentStore
 from zenpyre.ingestors import InMemoryIngestor
 
 from glyphik.ingestors import SecFilingDocumentStoreIngestor
@@ -20,10 +20,7 @@ def _make_record(id_: str) -> MagicMock:
 def _make_document_store(present: list[str] | None = None) -> MagicMock:
     document_store = MagicMock(spec=BaseDocumentStore)
     present = present or []
-    document_store.check_ids.side_effect = lambda ids: (
-        [i for i in ids if i in present],
-        [i for i in ids if i not in present],
-    )
+    document_store.contains_many.side_effect = lambda ids: [i in present for i in ids]
     return document_store
 
 
@@ -111,11 +108,11 @@ def test_sec_filing_document_store_ingestor_ingest_returns_store() -> None:
 # --- ingest: deduplication ---
 
 
-def test_sec_filing_document_store_ingestor_ingest_calls_check_ids() -> None:
+def test_sec_filing_document_store_ingestor_ingest_calls_contains_many() -> None:
     records = [_make_record("a"), _make_record("b")]
     document_store = _make_document_store()
     _make_ingestor(records, document_store).ingest()
-    document_store.check_ids.assert_called_once_with(["a", "b"])
+    document_store.contains_many.assert_called_once_with(["a", "b"])
 
 
 def test_sec_filing_document_store_ingestor_ingest_skips_present_records() -> None:
@@ -151,7 +148,7 @@ def test_sec_filing_document_store_ingestor_ingest_adds_documents_to_store() -> 
 
     _make_ingestor([record], document_store, processor=processor).ingest()
 
-    document_store.add_documents.assert_called_once_with([doc])
+    document_store.set_many.assert_called_once_with([doc])
 
 
 def test_sec_filing_document_store_ingestor_ingest_empty_filings_returns_store() -> None:
@@ -160,10 +157,8 @@ def test_sec_filing_document_store_ingestor_ingest_empty_filings_returns_store()
     assert result is document_store
 
 
-def test_sec_filing_document_store_ingestor_ingest_all_present_does_not_call_add_documents() -> (
-    None
-):
+def test_sec_filing_document_store_ingestor_ingest_all_present_does_not_call_set_many() -> None:
     records = [_make_record("a"), _make_record("b")]
     document_store = _make_document_store(present=["a", "b"])
     _make_ingestor(records, document_store).ingest()
-    document_store.add_documents.assert_not_called()
+    document_store.set_many.assert_not_called()

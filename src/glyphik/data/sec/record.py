@@ -7,7 +7,7 @@ __all__ = ["SecFilingRecord"]
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from zenpyre.records import Record
+from persista.record import Record
 
 from glyphik.utils.imports import is_edgar_available
 
