@@ -21,6 +21,16 @@ install-shellcheck:
 		esac; \
 	fi
 
+.PHONY: install-bats
+install-bats:
+	@if ! command -v bats >/dev/null 2>&1; then \
+		echo "📦 bats not found, installing..."; \
+		case "$$(uname -s)" in \
+			Darwin) brew install bats-core ;; \
+			*) sudo apt-get update && sudo apt-get install -y bats ;; \
+		esac; \
+	fi
+
 .PHONY: install-shfmt
 install-shfmt:
 	@if ! command -v shfmt >/dev/null 2>&1; then \
@@ -57,5 +67,11 @@ format-shell: install-shfmt ## Format shell scripts with shfmt
 	@echo "🔧 Running shfmt to format shell scripts..."
 	find $(SHELL_FORMAT_PATH) -type d -name '.make' -prune -o -type f -name '*.sh' -print0 | xargs -0 -r shfmt -l -w
 	@echo "✅ Shell formatting complete"
+
+.PHONY: check-format-shell
+check-format-shell: install-shfmt ## Check shell script formatting with shfmt
+	@echo "🔍 Checking shell script formatting with shfmt..."
+	find $(SHELL_FORMAT_PATH) -type d -name '.make' -prune -o -type f -name '*.sh' -print0 | xargs -0 -r shfmt -d
+	@echo "✅ Shell formatting is correct"
 
 endif
