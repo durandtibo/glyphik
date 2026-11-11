@@ -18,14 +18,8 @@ install-uv:
 .PHONY: install-invoke
 install-invoke: install-uv
 	@echo "📦 Installing invoke..."
-	uv pip install "invoke>=3.0"
+	uv pip install "invoke>=3.0" "invoke-tasklib>=0.0.8"
 	@echo "✅ invoke installed"
-
-.PHONY: install-invoke-tasklib
-install-invoke-tasklib: install-uv
-	@echo "📦 Installing invoke-tasklib..."
-	uv pip install "invoke-tasklib>=0.0.2"
-	@echo "✅ invoke-tasklib installed"
 
 .PHONY: update-uv
 update-uv: install-uv
@@ -36,7 +30,7 @@ setup-venv:
 	$(MAKE) update-uv
 	uv venv --python $(PYTHON_VERSION) --clear
 	$(MAKE) install-invoke
-	.venv/bin/inv create-venv
-	.venv/bin/inv install --docs-deps
+	uv run inv env.create-venv
+	uv run inv env.install
 
 endif
